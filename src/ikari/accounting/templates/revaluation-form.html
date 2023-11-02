@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+{% endblock %}
+{% block title %}Revaluation Form{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+
+{% block parent_AP_a_active %}{% if type_transaction == 'AP' %} active {% endif %}{% endblock %}
+{% block parent_AP_i_active %}{% if type_transaction == 'AP' %} active {% endif %}{% endblock %}
+{% block ap_revaluation_active %}{% if type_transaction == 'AP' %} active {% endif %}{% endblock %}
+{% block parent_AR_a_active %}{% if type_transaction == 'AR' %} active {% endif %}{% endblock %}
+{% block parent_AR_i_active %}{% if type_transaction == 'AR' %} active {% endif %}{% endblock %}
+{% block ar_revaluation_active %}{% if type_transaction == 'AR' %} active {% endif %}{% endblock %}
+{% block content %}
+	<div class="panel">
+		<div class="panel-heading">
+			<h4>Revaluation <button id="create-new" class="btn btn-success pull-right">+ ADD NEW</button></h4>
+		</div>
+		<div class="panel-body">
+			<h5><b>Currency Company : {{ currency.currency__name }}</b></h5>
+			{% csrf_token %}
+			<div class="table-responsive" style="overflow-x:auto;">
+				<table id="dynamic-table" style="width:100%" class="table table-striped table-bordered">
+					<thead>
+						<tr>
+							<th>No</th>
+							<th>Currency</th>
+							<!-- <th>Revaluation Date</th> -->
+							<th>Rate Date</th>
+							<th>Exchange Rate</th>
+							<!-- <th>Type Transaction</th> -->
+							<th>Execute Action</th>
+							<!-- <th><input type="checkbox" name="selectAll" /></th> -->
+						</tr>
+					</thead>
+				</table>
+				<tbody id="body"></tbody>
+			</div>
+			<div class="pull-right">
+				<button id="batch-process" class="btn btn-info" style="display:none">PROCESS</button>
+			</div>
+		</div>
+	</div>
+
+	<div class="modal callback-dialog" tabindex="-1" role="dialog" aria-labelledby="myCallbackModalLabel">
+	  <div class="modal-dialog" role="document" style="max-width: 40% !important;">
+	    <div class="modal-content">
+	     <div id="content-dialog" class="panel panel-info">
+	     	<div id="header-message" class="panel-heading header-callback">Loading ...</div>
+	     	<div class="panel-body" style="max-height: 100% !important; overflow-y: auto;">
+	     		<div class="col-lg-12" style="margin-left: -15px; margin-right:-15px"><p id="body-message">...</p></div>
+	     		<button id="close-dialog" class="btn btn-info pull-right" style="margin-right:0px">close</button>
+	     	</div>
+
+	     </div>
+	    </div>
+	  </div>
+	</div>
+{% endblock %}
+{% block js %}
+<script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>	
+<script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+<script type="text/javascript">
+
+var data_currencies = {{ all_currency|safe }}
+var table;
+var callbackDialog = {
+	'element' : $('.callback-dialog'),
+	'content' : $('#content-dialog'),
+	'header_message' : $('#header-message'),
+	'body_message' : $('#body-message'),
+	'looping_text' : null,
+	'show' : function() {
+		var idx = 0;
+		var text = ['Loading .', 'Loading ..', 'Loading ...'];
+
+		this.looping_text = setInterval(function() {
+			$('.header-callback').text(text[idx]);
+			if (idx != 2) idx++; else idx = 0;
+		}, 600);
+
+		this.element.modal({show : true, backdrop : 'static', 'keyboard' : false });
+
+		return this;
+	},
+	'reset' : function() {
+		this.element.modal('hide');
+		this.header_message.text('Loading');
+		this.body_message.text('...')
+		this.content.attr('class' , 'panel panel-info');
+		this.looping_text != null ? window.clearInterval(this.looping_text) : null;
+	},
+};
+
+var fnGenerateInput = {
+	'currency' : function(data, idx) {
+
+		if(data.length > 0) {
+			var options_string = '';
+			for (var i = data.length - 1; i >= 0; i--) {
+				options_string += '<option value="' + data[i].code + '" data-rate='+JSON.stringify(data[i].rate)+'>'+ data[i].symbol + ' -- ' + data[i].name + '</option>';
+			}
+			return '<select data-index="'+idx+'" class="form-control" id="currency'+idx+'" name="currency" required><option value="">--- select currency ---</option>'+options_string+'</select>';
+		}
+	}
+}
+
+var fnRequestToServer = {
+	'Revaluation' : {
+		'init' : function(act) {
+			return act == 'save' ? true : false; 
+		},
+		'controller' : function(row, elm, batchProcess) {
+			// this.init(elm.data('action')) ? this.functions.save(row, elm) : this.functions.remove(row);
+			this.functions.save(row, elm, batchProcess)
+		},
+		'functions' : {
+			'save': function(row, elm, batchProcess) {
+				valid = true;
+				var data = {};
+				$('input[data-index='+elm.data('index')+'], select[data-index='+elm.data('index')+']').each(function(index, el) {
+					if($(this).val().length == 0) {
+						alert('please fill the input');
+						valid = false;
+						$(this).focus();
+
+						return false;
+					}
+					data[$(this).attr('name')] = $(this).val();
+				});
+				
+				data['csrfmiddlewaretoken'] = $('input[name=csrfmiddlewaretoken]').val();
+
+				if(valid) {
+					$('a#action-btn[data-index='+elm.data('index')+']').hide();
+					$('button#loading[data-index='+elm.data('index')+']').show();
+					var dialogOpen = callbackDialog.show();
+
+					$.ajax({
+						url: "{% url 'revaluation' type_transaction %}",
+						type: 'POST',
+						dataType: 'json',
+						data: data,
+						cache : false,
+					})
+					.done(function(e) {
+						window.clearInterval(dialogOpen.looping_text);
+						if(e.status == 200) {
+							dumpStr = '';
+							dialogOpen.content.attr('class', 'panel panel-success');
+							dialogOpen.header_message.text(batchProcess ? 'batch process still on develop' : 'Success');
+							// dialogOpen.body_message.text(e.message);
+							if(e.records_not_processed.length != 0) {
+								dumpStr += '<br /><span style="font-size:20"><b>Record Not Processed :</b></span>';
+								for (var i =  0; i < e.records_not_processed.length; i++) {
+									dumpStr += ('<br />- ' + e.records_not_processed[i]);
+								}
+							}
+							dialogOpen.body_message.html('<span style="font-size:20"><b>'+e.message+'</b></span>' + dumpStr);
+
+							table.row(row).remove().draw();
+						} else {
+							alert('error : ' + e.message);
+						}
+					})
+					.fail(function(e) {
+						window.clearInterval(dialogOpen.looping_text);
+						dialogOpen.content.attr('class', 'panel panel-danger');
+						dialogOpen.header_message.text('Error:(Code:128#776)');
+						dialogOpen.body_message.text('Please contact the Developer !');
+					})
+					.always(function() {
+						$('button#loading[data-index='+elm.data('index')+']').hide();
+						$('a#action-btn[data-index='+elm.data('index')+']').show();
+						$('#close-dialog').click(function() {dialogOpen.reset()});
+					});	
+				}
+			}
+		}
+	}
+}
+$(document).ready(function() {
+	
+	rowCount = $('#body > tr').length;
+	table = $('#dynamic-table').DataTable({ 
+					'order' : [[0, 'DESC']] , 
+					'fnCreatedRow' : function(nRow, aData, iDataIndex) { 
+						$(nRow).attr('data-index', rowCount)
+							   .on('click', 'a.action[data-index='+rowCount+']', function() {
+									fnRequestToServer.Revaluation.controller($(nRow), $(this));
+								});
+						$(nRow).on('change', 'input[name=selected]', function() {
+									var checked = false;
+									$('input[name=selected]').each(function() {
+										if($(this).prop('checked')) checked = true; 
+									});
+									if(checked) $('#batch-process').show(); else $('#batch-process').hide();
+								});
+
+						$(nRow).on('change', 'select[name=currency]', function(e) {
+									var dataRate = $(this).find(":selected").data('rate');
+
+									if(dataRate!= null) {
+										$('input[name=rate][data-index='+$(this).data('index')+']').val(dataRate.rate);
+										$('input[name=rate_date][data-index='+$(this).data('index')+']').val(dataRate.rate_date);
+										$('input[name=rate_id][data-index='+$(this).data('index')+']').val(dataRate.rate_id);
+									} else {
+										var today = new Date();
+										var dd = today.getDate();
+										var mm = today.getMonth()+1; //January is 0!
+										var yyyy = today.getFullYear();
+
+										if(dd<10)  dd='0'+dd
+										if(mm<10) mm='0'+mm
+										
+										today = yyyy+'-'+mm+'-'+dd;
+
+										$('input[name=rate][data-index='+$(this).data('index')+']').val(null);
+										$('input[name=rate_date][data-index='+$(this).data('index')+']').val(today);
+									}
+								});
+					},
+					"columnDefs": [
+						{
+			                "targets": [ 0 ],
+			                "visible": false,
+			                "searchable": false
+			            },
+			            {
+			                "targets": [ 3 ],
+			                "searchable": false,
+			                "orderable" : false
+			            }
+			        ]
+				});
+
+	$('input[name=selectAll]').on('change', function() {
+		var checked = $(this).prop('checked');
+		$('input[name=selected]').prop('checked', checked);
+		if(checked) $('#batch-process').show(); else $('#batch-process').hide();
+	});
+
+	$('button#batch-process').on('click', function() {
+		$('input[name=selected]:checked').each(function() {
+			var idx = $(this).data('index');
+			var row = $('tr[data-index='+idx+']');
+			var btnAct = $('a.action[data-index='+idx+']');
+
+			fnRequestToServer.Revaluation.controller(row, btnAct, 1);
+		});
+	});
+
+	$('#create-new').on('click', function() {
+		var today = new Date();
+		var dd = today.getDate();
+		var mm = today.getMonth()+1; //January is 0!
+		var yyyy = today.getFullYear();
+
+		if(dd<10)  dd='0'+dd
+		if(mm<10) mm='0'+mm
+		
+		today = yyyy+'-'+mm+'-'+dd;
+		rowCount++;
+		table.row.add([
+			rowCount,
+			fnGenerateInput.currency(data_currencies, rowCount),
+			// '<input data-index="'+rowCount+'" type="date" name="revaluation_date" class="form-control" required/>' ,
+			'<input data-index="'+rowCount+'" type="date" name="rate_date" class="form-control" value="'+today+'" required readonly="true"/>' ,
+			'<input data-index="'+rowCount+'" type="number" name="rate" class="form-control" min="0.000001" step="0.000001" placeholder="0.000000" required/>' +
+			{% if type_transaction == 'AR' %}
+			'<input type="hidden" data-index="'+rowCount+'" name="type_transaction" value="1" />'+
+			{% else %}
+			 '<input type="hidden" data-index="'+rowCount+'" name="type_transaction" value="0" />'+
+			{% endif %}
+			'<input type="hidden" data-index="'+rowCount+'" name="rate_id" value="0" />',
+			'<a id="action-btn" data-index="'+rowCount+'" class="btn btn-white fa fa-check action" data-action="save"></a><a data-index="'+rowCount+'" class="btn btn-white fa fa-minus action hidden" data-action="cancel"></a><button id="loading" data-index="'+rowCount+'" class="btn btn-white" style="display:none"><i class="fa fa-spinner fa-spin"></i></button>'
+			// '<input type="checkbox" name="selected" data-index="'+rowCount+'" />'
+		]).draw();
+	});
+	
+});
+
+</script>
+{% endblock %}

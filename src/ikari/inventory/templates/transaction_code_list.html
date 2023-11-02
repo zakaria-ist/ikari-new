@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Transaction Code List{% endblock %}
+
+{% block inv_setting_a_active %}
+{% if menu_type == '1' %} {# TRN_CODE_TYPE_DICT['Inventory Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block inv_setting_i_active %}
+{% if menu_type == '1' %} {# TRN_CODE_TYPE_DICT['Inventory Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block ics_a_active %}
+{% if menu_type == '1' %} {# TRN_CODE_TYPE_DICT['Inventory Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block inv_transaction_active %}
+{% if menu_type == '1' %} {# TRN_CODE_TYPE_DICT['Inventory Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_order_a_active %}
+{% if menu_type == '2' or menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] or TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_a_active %}
+{% if menu_type == '2' or menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] or TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_i_active %}
+{% if menu_type == '2' or menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] or TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block customer_a_active %}
+{% if menu_type == '2' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] or TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block customer_i_active %}
+{% if menu_type == '2' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] or TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block supplier_a_active %}
+{% if menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] or TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block supplier_i_active %}
+{% if menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] or TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block sale_nember_active %}
+{% if menu_type == '2' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block purchase_nember_active %}
+{% if menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    Transaction Code List
+                    <span class="tools pull-right">
+                         {% if 'inventory.add_transactioncode' in user.get_all_permissions %}
+                             <a class="btn btn-success start" href="{% url 'transaction_code_add' menu_type %}">
+                                 <i class="glyphicon glyphicon-plus"></i>
+                                 <span>Add new</span>
+                             </a>
+                         {% endif %}
+                    </span>
+                    <span class="tools pull-right">
+                         {% if 'inventory.add_transactioncode' in user.get_all_permissions %}
+                             <a class="btn btn-danger" style="color:#ffffff" onclick="resetModal({{menu_type}})">
+                                 <i class="glyphicon glyphicon-time"></i>
+                                 <span>Reset</span>
+                             </a>
+                         {% endif %}
+                    </span>
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table">
+                        <table class="display table table-bordered table-striped"
+                               id="trans-code-table" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Description</th>
+
+                                {% if menu_type == '1'%} {# TRN_CODE_TYPE_DICT['Inventory Code'] #}
+                                    <th>I/O Flag</th>
+                                    <th>Price Flag</th>
+                                {% endif %}
+
+                                <th>Doc Type</th>
+                                <th>Auto Gen</th>
+
+                                {% if menu_type == '1'%} {# TRN_CODE_TYPE_DICT['Inventory Code'] #}
+                                    <th>ICS Prefix</th>
+                                {% elif menu_type == '2' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+                                    <th>DIs Prefix</th>
+                                {% elif menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+                                    <th>CIs Prefix</th>
+                                {% endif %}
+
+                                <th>Last Updated</th>
+                                {% if 'inventory.change_transactioncode' in user.get_all_permissions %}
+                                    <th class="text-center">Edit</th>
+                                {% endif %}
+                            </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    {#Comfirm Delete tranasaction#}
+    <div class="modal fade" id="comfirmResetModal" tabindex="-1" role="dialog"
+        aria-labelledby="myModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-sm" style="margin-top: 20%;">
+            <form id="comfirmResetForm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-hidden="true">&times;</button>
+                        <h4 class="modal-title"><strong>Reset Confirm Dialog</strong></h4>
+                    </div>
+                    <div class="modal-body" style="padding-bottom: 0px!important;">
+                        <div class="form-group">
+                            <label>This will reset all the numbers. Are you sure?</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="text-align: center">
+                        <button class="btn btn-default" type="button" data-dismiss="modal">No</button>
+                        <button class="btn btn-success" type="submit">Yes</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    {#End Comfirm delete transaction#}
+{% endblock %}
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <!--dynamic table initialization -->
+    <script src="{% static 'js/common/dynamic_table_init.js' %}?{% now 'H' %}"></script>
+    <script type="text/javascript">
+        function resetModal(menu_type) {
+            var url = '/inventory/reset_transaction_code_list/' + menu_type + '/';
+            $("#comfirmResetModal").modal("show");
+            $("#comfirmResetForm").attr("action", url);
+        }
+        $(document).ready(function () {
+            var menu_type = '{{menu_type}}' ;
+
+            $('#trans-code-table').dataTable({
+                "order": [[ 1, "asc" ]],
+                "serverSide": true,
+                "scrollX": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'load_transaction_code_list' menu_type %}"
+                },
+                "columns": [
+                    
+                    {"data": "code"},
+                    {"data": "name"},
+                    {% if menu_type == '1'%} /* TRN_CODE_TYPE_DICT['Inventory Code'] */
+                        {"data": "io_flag" },
+                        {"data": "price_flag" },
+                    {% endif %}
+                    {"data": "doc_type"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            if (full.auto_generate == 'True') {
+                                var mSpan = '<span class="label label-success label-mini">True</span>'
+                                return mSpan
+                            }
+                            else {
+                                var mSpan = '<span class="label label-danger label-mini">False</span>'
+                                return mSpan
+                            }
+                        }
+                    },
+                    {"data": "ics_prefix"},
+                    {"data": "update_date"},
+                    {% if 'inventory.change_transactioncode' in user.get_all_permissions %}
+                        {
+                            "className": "text-center",
+                            "orderable": false,
+                            "data": null,
+                            "render": function (data, type, full, meta) {
+                                var button_edit = '<a href="/inventory/transaction_code_edit/' + full.id +'/'+menu_type+ '/" class="fa fa-pencil fa-lg btn btn-primary btn-sm"></a>'
+                                return button_edit;
+                            }
+                        }
+                    {% endif %}
+                ]
+            });
+        });
+    </script>
+{% endblock %}
+
+

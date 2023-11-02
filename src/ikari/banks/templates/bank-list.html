@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "css/table.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Bank List{% endblock %}
+{% block bank_active %}active{% endblock %}
+{% block account_setting_a_active %}active{% endblock %}
+{% block account_setting_i_active %}active{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    Bank List
+                    <span class="tools pull-right">
+                        {% if request.session.staff_admin %}
+                            <a class="btn btn-success start" href="{% url 'bank_add' %}">
+                                <i class="glyphicon glyphicon-plus"></i>
+                                <span>Add new</span>
+                            </a>
+                        {% endif %}
+                    </span>
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table">
+                        <table class="display table table-bordered table-striped table-hover"
+                               id="dynamic-table">
+                            <thead>
+                            <tr>
+                                <th>Update Date</th>
+                                <th>Bank</th>
+                                <th>Description</th>
+                                <th>Bank Account</th>
+                                <th class="text-center">Active</th>
+                                {% if request.session.staff_admin %}
+                                    <th class="text-center">Edit</th>
+                                {% endif %}
+                            </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+{% block extrafoot %}
+    {% load staticfiles %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+
+    <script>
+        $(document).ready(function () {
+
+            $('#dynamic-table').dataTable({
+                "order": [[1, "asc"]],
+                "serverSide": true,
+                "scrollX": true,
+                //stateSave: true,
+                "ajax": {
+                    "url": "{% url 'Bank__asJson' %}"
+                },
+                "columns": [
+                    {"data": "update_date", "width": "55px"},
+                    {"data": "bank_code", "width": "80px"},
+                    {"data": "bank_name", "width": "200px"},
+                    {"data": "account__code", "width": "10px"},
+                    {
+                        "className": "text-center",
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            if (full.is_active == 'True') {
+                                var mSpan = '<span class="label label-success label-mini">True</span>'
+                                return mSpan
+                            }
+                            else {
+                                var mSpan = '<span class="label label-danger label-mini">False</span>'
+                                return mSpan
+                            }
+                        }
+                    },
+                    {% if request.session.staff_admin %}
+                        {
+                            "className": "text-center",
+                            "orderable": false,
+                            "data": null,
+                            "render": function (data, type, full, meta) {
+                                var button_edit = '<a href=../edit/' + full.id + ' class="fa fa-pencil fa-lg btn btn-primary btn-sm"></a>'
+                                return button_edit;
+                            }
+                        }
+                    {% endif %}
+                ]
+            });
+            $('.dataTables_scrollHeadInner').attr('style', 'margin-left: auto !important; margin-right: auto !important');
+        });
+    </script>
+{% endblock %}

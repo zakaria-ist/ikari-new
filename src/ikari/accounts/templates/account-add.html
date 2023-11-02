@@ -1,0 +1,517 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Add Account{% endblock %}
+{% block account_active %}active{% endblock %}
+{% block account_setting_a_active %}active{% endblock %}
+{% block account_setting_i_active %}active{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                Add Account
+            </header>
+            <div class="panel-body">
+                <form id="frmAccCode" class="form-horizontal" action="{% url 'account_add' %}" role="form" method="post" onsubmit="return checkForm(this);"
+                      enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="code" class="col-lg-2 col-sm-2 control-label">Account<span
+                                class="span-required">(*)</span></label>
+                        {% if company.use_segment %}
+                            <div class="col-lg-3">
+                                <input type="text" class="form-control" id="code" name="code" required>
+                            </div>
+                            <label id="acc-seg-label" class="col-lg-1 col-sm-1 control-label" style="padding-left: 0; font-weight: bold;"></label>
+                            <label for="segm_code" class="col-lg-2 col-sm-2 control-label"></span>Segment Code
+                            <span class="span-required">(*)</label>
+                            <div class="col-lg-2">
+                                <select class="form-control" id="segm_code" name="segm_code">
+                                    <option value="">Segment Code</option>
+                                    {% for segment in segment_list %}
+                                    <option value="{{segment.id}}">{{segment.code}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        {% else %}
+                            <div class="col-lg-8">
+                                <input type="text" class="form-control" id="code" name="code" required>
+                            </div>
+                        {% endif %}
+                        
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Description</label>
+                        <div class="col-lg-8">
+                            <input type="text" class="form-control" id="name" name="name">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="account_type" class="col-lg-2 col-sm-2 control-label">Account Type</label>
+                        <div class="col-lg-8">
+                            <select class="form-control" id="account_type" name="account_type">
+                                {% for type in account_type %}
+                                    <option value="{{ type.0 }}">{{ type.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="account_group" class="col-lg-2 col-sm-2 control-label">Account Group</label>
+                        <div class="col-lg-8">
+                            <select class="form-control" id="account_group" name="account_group">
+                                {% for group in account_group %}
+                                    <option value="{{ group.id }}">{{ group.name }}</option>{% endfor %}
+                            </select>
+                            {% if not account_group %}
+                                <span class="messages">Account Group is empty. Please input Account Group!</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% comment %} <div class="form-group" id="profit_loss_group_div">
+                        <label id="profit_loss_group_lb" for="profit_loss_group"
+                               class="col-lg-2 col-sm-2 control-label">Profit&Loss Group</label>
+                        <div class="col-lg-8">
+                            <select class="form-control" id="profit_loss_group" name="profit_loss_group">
+                                <option value="0">---Select---</option>
+                                {% for group in account_group %}
+                                    <option value="{{ group.id }}">{{ group.name }}</option>{% endfor %}
+                            </select>
+                            {% if not account_group %}
+                                <span class="messages">Account Group is empty. Please input Account Group!</span>
+                            {% endif %}
+                        </div>
+                    </div> {% endcomment %}
+
+                    <div class="form-group">
+                        <label for="balance_type" class="col-lg-2 col-sm-2 control-label">Normal Balance </label>
+                        <div class="col-lg-10" style="padding-top: 5px;">
+                            {% for account in balance_type %}
+                                <label class="label_radio" style="height: 40px;margin-right: 10px;padding-left: 25px;">
+                                    <input name="balance_type_radio" type="radio"
+                                           value="{{ account.0 }}">{{ account.1 }}
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="label_check" class="col-lg-2 col-sm-2 control-label"></label>
+                        <div class="col-lg-3">
+                            <div class="checkbox checkbox-primary">
+                                <input name="multicurrency-checkbox" id="checkbox-01" class="styled" type="checkbox"/>
+                                <label for="checkbox-01">
+                                    Multicurrency
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            <div class="checkbox checkbox-primary">
+                                <input name="active-checkbox" id="checkbox-02" class="styled" type="checkbox" checked/>
+                                <label for="checkbox-02">
+                                    Active
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            <div class="checkbox checkbox-primary">
+                                <input name="editable-checkbox" id="checkbox-03" class="styled" type="checkbox"
+                                       checked/>
+                                <label for="checkbox-03">
+                                    Editable
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="m_curr_div">
+                        <div class="form-group">
+                            <div class="col-lg-2 col-md-2">
+                                <label for="default_curr" class="control-label">Default Currency</label>
+                            </div>
+                            <div class="col-lg-3 col-md-3">
+                                <select id="default_curr" 
+                                    class="form-control default_curr" 
+                                    name="default_curr">
+                                    <option value="" data-name="" selected="selected">Select Currency</option>
+                                    {% for curr in currency_list %}
+                                        <option value="{{curr.id}}" data-name="{{curr.name}}" 
+                                            {% if account.default_currency_id == curr.id %}selected{% endif %}
+                                            >{{curr.code}} - {{curr.name}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-lg-2 col-md-2">
+                                <label for="posting_currency" class="control-label">Post In</label>
+                            </div>
+                            <div class="col-lg-6 col-md-6" style="font-size:18px;">
+                                <label class="radio-inline" style="padding-left:0px;">
+                                <input class="fieldset" type="radio" name="radioOptions" id="posting_currency_1" value="1" 
+                                        >     Specified Currencies</label>
+
+                                <label class="radio-inline">
+                                <input class="fieldset" type="radio" name="radioOptions" id="posting_currency_2" value="2"
+                                        >     All Currencies</label>
+                            </div>
+                        </div>
+
+                        <div id="curr_list" class="form-group">
+                        <div class="col-lg-offset-2 col-lg-8 col-sm-8">
+                            <input type="text" class="hide" id="txtaccid" name="txtaccid" value="{{ account.id }}">
+                            <input type="text" class="hide" id="curr_list_data" name="curr_list_data">
+                            <div class="table-responsive" style="overflow-x:auto;">
+                                <table id="dynamic-table" style="width:100%" class="table table-striped table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Currency</th>
+                                            <th>Revaluation Code</th>
+                                            <th>Options</th>
+                                            <th>ID</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="body">
+                                        <tr>
+                                            <td>
+                                                <select id="curr_code1" 
+                                                    class="form-control curr_code" 
+                                                    name="curr_code1"
+                                                    style="display:table-cell; width:100%">
+                                                    <option value="" data-name="" selected="selected">Select Currency</option>
+                                                    {% for curr in currency_list %}
+                                                        <option value="{{curr.id}}" data-name="{{curr.name}}">{{curr.code}} - {{curr.name}}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select id="revaluation_code1" 
+                                                    class="form-control revaluation_code" 
+                                                    name="revaluation_code1"
+                                                    style="display:table-cell; width:100%">
+                                                    <option value="" data-name="" selected="selected">Select Account</option>
+                                                    {% for revaluation_code in revaluation_code_list %}
+                                                    <option value="{{revaluation_code.id}}" data-name="{{revaluation_code.description}}">{{revaluation_code.code}} - {{ revaluation_code.description }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <a id="curr_del1" class="btn btn-white fa fa-minus curr_del"></a>
+                                                <a id="curr_add1" class="btn btn-white fa fa-plus curr_add"></a>
+                                            </td>
+                                            <td id="curr_list_id1"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="form-group bottom-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" name="btnSave" class="btn btn-success" {% if not account_type %}
+                                    disabled {% endif %} onclick="SaveAccCode()">Save
+                            </button>
+                            <a type="submit" class="btn btn-default" href="{% url 'account_list' %}">Cancel</a>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </section>
+    </div>
+
+{% endblock %}
+
+{% block js %}
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>    
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script>
+        var profit_loss_group = [];
+        {% for group in profit_loss_group %}
+            object = {};
+            object.id = "{{group.id}}";
+            object.name = "{{group.name}}";
+            profit_loss_group.push(object);
+        {% endfor %}
+
+        var balance_sheet_group = [];
+        {% for group in balance_sheet_group %}
+            object = {};
+            object.id = "{{group.id}}";
+            object.name = "{{group.name}}";
+            balance_sheet_group.push(object);
+        {% endfor %}
+
+        var data_currencies = [];
+        {% for curr in currency_list %}
+            var obj = {};
+            obj.id = "{{curr.id}}";
+            obj.code = "{{curr.code}}";
+            obj.name = "{{curr.name}}";
+            data_currencies.push(obj);
+        {% endfor %}
+
+        var data_revalueAcc = [];
+        {% for acc in revaluation_code_list %}
+            var obj = {};
+            obj.id = "{{acc.id}}";
+            obj.code = "{{acc.code}}";
+            obj.name = "{{acc.description}}";
+            data_revalueAcc.push(obj);
+        {% endfor %}
+
+        var fnCurrList = {
+            'currency' : function(data, idx) {
+                if(data.length > 0) {
+                    var options_string = '';
+                    for (var i = data.length - 1; i >= 0; i--) {
+                        options_string += '<option value="' + data[i].id + '">'+ data[i].code + ' - ' + data[i].name + '</option>';
+                    }
+                    return '<select data-index="'+idx+'" class="form-control curr_code" id="curr_code'+idx+'" name="curr_code'+idx+'" required><option value="">--- select currency ---</option>'+options_string+'</select>';
+                }
+            }
+        }
+
+        var fnRevalueAccList = {
+            'RevalueAcc' : function(data, idx) {
+                if(data.length > 0) {
+                    var options_string = '';
+                    for (var i = data.length - 1; i >= 0; i--) {
+                        options_string += '<option value="' + data[i].id + '">'+ data[i].code + ' - ' + data[i].name + '</option>';
+                    }
+                    return '<select data-index="'+idx+'" class="form-control revaluation_code" id="revaluation_code'+idx+'" name="revaluation_code'+idx+'"><option value="">--- select currency ---</option>'+options_string+'</select>';
+                }
+            }
+        }
+
+        $(document).ready(function () {
+            rowCount = $('#body > tr').length;
+            $(":radio[name='balance_type_radio'][value='1']").attr('checked', 'checked');
+
+            {% comment %} var select_account_type_id = parseInt($('#account_type').val());
+            if (select_account_type_id == '1') {
+                $('#profit_loss_group').removeClass('hidden');
+                $('#profit_loss_group_lb').removeClass('hidden');
+
+                $('#profit_loss_group_lb')[0].innerText='Profit&Loss Group'
+                $('#profit_loss_group').empty();
+                $('#profit_loss_group').append('<option value="0">---Select---</option>');
+                $.each(profit_loss_group, function(key, value) {
+                    $('#profit_loss_group').append($("<option></option>").attr("value", value.id).text(value.name));
+                });
+
+            } else if (select_account_type_id == '2') {
+                $('#profit_loss_group').removeClass('hidden');
+                $('#profit_loss_group_lb').removeClass('hidden');
+                
+                $('#profit_loss_group_lb')[0].innerText='Balance Sheet Group'
+                $('#profit_loss_group').empty();
+                $('#profit_loss_group').append('<option value="0">---Select---</option>');
+                $.each(balance_sheet_group, function(key, value) {
+                    $('#profit_loss_group').append($("<option></option>").attr("value", value.id).text(value.name));
+                });
+            } else {
+                $('#profit_loss_group').val('');
+                $('#profit_loss_group').addClass('hidden');
+                $('#profit_loss_group_lb').addClass('hidden');
+            } {% endcomment %}
+
+            var datatbl = $('#dynamic-table').DataTable({
+                bFilter: false,
+                bLengthChange: false,
+                ordering: false,
+                bInfo: false,
+                bPaginate: false,
+                columnDefs: [
+                    { width: "40%", "targets": 0 },
+                    { width: "45%", "targets": 1 },
+                    { width: "15%", "targets": 2 },
+                    {
+                        className: "hide",
+                        targets: [3]
+                    }
+                ]
+            });
+            
+            
+            $("#segm_code").select2({
+                placeholder: "Segment Code",
+                allowClear: true
+            });
+
+            $(".curr_code").select2({
+                placeholder: "Select Currency",
+                allowClear: true,
+            });
+
+            $("#default_curr").select2({
+                placeholder: "Select Currency",
+                allowClear: true,
+            });
+
+            $(".revaluation_code").select2({
+                placeholder: "Select Account",
+                allowClear: true,
+            });
+
+            $("#account_type").select2({});
+            $("#account_group").select2({});
+
+            setTimeout( () => {$("#code").focus();}, 500);
+
+            $('#segm_code').on('change', function(){
+                if ($('#segm_code').val()) {
+                    var segm_code = $('#segm_code option:selected').text();
+                    $('#acc-seg-label').text('-' + segm_code);
+                } else {
+                    $('#acc-seg-label').text('');
+                }
+                $("#name").focus();
+            });
+
+            IsMultiCurrency = $('#checkbox-01').is(':checked');
+            if (IsMultiCurrency){
+                $('#m_curr_div').removeClass('hide');
+            } else {
+                $('#m_curr_div').addClass('hide');
+            }
+
+            $('#checkbox-01').click( function(){
+                if( $(this).is(':checked') ){
+                    $('#m_curr_div').removeClass('hide');
+                } else {
+                    $('#m_curr_div').addClass('hide');
+                }
+            });
+
+            {% comment %} $('input[type=radio][name=radioOptions]').change(function() {
+                if(this.value == '1') {
+                    $('#curr_list').removeClass('hide');
+                } else {
+                    $('#curr_list').addClass('hide');
+                }
+            }); {% endcomment %}
+
+            $( "#body" ).on( "click", ".curr_add", function() {
+                var curr_code_val = $(this).closest('tr').children('td').children('.curr_code').val();
+                if (curr_code_val){
+                    $('#curr_del'+rowCount).hide();
+                    $('#curr_add'+rowCount).hide();
+                    rowCount++;
+
+                    datatbl.row.add([
+                        fnCurrList.currency(data_currencies, rowCount),
+                        fnRevalueAccList.RevalueAcc(data_revalueAcc, rowCount),
+                        '<a id="curr_del'+rowCount+'" class="btn btn-white fa fa-minus curr_del"></a><a id="curr_add'+rowCount+'" class="btn btn-white fa fa-plus curr_add"></a>',null
+                    ]).draw();
+
+                    $(".curr_code").select2({
+                        placeholder: "Select Currency",
+                        allowClear: true,
+                    });
+
+                    $(".revaluation_code").select2({
+                        placeholder: "Select Account",
+                        allowClear: true,
+                    });
+                } else {
+                    alert("You must select Currency !");
+                }
+            });
+
+            $( "#body" ).on( "click", ".curr_del", function() {
+                if (rowCount>1){
+                    $('#curr_del'+rowCount).hide();
+                    $('#curr_add'+rowCount).hide();
+                    rowCount--;
+                    datatbl.row( $(this).parents('tr') ).remove().draw();
+                    $('#curr_del'+rowCount).show();
+                    $('#curr_add'+rowCount).show();
+                } else {
+                    $(".curr_code").val("");
+                    $(".curr_code").text("");
+                    $(".revaluation_code").val("");
+                    $(".revaluation_code").text("");
+                }
+            });
+        });
+        
+        function SaveAccCode(){
+            $("#frmAccCode").submit(function(e){
+                var array = [];
+                var nRow = rowCount;
+                for (i=1; i<=nRow; i++){
+                    var accid = $('#txtaccid').val();
+                    var curr = $('#curr_code'+i).val();
+                    if (!curr){
+                        curr = '0';
+                    }
+                    var rev_acc = $('#revaluation_code'+i).val();
+                    if (!rev_acc){
+                        rev_acc = '0';
+                    }
+                    var curr_list_id = $('#curr_list_id'+i).text();
+                    currency_list = {};
+                    currency_list.id = curr_list_id;
+                    currency_list.curr_id = curr;
+                    currency_list.revaluation_code_id = rev_acc;
+                    currency_list.account_id = accid;
+                    array.push(currency_list);
+                }
+                $('#curr_list_data').val(JSON.stringify(array));
+            })
+        }
+
+        $("#segm_code").on("select2:close", function() {
+            $("#name").select();
+        })
+        $("#account_type").on("select2:close", function() {
+            $("#account_group").select2("open");
+        })
+
+        {% comment %} $('#account_type').on('change', function () {
+            //profit_loss_group = {{ profit_loss_group }};
+            var select_account_type_id = parseInt($('#account_type').val());
+            if (select_account_type_id == '1') {
+                $('#profit_loss_group').removeClass('hidden');
+                $('#profit_loss_group_lb').removeClass('hidden');
+
+                $('#profit_loss_group_lb')[0].innerText='Profit&Loss Group';
+                $('#profit_loss_group').empty();
+                $('#profit_loss_group').append('<option value="0">---Select---</option>');
+                $.each(profit_loss_group, function(key, value) {
+                    $('#profit_loss_group').append($("<option></option>").attr("value", value.id).text(value.name));
+                });
+            } else if (select_account_type_id == '2') {
+                $('#profit_loss_group').removeClass('hidden');
+                $('#profit_loss_group_lb').removeClass('hidden');
+
+                $('#profit_loss_group_lb')[0].innerText='Balance Sheet Group';
+                $('#profit_loss_group').empty();
+                $('#profit_loss_group').append('<option value="0">---Select---</option>');
+                $.each(balance_sheet_group, function(key, value) {
+                    $('#profit_loss_group').append($("<option></option>").attr("value", value.id).text(value.name));
+                });
+            } else {
+                $('#profit_loss_group').val('');
+                $('#profit_loss_group').addClass('hidden');
+                $('#profit_loss_group_lb').addClass('hidden');
+            }
+        }); {% endcomment %}
+
+    </script>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+{% endblock %}

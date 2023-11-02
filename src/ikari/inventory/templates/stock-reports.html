@@ -1,0 +1,533 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Inventory Reports{% endblock %}
+{% block inv_setting_a_active %}active{% endblock %}
+{% block inv_setting_i_active %}active{% endblock %}
+{% block inv_report_active %}active{% endblock %}
+{% block inv_report_li_active %}active{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-3">
+            <section class="panel" id="secReportList">
+{#                <header class="panel-heading">#}
+{#                    Inventory Reports#}
+{#                </header>#}
+                {% csrf_token %}
+                {% comment %} <div class="panel-body form-horizontal">
+                    <form class="form-horizontal" action="" role="form" method="post">
+                        <div class="form-group">
+                            <label class="control-label col-md-12">General Stock Report</label>
+                            <div class="col-md-12">
+                                <select class="form-control" id="report_list" name="report_list">
+                                    {% if company.id == 4 %}
+                                        <option value="{{ st_report_list.0.0 }}">
+                                            {{ st_report_list.0.1 }}
+                                        </option>
+                                    {% else %}
+                                        {% for report in st_report_list %}
+                                            <option value="{{ report.0 }}">
+                                                {{ report.1 }}
+                                            </option>
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div> {% endcomment %}
+            </section>
+            <section class="panel" id="secFilterCondition">
+                <input type="hidden" id="hdReportId" value="{{ report_code }}">
+                <header class="panel-heading">
+                    Filter Conditions
+                </header>
+                <div class="panel-body form-horizontal">
+                    <div id="divST1" class="form-group filter divST1">
+
+                        <label class="control-label col-md-12">Period</label>
+                        <div class="col-md-10">
+                            <div id="sandbox-month">
+                                <input type="text" class="id_period form-control text-center" value="{{company.current_period_month_ic}}-{{company.current_period_year_ic}}">
+                            </div>
+                        </div>
+                        <label class="control-label col-md-12">Location</label>
+                        <div class="col-md-10">
+                            <select class="form-control" id="selectLocation" name="selectLocation">
+                                <option value="" selected="selected"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="divST2" class="form-group filter divST2">
+
+                        <label class="control-label col-md-12">Wanted Date From </label>
+                        <div class="col-md-10">
+                            <div data-date-viewmode="years" data-date-format="dd-mm-yyyy"
+                                 class="input-append date dpYears">
+                                <input class="form-control form-control-inline input-medium default-date-picker"
+                                       size="16"
+                                       type="text" value="{% now "d-m-Y" %}"/>
+                                <span class="input-group-btn add-on">
+                                    <button class="btn btn-danger" type="button" style="min-width: 10px !important;">
+                                        <i class="fa fa-calendar"></i>
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+                        <label class="control-label col-md-12">Wanted Date To </label>
+                        <div class="col-md-10">
+                            <div data-date-viewmode="years" data-date-format="dd-mm-yyyy"
+                                 class="input-append date dpYears">
+                                <input class="form-control form-control-inline input-medium default-date-picker"
+                                       size="16"
+                                       type="text" value="{% now "d-m-Y" %}"/>
+                                <span class="input-group-btn add-on">
+                                    <button class="btn btn-danger" type="button" style="min-width: 10px !important;">
+                                        <i class="fa fa-calendar"></i>
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="divST3" class="form-group filter divST3">
+                        <label for="sort_order" class="control-label col-md-12">Sort Order</label>
+                        <div class="col-md-10">
+                            <select id='sort_order' name='sort_order' class="form-control">
+                                <option value='0' selected>Loc. Code</option>
+                                <option value='1'>Price Type</option>
+                                <option value='2'>Stock Class</option>
+                            </select>
+                        </div>
+
+                        <label for="print_selection" class="control-label col-md-12">Print Selection</label>
+                        <div class="col-md-10">
+                            <select id='print_selection' name='print_selection' class="form-control">
+                                <option value='0' selected>Cost Price</option>
+                                <option value='1'>Stockist Price</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="divST4" class="form-group filter divST4">
+
+                        <label class="control-label col-md-12">Period</label>
+                        <div class="col-md-10">
+                            <div id="sandbox-container">
+                                <input type="text" class="form-control" value="{{company.current_period_month_ic}}-{{company.current_period_year_ic}}">
+                                <label class="control-label col-md-12">Transaction Code</label>
+                                <label id="msg_error" style="color: red" class="control-label col-md-12">Please Select Code</label>
+                                <select class="form-control" name="trx_code" id="trx_code">
+                                    <option value="0">--select code--</option>
+                                    {% for trx in trn_code %}
+                                    <option value="{{ trx.id }}">{{ trx.code }}</option>
+
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="divST5" class="form-group filter divST5">
+
+                        <label class="control-label col-md-12">Period</label>
+                        <div class="col-md-10">
+                            <div id="sandbox-container">
+                                <input type="text" class="form-control" value="{{company.current_period_month_ic}}-{{company.current_period_year_ic}}">
+                            </div>
+                        </div>
+                    </div>
+                    <div id="divST6" class="form-group filter divST6">
+
+                        <label class="control-label col-md-12">Period</label>
+                        <div class="col-md-10">
+                            <div id="sandbox-container">
+                                <input type="text" class="form-control" value="{{company.current_period_month_ic}}-{{company.current_period_year_ic}}">
+                            </div>
+                        </div>
+                    </div>
+                    <div id="divST7" class="form-group filter divST7">
+
+                        <label class="control-label col-md-12">Period</label>
+                        <div class="col-md-10">
+                            <div id="sandbox-container">
+                                <input type="text" class="form-control" value="{{company.current_period_month_ic}}-{{company.current_period_year_ic}}">
+                            </div>
+                        </div>
+                    </div>
+                    <div id="divButton" class="form-group bottom-group text-center">
+                        <div class="col-md-12" style="border-top: 1px solid #eee; ">
+                            <a id="btnReview" tabindex="1" class="btn btn-success" style="margin-top: 10px;">Review</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <div class="col-md-9">
+            <section class="panel">
+                <div class="panel-body" style="height: 100%; min-height: 500px;">
+                    <div id="divViewPDF" class="adv-table">
+                        <iframe id="frViewPDF" width="100%" height="100%" style="height: 100%; min-height: 510px;"
+                                src=""></iframe>
+                    </div>
+                    <div id="loadpage"
+                         style="position:absolute; left:0px; top:0px; background-color:white; layer-background-color:white; width: 100%; height: 100%;">
+                        <p align="center" style="font-size: large;">
+                            <img src="/static/img/loading1.gif">
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+        var current_month = "{{company.current_period_month_ic}}";
+        var fiscal_period_number = "{{company.fiscal_period_number}}";
+        var current_year = "{{company.current_period_year_ic}}";
+        $('#sandbox-container input').datepicker({
+            format: "mm-yyyy",
+            startView: 1,
+            minViewMode: 1,
+            autoclose: true
+        });
+        $(document).on('keyup', '.select2-selection.select2-selection--single', function (e) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if(keycode == '9'){
+                $(this).closest(".select2-container").siblings('select:enabled').select2('open');
+            }
+        });
+        $(document).ready(function () {
+            $('.id_period').focus();
+            $("#loadpage").hide();
+            $("#msg_error").hide();
+            $("#report_list").trigger('change');
+            //Set height of report view
+            var header = $('.header');
+            var divViewPDF = $('#divViewPDF');
+            var height = $(this).height() - header.height() * 2;
+            divViewPDF.height(height);
+            var window = $(window).on('resize', function () {
+                divViewPDF.height(height);
+            }).trigger('resize'); //on page load
+
+            $('#trx_code').select2({
+                allowClear: true,
+                placeholder: "Select Code",
+            });
+
+            $("#selectLocation").select2({
+                allowClear: true,
+                placeholder: "Select Location",
+            });
+
+            $('#selectLocation').on('select2:close', function (e)
+            {
+                $('#btnReview').focus();
+            });
+
+            $('#btnReview').keyup(function (event) {
+                if (event.keyCode == 13) {
+                    $(this).click();
+                }
+            });
+
+            get_inv_location();
+
+
+            if (current_month.length == 1) {
+                current_month = '0' + current_month;
+            }
+
+            //$('#sandbox-container input').val(current_month + '-' + current_year);
+
+            var ord_code = $('#hdReportId').val();
+            $('.filter').css("display", "none");
+            $('.divST' + ord_code).removeAttr("style");
+            frViewPDF.setAttribute("src", "");
+            divViewPDF.innerHTML = frViewPDF.outerHTML;
+
+            if (ord_code == '2') {
+                $('.divButton').css("display", "none");
+            }
+            else {
+                $('#divButton').removeAttr("style")
+            }
+        });
+
+        var year_period_day = moment().format("DD-MM-YYYY");
+        $('.default-date-picker').bind('keyup', function (event) {
+            if (event.which != 13) {
+                temp_date = $(this).val();
+                valid_date = moment(temp_date, "DD-MM-YYYY", true).isValid();
+                if (valid_date) {
+                    year_period_day = temp_date;
+                }
+                return true;
+            }
+        });
+        $('.default-date-picker').bind('keydown', function (event) {
+            if (event.which == 13) {
+                setTimeout(() => {
+                    $(this).datepicker('setDate', year_period_day);
+                    move_next_elem(this, 1);
+                }, 100);
+                return false;
+            } else {
+                adjust_input_date(this);
+            }
+        });
+
+        var year_period = moment().format("MM-YYYY");
+        {#$('#sandbox-container input').bind('keyup', function (event) {#}
+        {#    if (event.which != 13) {#}
+        {#        temp_date = $(this).val();#}
+        {#        valid_date = moment(temp_date, "MM-YYYY", true).isValid();#}
+        {#        if (valid_date) {#}
+        {#            year_period = temp_date;#}
+        {#        }#}
+        {#        return true;#}
+        {#    }#}
+        {#});#}
+        $('#sandbox-container input').bind('keydown', function (event) {
+            if (event.which == 13) {
+                $(this).val(moment(year_period, "MM-YYYY").format("MM-YYYY"));
+                move_next_elem(this, 1);
+                return false;
+            } else {
+                adjust_input_month_year(this);
+            }
+        });
+        
+        $('#sandbox-month input').bind('keydown', function (event) {
+            if (event.which == 13) {
+                $(this).val(moment(year_period, "MM-YYYY").format("MM-YYYY"));
+                move_next_elem(this, 1);
+                return false;
+            } else {
+                adjust_input_month_year(this);
+            }
+        });
+
+        $('.id_period').off('change').on('change', function (event) {
+            var this_date = $(this).val();
+            var this_date = moment(this_date, "MM-YYYY");
+            var check_date = moment( fiscal_period_number + '-' + current_year , "MM-YYYY");
+            if (this_date > check_date) {
+                pop_ok_dialog("Invalid Date",
+                    "This value can not be greater than " + fiscal_period_number + '-' + current_year,
+                    function () {
+                        $('.id_period').datepicker('setDate', moment(current_month + '-' + current_year, 'MM-YYYY').format('MM-YYYY'));
+                        $(this).focus();
+                    });
+            }
+        });
+
+        function get_inv_location() {
+            $.ajax({
+                method: "POST",
+                url: '/reports/get_inv_location/',
+                dataType: 'JSON',
+                data: {
+                    'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val()
+                },
+                responseTime: 200,
+                success: function (json) {
+                    let location_data = json;
+                    if (location_data.length > 0) {
+                        for (j = 0; j < location_data.length; j++) {
+                            $("#selectLocation").append('<option value="' + location_data[j].id + '">' + location_data[j].code + '</option>')
+                        }
+                    }
+
+                }
+            });
+        }
+
+        {% comment %} $("#report_list").change(function () {
+            var ord_code = "";
+            var frViewPDF = $('#frViewPDF')[0];
+            var divViewPDF = $('#divViewPDF')[0];
+
+            $("#report_list option:selected").each(function () {
+                ord_code = $(this).val();
+                $('#hdReportId').val(ord_code);
+            });
+
+            $('.filter').css("display", "none");
+            $('.divST' + ord_code).removeAttr("style");
+            frViewPDF.setAttribute("src", "");
+            divViewPDF.innerHTML = frViewPDF.outerHTML;
+
+            if (ord_code == '2') {
+                $('.divButton').css("display", "none");
+            }
+            else {
+                $('#divButton').removeAttr("style")
+            }
+        }); {% endcomment %}
+        $('#btnReview').on('click', function () {
+            var frViewPDF = $('#frViewPDF')[0];
+            var divViewPDF = $('#divViewPDF')[0];
+            var hdReportId = $('#hdReportId').val();
+            var divFilter = $('.divST' + hdReportId)[0];
+            var url = "";
+
+            $("#loadpage").show();
+            //Print SR.... reports
+            switch (hdReportId) {
+                case '1':
+                    inputData = divFilter.getElementsByTagName("input");
+                    if (inputData.length > 0) {
+                        data0 = inputData[0].value.split("-").reverse().join("-")
+
+                        if (data0.length == 0) {
+                            pop_ok_dialog("Invalid Wanted Date",
+                                'Please select a valid date!',
+                                function () {
+                                    $("#loadpage").hide();
+                                }
+                            );
+                        } else {
+                            selectData = divFilter.getElementsByTagName("select");
+                            let data1 = '0';
+                            if (selectData.length > 0) {
+                                data1 = selectData[0].value ? selectData[0].value : '0';
+                            }
+
+                            url = '/reports/print_ST' + hdReportId + '/' + data0 + '/' + data1 + '/';
+                            frViewPDF.setAttribute("src", url);
+                            divViewPDF.innerHTML = frViewPDF.outerHTML;
+                        }
+                    }
+                    break;
+                case '2':
+                    inputData = divFilter.getElementsByTagName("input");
+                    if (inputData.length > 0) {
+                        data0 = inputData[0].value.split("-").reverse().join("-")
+                        data1 = inputData[1].value.split("-").reverse().join("-")
+
+                        if (data0.length == 0)
+                            data0 = '0'
+                        if (data1.length == 0)
+                            data1 = '0'
+
+                        url = '/reports/print_ST' + hdReportId + '/' + data0 + '/' + data1 + '/';
+                        frViewPDF.setAttribute("src", url);
+                        divViewPDF.innerHTML = frViewPDF.outerHTML;
+                    }
+                    break;
+                case '3':
+                    inputData = divFilter.getElementsByTagName("select");
+                    if (inputData.length > 0) {
+                        data0 = inputData[0].value;
+                        data1 = inputData[1].value;
+                        url = '/reports/print_ST' + hdReportId + '/' + data0 + '/' + data1 + '/';
+                        frViewPDF.setAttribute("src", url);
+                        divViewPDF.innerHTML = frViewPDF.outerHTML;
+                    }
+                    break;
+                case '4':
+                    inputData = divFilter.getElementsByTagName("input");
+                    if (inputData.length > 0) {
+                        data0 = inputData[0].value.split("-").reverse().join("-");
+                        if (data0.length == 0) {
+                            pop_ok_dialog("Invalid Wanted Date",
+                                'Please select a valid date!',
+                                function () {
+                                    $("#loadpage").hide();
+                                }
+                            );
+                        } else {
+                            data1 = $('#trx_code').val();
+                            if (data1 > 0){
+
+                                url = '/reports/print_ST' + hdReportId + '/' + data0 + '/'+data1 + '/';
+                                $("#msg_error").hide();
+                                frViewPDF.setAttribute("src", url);
+                                divViewPDF.innerHTML = frViewPDF.outerHTML;
+                            }else{
+                                $("#msg_error").show();
+                                $("#loadpage").hide();
+                            }
+                        }
+                    }
+                    break;
+
+                case '5':
+                    inputData = divFilter.getElementsByTagName("input");
+                    if (inputData.length > 0) {
+                        data0 = inputData[0].value.split("-").reverse().join("-");
+                        if (data0.length == 0) {
+                            pop_ok_dialog("Invalid Wanted Date",
+                                'Please select a valid date!',
+                                function () {
+                                    $("#loadpage").hide();
+                                }
+                            );
+                        } else {
+                            url = '/reports/print_ST' + hdReportId + '/' + data0 + '/';
+                            frViewPDF.setAttribute("src", url);
+                            divViewPDF.innerHTML = frViewPDF.outerHTML;
+                        }
+                    }
+                    break;
+                case '6':
+                    inputData = divFilter.getElementsByTagName("input");
+                    if (inputData.length > 0) {
+                        data0 = inputData[0].value.split("-").reverse().join("-");
+                        if (data0.length == 0) {
+                            pop_ok_dialog("Invalid Wanted Date",
+                                'Please select a valid date!',
+                                function () {
+                                    $("#loadpage").hide();
+                                }
+                            );
+                        } else {
+                            url = '/reports/print_ST' + hdReportId + '/' + data0 + '/';
+                            frViewPDF.setAttribute("src", url);
+                            divViewPDF.innerHTML = frViewPDF.outerHTML;
+                        }
+                    }
+                    break;
+                case '7':
+                    inputData = divFilter.getElementsByTagName("input");
+                    if (inputData.length > 0) {
+                        data0 = inputData[0].value.split("-").reverse().join("-");
+                        if (data0.length == 0) {
+                            pop_ok_dialog("Invalid Wanted Date",
+                                'Please select a valid date!',
+                                function () {
+                                    $("#loadpage").hide();
+                                }
+                            );
+                        } else {
+                            url = '/reports/print_ST' + hdReportId + '/' + data0 + '/';
+                            frViewPDF.setAttribute("src", url);
+                            divViewPDF.innerHTML = frViewPDF.outerHTML;
+                        }
+                    }
+                    break;
+                default:
+                    frViewPDF.setAttribute("src", "");
+                    divViewPDF.innerHTML = frViewPDF.outerHTML;
+                    break;
+            }
+
+            document.getElementById("frViewPDF").onload = function () {
+                $("#loadpage").hide();
+            }
+
+        });
+
+    </script>
+{% endblock %}

@@ -1,0 +1,406 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <!-- <link href="{% static "css/checkbox.css" %}" rel="stylesheet"> -->
+    <style>
+        .hide_column {
+            display: none;
+        }
+
+        .delete {
+            background-color: #b0b5b9 !important;
+        }
+
+        select::-ms-expand {
+            display: none;
+        }
+
+        .no-select {
+            /*for firefox*/
+            -moz-appearance: none;
+            /*for chrome*/
+            -webkit-appearance: none;
+        }
+
+        .disabled {
+            pointer-events: none;
+            cursor: not-allowed;
+            background-color: #eee;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}
+{% if module_type == '1' %} {# PAGE_TYPE['S&P'] #}
+    S/P Fiscal Calendars
+{% elif module_type == '2' %} {# PAGE_TYPE['Accounting'] #}
+    Accounting Fiscal Calendars
+{% endif %}
+{% endblock %}
+
+{% block inv_setting_a_active %}
+{% if module_type == '0' %} {# PAGE_TYPE['Inventory'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block ics_r_a_active %}
+{% if module_type == '0' %} {# PAGE_TYPE['Inventory'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block inv_fiscal_active %}
+{% if module_type == '0' %} {# PAGE_TYPE['Inventory'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_order_a_active %}
+{% if module_type == '1' %} {# PAGE_TYPE['S&P'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block sp_fiscal_active %}
+{% if module_type == '1' %} {# PAGE_TYPE['S&P'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block processing_a_active %}
+{% if module_type == '1' %} {# PAGE_TYPE['S&P'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block processing_i_active %}
+{% if module_type == '1' %} {# PAGE_TYPE['S&P'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_accounting_a_active %}
+{% if module_type == '2' %} {# PAGE_TYPE['Accounting'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_accounting_i_active %}
+{% if module_type == '2' %} {# PAGE_TYPE['Accounting'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_com_a_active %}
+{% if module_type == '2' %} {# PAGE_TYPE['Accounting'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_com_i_active %}
+{% if module_type == '2' %} {# PAGE_TYPE['Accounting'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block com_fiscal_active %}
+{% if module_type == '2' %} {# PAGE_TYPE['Accounting'] #}
+    active
+{% endif %}
+{% endblock %}
+
+
+{% block content %}
+    <section class="panel">
+        <header class="panel-heading">
+            <strong>
+                {% if module_type == '1' %} {# PAGE_TYPE['S&P'] #}
+                    S/P
+                {% elif module_type == '2' %} {# PAGE_TYPE['Accounting'] #}
+                    Accounting
+                {% endif %}
+                Fiscal Calendars</strong>
+        </header>
+        <div class="panel-body">
+            <form class="form-horizontal" id="fiscal_form"
+                  action="" role="form" method="post"  onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.errors }}
+                <div class="form-group">
+                    <div id="fiscal_error" class="messages" text="adasd"
+                         style="font-size: 12.5px !important;  padding-left: 20px"></div>
+                </div>
+                <div class="form-group">
+                    <label for="code" class="col-lg-1 col-sm-1 control-label">Year</label>
+                    <div class="col-lg-2 col-md-2 col-sm-2">
+                        <select class="form-control" id="fiscal_year" name="fiscal_year" onchange="location=this.value;">
+                            {% for year in year_list %}
+                                <option value="/accounting/fiscal-calendars/{{ year }}/{{ module_type }}/"
+                                        {% if choosen_year == year %} selected
+                                        {% endif %}>
+                                    <a href="/accounting/fiscal-calendars/{{ year }}/{{ module_type }}/">{{year}}</a>
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% if module_type == '2' %} {# PAGE_TYPE['Accounting'] #}
+                    <div class="col-lg-2 col-md-2 col-sm-2">
+                    </div>
+                    <div class="col-lg-3 col-md-3 col-sm-3">
+                        <div class="checkbox checkbox-primary pull-right">
+                            <input name="adj-checkbox" id="checkbox-01" class="styled" type="checkbox"
+                                   {% comment %} {% if account.is_multicurrency %}checked{% endif %}/> {% endcomment %}
+                                   {% if is_adj_lock %}checked{% endif %}/>
+                            <label for="checkbox-01">
+                                Lock Adjustment Period
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-3 col-sm-3">
+                        <div class="checkbox checkbox-primary pull-right">
+                            <input name="cls-checkbox" id="checkbox-02" class="styled" type="checkbox"
+                                   {% comment %} {% if account.is_multicurrency %}checked{% endif %}/> {% endcomment %}
+                                   {% if is_cls_lock %}checked{% endif %}/>
+                            <label for="checkbox-02">
+                                Lock Closing Period
+                            </label>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <hr>
+                <div class="form-group">
+                    <div class="col-lg-5 col-sm-4">
+                        <label style="text-align:center" class="col-lg-4 col-md-4 control-label"><b>Start Date</b></label>
+                        <label style="text-align:center" class="col-lg-4 col-md-4 control-label"><b>End Date</b></label>
+                        <!-- <label class="col-lg-4 col-md-4 control-label"></label> -->
+                    </div>
+                    <div class="col-lg-7 col-sm-8">
+                        {% if module_type == '0' %} {# PAGE_TYPE['Inventory'] #}
+                        <label style="text-align:center" class="col-lg-4 col-md-4 control-label"><b>Inventory<br />Control</b></label>
+                        {% elif module_type == '1' %} {# PAGE_TYPE['S&P'] #}
+                        <label style="text-align:center" class="col-lg-4 col-md-4 control-label"><b>Sales<br />&<br />Purchase</b></label>
+                        {% elif module_type == '2' %} {# PAGE_TYPE['Accounting'] #}
+                        <label style="text-align:center" class="col-lg-3 col-md-3 control-label"><b>Account <p>Payable</p></b></label>
+                        <label style="text-align:center" class="col-lg-3 col-md-3 control-label"><b>Account <p>Receivable</p></b></label>
+                        <label style="text-align:center" class="col-lg-3 col-md-3 control-label"><b>General <p>Ledger</p></b></label>
+                        <label style="text-align:center" class="col-lg-3 col-md-3 control-label"><b>Bank <p>Services</p></b></label>
+                        {% endif %}
+                    </div>
+                </div>
+                <div style="height:34px" class="form-group">
+                    <div class="col-lg-5 col-sm-4">
+                        <label class="col-lg-4 col-md-4 control-label"></label>
+                        <label class="col-lg-4 col-md-4 control-label"></label>
+                        
+                        <!-- <div style="text-align:center" class="col-lg-4 col-sm-4 button-checkbox">
+                            <button type="button" class="btn btn-default" data-color="danger"></button>
+                            <input type="checkbox" id="all-checkbox" class="col-lg-2 col-md-2 hidden"></input>
+                        </div> -->
+                    </div>
+                    <div class="col-lg-7 col-sm-8">
+                        {% if module_type == '0' %} {# PAGE_TYPE['Inventory'] #}
+                        <div style="text-align:center" class="col-lg-4 col-sm-4 button-checkbox">
+                            <button type="button" class="btn btn-default" data-color="danger"></button>
+                            <input type="checkbox" id="all-ic-checkbox" class="col-lg-4 col-md-4 hidden"></input>
+                        </div>
+                        {% elif module_type == '1' %} {# PAGE_TYPE['S&P'] #}
+                        <div style="text-align:center" class="col-lg-4 col-sm-4 button-checkbox">
+                            <button type="button" class="btn btn-default" data-color="danger"></button>
+                            <input type="checkbox" id="all-sp-checkbox" class="col-lg-4 col-md-4 hidden"></input>
+                        </div>
+                        {% elif module_type == '2' %} {# PAGE_TYPE['Accounting'] #}
+                        <div style="text-align:center" class="col-lg-3 col-sm-3 button-checkbox">
+                            <button type="button" class="btn btn-default" data-color="danger"></button>
+                            <input type="checkbox" id="all-ap-checkbox" class="col-lg-3 col-md-3 hidden"></input>
+                        </div>
+                        <div style="text-align:center" class="col-lg-3 col-sm-3 button-checkbox">
+                            <button type="button" class="btn btn-default" data-color="danger"></button>
+                            <input type="checkbox" id="all-ar-checkbox" class="col-lg-3 col-md-3 hidden"></input>
+                        </div>
+                        <div style="text-align:center" class="col-lg-3 col-sm-3 button-checkbox">
+                            <button type="button" class="btn btn-default" data-color="danger"></button>
+                            <input type="checkbox" id="all-gl-checkbox" class="col-lg-3 col-md-3 hidden"></input>
+                        </div>
+                        <div style="text-align:center" class="col-lg-3 col-sm-3 button-checkbox">
+                            <button type="button" class="btn btn-default" data-color="danger"></button>
+                            <input type="checkbox" id="all-bank-checkbox" class="col-lg-3 col-md-3 hidden"></input>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {{fiscal_formset.management_form}}
+                {% for form in fiscal_formset %}
+                <div class="form-group">
+                    <div class="col-lg-5 col-sm-4">
+                        {{form.period}}
+
+                        <div class="col-lg-4 col-sm-2">
+                            {{ form.start_date }}
+                        </div>
+                        <div class="col-lg-4 col-sm-2">
+                            {{ form.end_date }}
+                        </div>
+                        <!-- <div style="text-align:center" class="col-lg-4 col-sm-4 button-checkbox">
+                            <button type="button" class="btn btn-default" data-color="danger"></button>
+                            <input type="checkbox" id="{{form.prefix}}" class="col-lg-4 col-md-4 hidden"></input>
+                        </div> -->
+                    </div>
+                    <div class="col-lg-7 col-sm-8">
+                        {% if module_type == '0' %} {# PAGE_TYPE['Inventory'] #}
+                        <div style="text-align:center" class="col-lg-4 col-sm-4 button-checkbox">
+                            <button type="button" name="btn-check-ic" class="btn btn-default" data-color="danger"></button>
+                            {{ form.is_ic_locked }}
+                        </div>
+                        {{ form.is_sp_locked }}
+                        {{ form.is_ap_locked }}
+                        {{ form.is_ar_locked }}
+                        {{ form.is_gl_locked }}
+                        {{ form.is_bank_locked }}
+                        {% elif module_type == '1' %} {# PAGE_TYPE['S&P'] #}
+                        <div style="text-align:center" class="col-lg-4 col-sm-4 button-checkbox">
+                            <button type="button" name="btn-check-sp" class="btn btn-default" data-color="danger"></button>
+                            {{ form.is_sp_locked }}
+                        </div>
+                        {{ form.is_ic_locked }}
+                        {{ form.is_ap_locked }}
+                        {{ form.is_ar_locked }}
+                        {{ form.is_gl_locked }}
+                        {{ form.is_bank_locked }}
+                        {% elif module_type == '2' %} {# PAGE_TYPE['Accounting'] #}
+                        <div style="text-align:center" class="col-lg-3 col-sm-3 button-checkbox">
+                            <button type="button" name="btn-check-ap" class="btn btn-default" data-color="danger"></button>
+                            {{ form.is_ap_locked }}
+                        </div>
+                        <div style="text-align:center" class="col-lg-3 col-sm-3 button-checkbox">
+                            <button type="button" name="btn-check-ar" class="btn btn-default" data-color="danger"></button>
+                            {{ form.is_ar_locked }}
+                        </div>
+                        <div style="text-align:center" class="col-lg-3 col-sm-3 button-checkbox">
+                            <button type="button" name="btn-check-gl" class="btn btn-default" data-color="danger"></button>
+                            {{ form.is_gl_locked }}
+                        </div>
+                        <div style="text-align:center" class="col-lg-3 col-sm-3 button-checkbox">
+                            <button type="button" name="btn-check-bank" class="btn btn-default" data-color="danger"></button>
+                            {{ form.is_bank_locked }}
+                        </div>
+                        {{ form.is_ic_locked }}
+                        {{ form.is_sp_locked }}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+                <hr>
+                <div class="form-group">
+                    <div class=" col-lg-8">
+                        <label for="" class="col-lg-8 col-sm-2 control-label"></label>
+                        <button type="submit" class="btn btn-success sended" name="btnSave">
+                            Save
+                        </button>
+                        <a class="btn btn-default" href="{% url 'home_load' %}">Cancel</a>
+                    </div>
+                </div>
+            </form>
+    </section>
+
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script>
+        var start_date = '';
+        var end_date = '';
+    </script>
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script src="{% static "js/common/checkbox.js" %}"></script>
+    <script>
+        $(document).on('keyup', '.select2-selection.select2-selection--single', function (e) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if(keycode == '9'){
+                $(this).closest(".select2-container").siblings('select:enabled').select2('open');
+            }
+        });
+        $(document).ready(function () {
+            $('#fiscal_year').select2({});
+            
+            {% comment %} $("#all-checkbox").click(function(){
+                $('input:checkbox').not(this).prop('checked', this.checked);
+            });
+
+            if( $('.hidden:input:checkbox:checked').length == $('.hidden:input:checkbox').length) {
+                $('#all-checkbox').prop('checked', true).trigger('change');
+            } {% endcomment %}
+
+            if( $("input[name*='is_ap']:checked").length == $("input[name*='is_ap']").length) {
+                $('#all-ap-checkbox').prop('checked', true).trigger('change');
+            }
+            if( $("input[name*='is_ar']:checked").length == $("input[name*='is_ar']").length) {
+                $('#all-ar-checkbox').prop('checked', true).trigger('change');
+            }
+            if( $("input[name*='is_gl']:checked").length == $("input[name*='is_gl']").length) {
+                $('#all-gl-checkbox').prop('checked', true).trigger('change');
+            }
+            if( $("input[name*='is_bank']:checked").length == $("input[name*='is_bank']").length) {
+                $('#all-bank-checkbox').prop('checked', true).trigger('change');
+            }
+            
+            for(i=0; i<12; i++) {
+                $('#id_form-' + i + '-start_date').bind('keyup', function (event) {
+                    start_date = '';
+                    if (event.which != 13) {
+                        adjust_input_date(this);
+                        var temp_date = $(this).val();
+                        var valid_date = moment(temp_date, "DD-MM-YYYY", true).isValid();
+                        if (valid_date) {
+                            start_date = temp_date;
+                        }
+                    }
+                });
+                $('#id_form-' + i + '-end_date').bind('keyup', function (event) {
+                    end_date = '';
+                    if (event.which != 13) {
+                        adjust_input_date(this);
+                        var temp_date = $(this).val();
+                        var valid_date = moment(temp_date, "DD-MM-YYYY", true).isValid();
+                        if (valid_date) {
+                            end_date = temp_date;
+                        }
+                    }
+                });
+
+                $('#id_form-'+i+'-end_date').attr('onchange', 'checkEndDate('+i+')');
+                $('#id_form-'+i+'-start_date').attr('onchange', 'checkStartDate('+i+')');
+                
+                $('#id_form-' + i + '-start_date').on('focus', function(e){
+                    start_date = $(this).val();
+                });
+                $('#id_form-' + i + '-end_date').on('focus', function(e){
+                    end_date = $(this).val();
+                });
+            };
+        });
+
+        $('#fiscal_form').submit(function(e){
+            var result = getFiscalPeriod();
+            if(result){
+                for (i = 0; i < 12; i++) {
+                    var s_date = $('#id_form-' + i + '-start_date').val();
+                    s_date = s_date.split('-').reverse().join('-');
+                    $('#id_form-' + i + '-start_date').val(s_date);
+                    var e_date = $('#id_form-' + i + '-end_date').val();
+                    e_date = e_date.split('-').reverse().join('-');
+                    $('#id_form-' + i + '-end_date').val(e_date);
+                }
+            } else {
+                e.preventDefault();
+            }
+        });
+    </script>
+{% endblock %}

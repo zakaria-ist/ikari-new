@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+{% endblock %}
+
+{% block title %}General Ledger Entry{% endblock %}
+{% block gl_transaction_active %}active{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block parent_GL_a_active %}active{% endblock %}
+{% block parent_GL_i_active %}active{% endblock %}
+
+{% block content %}
+    <br/>
+    <input id="hdJournalType" type="hidden" value="{{ journal_type }}">
+    <div class="row">
+        <div class="col-sm-12">
+            {% if messages %}
+                <div id="message" class="col-lg-12 alert alert-info">
+                    {% for message in messages %}
+                        <strong id="me2">+ {{ message }}</strong><br>
+                    {% endfor %}
+                    <strong name="nomessage" id="nomessage" value=""></strong>
+                </div>
+            {% endif %}
+
+            <section class="panel">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="panel-body">
+                            <header class="panel-heading" style="font-size: 20px">
+                                General Ledger Entry
+                                <span class="tools pull-right">
+                                      {% if 'accounting.add_journal' in user.get_all_permissions %}
+                                          <a class="btn btn-success start" href="{% url 'journal_GL_add' batch_id %}">
+                                              <i class="glyphicon glyphicon-plus"></i>
+                                              <span>Add new</span>
+                                          </a>
+                                      {% endif %}
+                                </span>
+                            </header>
+                            <div class="adv-table table-responsive">
+                                <table class="display table table-bordered table-striped table-condensed"
+                                       id="dynamic-table" style="width:100%" >
+                                    <thead>
+                                    <tr>
+                                        <th>Batch Number</th>
+                                        <th>ID</th>
+                                        <th>Description</th>
+                                        <th>Source Ledger</th>
+                                        <th>Edited</th>
+                                        <th>Ready To Post</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Printed</th>
+                                        <th>Batch Total</th>
+                                        <th>Created</th>
+                                        <th class="text-center" style="min-width:90px!important;">Options</th>
+                                    </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#dynamic-table').dataTable({
+                "order": [[0, "desc"]],
+                "serverSide": true,
+                "scrollX": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'GLList__asJson' journal_type %}"
+                },
+                "columns": [
+                    {"data": "code"},
+                    {
+                        "data": "id",
+                        "visible": false,
+                    },
+                    {"data": "name"},
+                    {
+                        "data": null,
+                        "render": function (data, type, row, meta) {
+                            if (row.journal_type == '1' || /* TRANSACTION_TYPES)['AR Invoice'] */
+                                row.journal_type == '3') {
+                                return 'AR'
+                            } else if (row.journal_type == '2' || /* TRANSACTION_TYPES)['AP Invoice'] */
+                                row.journal_type == '4') {
+                                return 'AP'
+                            } else if (row.journal_type == '5') { /* TRANSACTION_TYPES)['GL'] */
+                                return 'GL'
+                            } else {
+                                //unknown journal type
+                                return 'N/A'
+                            }
+                        }
+                    },
+                    {"data": "update_date", "defaultContent": ""},
+                    {"data": "ready_to_post", "defaultContent": ""},
+                    {"data": "type", "defaultContent": ""},
+                    {
+                        "data": null,
+                        "render": function (data, type, row, meta) {
+                            if (row.status == '1') { /* STATUS_TYPE_DICT['Open'] */
+                                return '<span class="badge badge-sm label-inverse">Open</span>'
+                            }
+                            if (row.status == '2') { /* STATUS_TYPE_DICT['Posted'] */
+                                return '<span class="badge badge-sm label-success">Posted</span>'
+                            }
+                        }
+                    },
+                    {"data": "print_date", "defaultContent": ""},
+                    {"data": "amount", "defaultContent": 0},
+                    {"data": "create_date", "defaultContent": ""},
+                    {
+                        "sClass": "text-center",
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, row, meta) {
+                            var btn =
+                                    '<div class="btn-group dropdown">' +
+                                    '<button type="button"' +
+                                    'class="btn btn-primary btn-sm dropdown-toggle"' +
+                                    'data-toggle="dropdown" aria-haspopup="true"' +
+                                    'aria-expanded="false"' +
+                                    'style="min-width: 40px!important;">Action' +
+                                    '<span class="caret" style="margin-left:15px;"></span>' +
+                                    '<span class="sr-only">Toggle Dropdown</span>' +
+                                    '</button>' +
+                                    '<ul class="dropdown-menu dropdown-menu-right">' +
+                                    '<li>';
+                            if (row.journal_type == 3) { /*  TRANSACTION_TYPES['AR Receipt'] */
+                                btn = btn + '<li><a href="/accounting/edit/AR/' + row.id + '/">Edit</a>';
+                            } else if (row.journal_type == 4) { /* TRANSACTION_TYPES)['AP Payment'] */
+                                btn = btn + '<li><a href="/accounting/edit/AP/' + row.id + '/">Edit</a>';
+                            } else if (row.journal_type == 5) { /* TRANSACTION_TYPES)['GL'] */
+                                btn = btn + '<li><a href="/accounting/edit/GL/' + row.id + '/">Edit</a>';
+                            }
+
+                            if (row.status == '1') { /* STATUS_TYPE_DICT['Open'] */
+                                btn = btn + '<li><a href="/accounting/edit/GL/' + row.id + '/">Post</a>';
+                            }
+                            btn = btn + '</ul/div>';
+                            return btn;
+
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+{% endblock %}
+
+

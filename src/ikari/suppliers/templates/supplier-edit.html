@@ -1,0 +1,512 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+{% endblock %}
+
+{% block title %}Edit Supplier{% endblock %}
+{% block supplier_active %}active{% endblock %}
+{% block sp_setting_a_active %}active{% endblock %}
+{% block sp_setting_i_active %}active{% endblock %}
+{% block parent_order_a_active %}active{% endblock %}
+{% block parent_order_i_active %}active{% endblock %}
+
+{% block content %}
+    <form action="{% url 'supplier_edit' supplier.id %}" class="form-horizontal" role="form"
+          method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div id="content">
+            <ul id="tabs" class="nav nav-tabs" data-tabs="tabs"
+                style="padding-left: 20px; margin-left: 18px; margin-right: 24px;">
+                <li {% if active_tab_index == '0' %}
+                    class="active"
+                {% else %}
+                    class=""
+                {% endif %}>
+                    <a href="#supplier_tab" data-toggle="tab">Supplier</a>
+                </li>
+                <li {% if active_tab_index == '1' %}
+                    class="active"
+                {% else %}
+                    class=""
+                {% endif %}><a href="#item_tab" data-toggle="tab">Items</a></li>
+                <li {% if active_tab_index == '2' %}
+                    class="active"
+                {% else %}
+                    class=""
+                {% endif %}><a href="#contact_tab" data-toggle="tab">Contacts</a></li>
+            </ul>
+            <div id="my-tab-content" class="tab-content">
+                <div {% if active_tab_index == '0' %}
+                    class="tab-pane active"
+                {% else %}
+                    class="tab-pane"
+                {% endif %} id="supplier_tab">
+                    <div class="col-lg-12">
+                        <section class="panel">
+                            <div class="panel-body">
+                                <div class="form-group">
+                                    <label for="code" class="col-lg-2 col-sm-2 control-label">Supplier Code<span
+                                            class="span-required">(*)</span></label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" id="code" name="code"
+                                               value="{{ supplier.code|default_if_none:"" }}" required>
+                                    </div>
+                                    <label for="country"
+                                           class="col-lg-2 col-sm-2 control-label">Country</label>
+                                    <div class="col-lg-4">
+                                        <select class="form-control" id="country" name="country">
+                                            <option value="0">---Select---</option>
+                                            {% for country in country_list %}
+                                                <option value="{{ country.id }}"
+                                                        {% if country.id == supplier.country_id %}selected{% endif %}>
+                                                    {{ country.name|default_if_none:"" }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                </div>
+                                <div class="form-group">
+                                    <label for="name" class="col-lg-2 col-sm-2 control-label">Supplier Name<span
+                                            class="span-required">(*)</span></label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" id="name" name="name"
+                                               value="{{ supplier.name|default_if_none:"" }}"
+                                               required>
+                                    </div>
+                                    <label for="currency" class="col-lg-2 col-sm-2 control-label">Currency</label>
+                                    <div class="col-sm-4">
+                                        <select class="form-control" id="currency" name="currency">
+                                            <option value="0">---Select---</option>
+                                            {% for currency in currency_list %}
+                                                <option value="{{ currency.id }}"
+                                                        {% if currency.id == supplier.currency_id %}selected{% endif %}>
+                                                    {{ currency.name|default_if_none:"" }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                </div>
+                                <div class="form-group">
+                                    <label for="address" class="col-lg-2 col-sm-2 control-label">Address</label>
+                                    <div class="col-lg-4">
+                                        <textarea class="form-control" id="address" rows="3"
+                                                  name="address">{{ supplier.address|default_if_none:"" }}</textarea>
+                                    </div>
+                                    <div>
+                                        <label for="payment_mode" class="col-lg-2 col-sm-2 control-label">Payment
+                                            Mode</label>
+                                        <div style="margin-bottom: 15px" class="col-sm-4">
+                                            <select class="form-control" id="payment_mode" name="payment_mode">
+                                                <option value="0">---Select---</option>
+                                                {% for pay in payment_mode_list %}
+                                                    <option value="{{ pay.id }}"
+                                                            {% if pay.id == supplier.payment_mode_id %}selected{% endif %}>
+                                                        {{ pay.name|default_if_none:"" }}</option>
+
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <label for="term"
+                                               class="col-lg-2 col-sm-2 control-label">Payment Term</label>
+                                        <div class="col-lg-4">
+                                            <select class="form-control" id="term" name="term">
+                                                <option value="-1">---Select---</option>
+                                                {% for term in term_list %}
+                                                    <option value="{{ term.id }}"
+                                                            {% if term.id == supplier.term_days %}selected{% endif %}>
+                                                        {{ term.name|default_if_none:"" }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group ">
+                                    <label for="ship_info_1" class="control-label col-lg-2">Remark</label>
+                                    <div class="col-lg-4">
+                                        <textarea rows="3" class="form-control " id="ship_info_1"
+                                                  name="ship_info_1">{{ supplier.ship_info_1|default_if_none:"" }}</textarea>
+                                    </div>
+                                    <div>
+                                     <label for="credit_limit"
+                                               class="col-lg-2 col-sm-2 control-label">Credit Limit</label>
+                                        <div style="margin-bottom: 15px" class="col-lg-4">
+                                            <input type="number" step="0.0001" class="form-control" id="credit_limit"
+                                                   name="credit_limit"
+                                                   value="{{ supplier.credit_limit|default_if_none:"" }}">
+                                        </div>
+
+                                        <label for="tax"
+                                               class="col-lg-2 col-sm-2 control-label">Tax Code</label>
+                                        <div class="col-lg-4">
+                                            <select class="form-control" id="tax" name="tax">
+                                                <option value="0">---Select---</option>
+                                                {% for tax in tax_list %}
+                                                    <option value="{{ tax.id }}"
+                                                            {% if tax.id == supplier.tax_id %}selected{% endif %}>
+                                                        {{ tax.name|default_if_none:"" }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group ">
+                                    <div class="col-lg-6"></div>
+                                        <label for="ship_via" class="col-lg-offset-6 col-lg-2 col-sm-2 control-label">Ship Via</label>
+                                        <div class="col-lg-4">
+                                            <input type="text" class="form-control" id="ship_via" name="ship_via"
+                                                   value="{{ supplier.ship_via|default_if_none:"" }}">
+                                        </div>
+                                 </div>
+                                <div class="form-group ">
+                                    <label for="account_set" class="col-lg-offset-6 col-lg-2 col-sm-2 control-label">Account
+                                        Set</label>
+                                    <div class="col-lg-4">
+                                        <select class="form-control" id="account_set" name="account_set">
+                                            <option value="0">---Select---</option>
+                                            {% for account in account_set %}
+                                                <option value="{{ account.id }}"
+                                                        {% if account.id == supplier.account_set_id %}selected{% endif %}>
+                                                    {{ account.name|default_if_none:"" }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- <div class="form-group">
+                                    <label for="chkActive" class="col-lg-2 col-sm-2 control-label"></label>
+                                    <div class="col-lg-10">
+                                        <div class="checkbox checkbox-primary">
+                                            <input name="chkActive" id="chkActive" class="styled" type="checkbox"
+                                                   {% if supplier.is_active %}checked{% endif %}/>
+                                            <label for="chkActive">
+                                                Active
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div> -->
+                                <div class="form-group">
+                                    <div class="col-lg-offset-2 col-lg-10">
+                                        <button type="submit" class="btn btn-success">Save</button>
+                                        {% if 'suppliers.delete_supplier' in user.get_all_permissions %}
+                                            <a href="#delete-dialog" data-toggle="modal"
+                                               class="btn btn-danger">Delete</a>
+                                        {% endif %}
+                                        <a class="btn btn-default" href="{% url 'supplier_list' %}">Cancel</a>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </section>
+                    </div>
+                </div>
+                <div {% if active_tab_index == '2' %}
+                    class="tab-pane active"
+                {% else %}
+                    class="tab-pane"
+                {% endif %} id="contact_tab">
+                    <div class="col-sm-12">
+                        <section class="panel">
+                            <div class="panel-body">
+                                <div class="adv-table">
+                                    <table class="display table table-bordered table-striped"
+                                           id="contacts-table">
+                                        <thead>
+                                        <tr>
+                                            <th style="display: none">Code</th>
+                                            <th style="display: none">Name</th>
+                                            <th>Attention</th>
+                                            <th>Supplier</th>
+                                            <th>Phone</th>
+                                            <th class="text-center">Active</th>
+                                            {% if 'contacts.change_contact' in user.get_all_permissions %}
+                                                <th class="text-center">Edit</th>
+                                            {% endif %}
+                                        </tr>
+                                        </thead>
+                                        {% if contact_list %}
+                                            <tbody>
+                                            {% for c in contact_list %}
+                                                <tr class="gradeX">
+                                                    <td style="display: none">{{ c.code|default_if_none:"" }}</td>
+                                                    <td style="display: none">{{ c.name|default_if_none:"" }}</td>
+                                                    <td>{{ c.attention|default_if_none:"" }}</td>
+                                                    <td>
+                                                        ({{ c.supplier.code|default_if_none:"" }})-{{ c.supplier.name|default_if_none:"" }}</td>
+                                                    <td>{{ c.phone|default_if_none:"" }}</td>
+                                                    <td class="center"> {% if c.is_active %}
+                                                        <span class="label label-success label-mini">{{ c.is_active }}</span>
+                                                    {% else %}
+                                                        <span class="label label-danger label-mini">{{ c.is_active }}</span>
+                                                    {% endif %}
+                                                    </td>
+                                                    {% if 'contacts.change_contact' in user.get_all_permissions %}
+                                                        <td class="center"><a href="{% url 'contact_refer_edit' c.id %}"
+                                                                              class="fa fa-pencil btn btn-primary btn-xs"></a>
+                                                        </td>
+                                                    {% endif %}
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        {% endif %}
+                                        <tfoot>
+                                        <tr>
+                                            <td colspan="12" style="text-align: left;">
+                                                <a data-toggle="modal" href="{% url 'contact_refer_add' 2 supplier.id %}" class="btn btn-white fa fa-plus"></a> {# CONTACT_TYPES_DICT['Supplier'] #}
+                                            </td>
+                                        </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+                <div class="tab-pane" id="consignee_tab">
+                    <div class="col-sm-12">
+                        <section class="panel">
+                            <div class="panel-body">
+                                <div class="adv-table">
+                                    <table class="display table table-bordered table-striped"
+                                           id="consignees-table">
+                                        <thead>
+                                        <tr>
+                                            <th style="display: none">Code</th>
+                                            <th>Name</th>
+                                            <th>Attention</th>
+                                            <th>Supplier</th>
+                                            <th>Phone</th>
+                                            <th class="text-center">Active</th>
+                                            {% if 'contacts.change_contact' in user.get_all_permissions %}
+                                                <th class="text-center">Edit</th>
+                                            {% endif %}
+                                        </tr>
+                                        </thead>
+                                        {% if consignee_list %}
+                                            <tbody>
+                                            {% for c in consignee_list %}
+                                                <tr class="gradeX">
+                                                    <td style="display: none">{{ c.code|default_if_none:"" }}</td>
+                                                    <td>{{ c.name|default_if_none:"" }}</td>
+                                                    <td>{{ c.attention|default_if_none:"" }}</td>
+                                                    <td>
+                                                        ({{ c.supplier.code|default_if_none:"" }})-{{ c.supplier.name|default_if_none:"" }}</td>
+                                                    <td>{{ c.phone|default_if_none:"" }}</td>
+                                                    <td class="center"> {% if c.is_active %}
+                                                        <span class="label label-success label-mini">{{ c.is_active }}</span>
+                                                    {% else %}
+                                                        <span class="label label-danger label-mini">{{ c.is_active }}</span>
+                                                    {% endif %}
+                                                    </td>
+                                                    {% if 'contacts.change_contact' in user.get_all_permissions %}
+                                                        <td class="center"><a href="{% url 'contact_refer_edit' c.id %}"
+                                                                              class="fa fa-pencil btn btn-primary btn-xs"></a>
+                                                        </td>
+                                                    {% endif %}
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        {% endif %}
+                                        <tfoot>
+                                        <tr>
+                                            <td colspan="12" style="text-align: left;">
+                                                <a data-toggle="modal" href="{% url 'contact_refer_add' 5 supplier.id %}" class="btn btn-white fa fa-plus"></a> {# CONTACT_TYPES_DICT['Consignee'] #}
+                                            </td>
+                                        </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+                <div class="tab-pane" id="bank_tab">
+                    <div class="col-sm-12">
+                        <section class="panel">
+                            <div class="panel-body">
+                                <div class="adv-table">
+                                    <table class="display table table-bordered table-striped"
+                                           id="banks-table">
+                                        <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Account Owner</th>
+                                            <th>Account Number</th>
+                                            <th>Supplier</th>
+                                            <th class="text-center">Active</th>
+                                            {% if 'banks.change_bank' in user.get_all_permissions %}
+                                                <th class="text-center">Edit</th>
+                                            {% endif %}
+                                        </tr>
+                                        </thead>
+                                        {% if bank_list %}
+                                            <tbody>
+                                            {% for c in bank_list %}
+                                                <tr class="gradeX">
+                                                    <td>{{ c.name|default_if_none:"" }}</td>
+                                                    <td>{{ c.account_owner|default_if_none:"" }}</td>
+                                                    <td>{{ c.account_number|default_if_none:"" }}</td>
+                                                    <td>
+                                                        ({{ c.supplier.code|default_if_none:"" }})-{{ c.supplier.name|default_if_none:"" }}</td>
+                                                    <td class="center"> {% if c.is_active %}
+                                                        <span class="label label-success label-mini">{{ c.is_active }}</span>
+                                                    {% else %}
+                                                        <span class="label label-danger label-mini">{{ c.is_active }}</span>
+                                                    {% endif %}
+                                                    </td>
+                                                    {% if 'banks.change_bank' in user.get_all_permissions %}
+                                                        <td class="center"><a href="{% url 'bank_edit' c.id %}"
+                                                                              class="fa fa-pencil btn btn-primary btn-xs"></a>
+                                                        </td>
+                                                    {% endif %}
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        {% endif %}
+                                        <tfoot>
+                                        <tr>
+                                            <td colspan="12" style="text-align: left;">
+                                                <a data-toggle="modal"
+                                                   href="{% url 'bank_add' %}"
+                                                   class="btn btn-white fa fa-plus"></a>
+                                            </td>
+                                        </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+                <div {% if active_tab_index == '1' %}
+                    class="tab-pane active"
+                {% else %}
+                    class="tab-pane"
+                {% endif %} id="item_tab">
+                    {#                    <div class="col-sm-12">#}
+                    <section class="panel">
+                        <input type="hidden" name="hdIdJson" id="hdIdJson" value={{ supplier.id }}>
+                        <div class="panel-body">
+                            <div class="adv-table">
+                                <table class="display table table-bordered table-striped table-condensed"
+                                       id="item-table" style="width: 100%">
+                                    <thead>
+                                    <tr>
+                                        <th>Update Date</th>
+                                        <th>Part Number</th>
+                                        <th>Part Name</th>
+                                        <th>Part Group</th>
+                                        <th>Purchase Price</th>
+                                        <th class="text-center">Active</th>
+                                        {% if 'items.change_item' in user.get_all_permissions %}
+                                            <th class="text-center">Edit</th>
+                                        {% endif %}
+                                    </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+                    {#                    </div>#}
+                </div>
+            </div>
+        </div>
+    </form>
+    <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1"
+         id="delete-dialog"
+         class="modal fade">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×
+                    </button>
+                    <h4 class="modal-title">Delete Confirm Dialog</h4>
+                </div>
+                <div class="modal-body">
+                    <form role="form" action="{% url 'supplier_delete' supplier.id %}"
+                          method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                        </div>
+                        <button type="submit" class="btn btn-success">OK</button>
+                        <a class="btn btn-default" href="{% url 'supplier_edit' supplier.id %}">Cancel</a>
+                    </form>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <!--dynamic table initialization -->
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            var hdIdJson = $('#hdIdJson').val();
+            $('#item-table').dataTable({
+                "order": [[0, "desc"]],
+                "serverSide": true,
+                "ajax": {
+                    url: '/suppliers/item_edit/' + hdIdJson + '/pagination',
+                },
+                "columns": [
+                    {"data": "update_date"},
+                    {"data": "item_code"},
+                    {"data": "item_name"},
+                    {"data": "category_name"},
+                    {"data": "purchase_price"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            if (full.is_active == 'True') {
+                                var mSpan = '<span class="label label-success label-mini">True</span>'
+                                return mSpan
+                            }
+                            else {
+                                var mSpan = '<span class="label label-danger label-mini">False</span>'
+                                return mSpan
+                            }
+                        }
+                    },
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            var button_edit = '<a href="/suppliers/item_edit/' + full.id + '/" class="fa fa-pencil btn btn-primary btn-xs"></a> ';
+                            return button_edit;
+                        }
+                    }
+                ]
+            });
+
+            $('#item-table').append("<tfoot>" +
+                    '<tr>' + "<td colspan='12' style='text-align: left;'>" +
+                    "<a data-toggle='modal' href='{% url 'supplier_add_item' supplier.id %}' class='btn btn-white fa fa-plus'></a>" +
+                    "</td>" + "</tr>" + "</tfoot>");
+
+        });
+        jQuery(document).ready(function ($) {
+            $('#tabs').tab();
+            $('#banks-table').dataTable({
+                "aaSorting": [[0, "desc"]]
+            });
+            $('#contacts-table').dataTable({
+                "aaSorting": [[0, "desc"]]
+            });
+
+            $('#consignees-table').dataTable({
+                "aaSorting": [[0, "desc"]]
+            });
+        });
+
+    </script>
+{% endblock %}

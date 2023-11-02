@@ -1,0 +1,613 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <!-- Datatables -->
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Edit Customer{% endblock %}
+{% block customer_active %}active{% endblock %}
+{% block sp_setting_a_active %}active{% endblock %}
+{% block sp_setting_i_active %}active{% endblock %}
+{% block parent_order_a_active %}active{% endblock %}
+{% block parent_order_i_active %}active{% endblock %}
+
+{% block content %}
+    {#    <h1>{{ active_tab_index }}</h1>#}
+    <form action="{% url 'customer_edit' customer.id %}" class="form-horizontal" role="form"
+          method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div id="content">
+            <ul id="tabs" class="nav nav-tabs" data-tabs="tabs"
+                style="padding-left: 20px; margin-left: 18px; margin-right: 24px;">
+                <li {% if active_tab_index == '0' %}
+                    class="active"
+                {% else %}
+                    class=""
+                {% endif %}>
+                    <a href="#customer_tab" data-toggle="tab">Customer</a>
+                </li>
+                <li {% if active_tab_index == '1' %}
+                    class="active"
+                {% else %}
+                    class=""
+                {% endif %}><a href="#item_tab" data-toggle="tab">Items</a></li>
+                <li {% if active_tab_index == '2' %}
+                    class="active"
+                {% else %}
+                    class=""
+                {% endif %}><a href="#contact_tab" data-toggle="tab">Contacts</a></li>
+                <li {% if active_tab_index == '3' %}
+                    class="active"
+                {% else %}
+                    class=""
+                {% endif %}><a href="#consignee_tab" data-toggle="tab">Consignees</a></li>
+            </ul>
+            <div id="my-tab-content" class="tab-content">
+                <div {% if active_tab_index == '0' %}
+                    class="tab-pane active"
+                {% else %}
+                    class="tab-pane"
+                {% endif %} id="customer_tab">
+                    <div class="col-lg-12">
+                        <section class="panel">
+                            <div class="panel-body">
+                                <div class="form-group">
+                                    <label for="code" class="col-lg-2 col-sm-2 control-label">Customer Code<span
+                                            class="span-required">(*)</span></label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" id="code" name="code"
+                                               value="{{ customer.code|default_if_none:"" }}" required>
+                                    </div>
+                                    <label for="country" class="col-lg-2 col-sm-2 control-label">Country</label>
+                                    <div class="col-sm-4">
+                                        <select class="form-control" id="country" name="country">
+                                            <option value="0">---Select---</option>
+                                            {% for country in country_list %}
+                                                <option value="{{ country.id }}"
+                                                        {% if country.id == customer.country_id %}selected{% endif %}>
+                                                    {{ country.name|default_if_none:"" }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="name" class="col-lg-2 col-sm-2 control-label">Customer Name<span
+                                            class="span-required">(*)</span></label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" id="name" name="name"
+                                               value="{{ customer.name|default_if_none:"" }}"
+                                               required>
+                                    </div>
+                                    <label for="currency" class="col-lg-2 col-sm-2 control-label">Currency</label>
+                                    <div class="col-lg-4">
+                                        <select class="form-control" id="currency" name="currency">
+                                            <option value="0">---Select---</option>
+                                            {% for currency in currency_list %}
+                                                <option value="{{ currency.id }}"
+                                                        {% if currency.id == customer.currency_id %}selected{% endif %}>
+                                                    {{ currency.name|default_if_none:"" }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="address" class="col-lg-2 col-sm-2 control-label">Address</label>
+                                    <div class="col-lg-4">
+                                        <textarea rows="3" class="form-control" name="address"
+                                                  id="address">{{ customer.address|default_if_none:"" }}</textarea>
+                                    </div>
+                                    <div>
+                                        <label style="margin-bottom: 15px;" for="payment_mode"
+                                               class="col-lg-2 col-sm-2 control-label">Payment Mode</label>
+                                        <div style="margin-bottom: 15px;" class="col-lg-4">
+                                            <select class="form-control" id="payment_mode" name="payment_mode">
+                                                <option value="0">---Select---</option>
+                                                {% for pay in payment_mode_list %}
+                                                    <option value="{{ pay.id }}"
+                                                            {% if pay.id == customer.payment_mode_id %}selected{% endif %}>{{ pay.name|default_if_none:"" }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <label for="term" class="col-lg-2 col-sm-2 control-label">Payment Term</label>
+                                        <div class="col-lg-4">
+                                            <select class="form-control" id="term" name="term">
+                                                <option value="0">---Select---</option>
+                                                {% for term in term_list %}
+                                                    <option value="{{ term.id }}"
+                                                            {% if term.id == customer.payment_term %}selected{% endif %}>{{ term.name|default_if_none:"" }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="note1" class="col-lg-2 col-sm-2 control-label">Remark</label>
+                                    <div class="col-lg-4">
+                                    <textarea rows="3" class="form-control" name="note1"
+                                              id="note1">{{ customer.note1|default_if_none:"" }}</textarea>
+                                    </div>
+                                    <div>
+                                        <label for="credit_limit" class="col-lg-2 col-sm-2 control-label">Credit
+                                            Limit</label>
+                                        <div style="margin-bottom: 15px" class="col-lg-4">
+                                            <input type="number" step="0.0001" class="form-control" id="credit_limit"
+                                                   name="credit_limit"
+                                                   value="{{ customer.credit_limit|default_if_none:"" }}">
+                                        </div>
+                                        <label for="tax" class="col-lg-2 col-sm-2 control-label">Tax
+                                            Code</label>
+                                        <div class="col-lg-4">
+                                            <select class="form-control" id="tax" name="tax">
+                                                <option value="0">---Select---</option>
+                                                {% for tax in tax_list %}
+                                                    <option value="{{ tax.id }}"
+                                                            {% if tax.id == customer.tax_id %}selected{% endif %}>{{ tax.name|default_if_none:"" }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% if request.session.use_inventory %}
+                                    <div class="form-group">
+                                        <label for="location"
+                                               class="col-lg-offset-6  col-lg-2 col-sm-2 control-label">Location Stock</label>
+                                        <div class="col-lg-4">
+                                            <select class="form-control" id="location" name="location">
+                                                <option value="0">---Select---</option>
+                                                {% for location in location_list %}
+                                                    <option value="{{ location.id }}"
+                                                            {% if location.id == customer.location_id %}selected{% endif %}>{{ location.name|default_if_none:"" }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                <div class="form-group">
+                                    <label for="account_set" class="col-lg-offset-6 col-lg-2 col-sm-2 control-label">Account
+                                        Set</label>
+                                    <div class="col-lg-4">
+                                        <select class="form-control" id="account_set" name="account_set">
+                                            <option value="0">---Select---</option>
+                                            {% for account_set in account_set %}
+                                                <option value="{{ account_set.id }}"
+                                                        {% if account_set.id == customer.account_set_id %}selected{% endif %}>
+                                                    {{ account_set.name|default_if_none:"" }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <!-- <div class="form-group">
+                                    <label for="inputPassword1" class="col-lg-2 col-sm-2 control-label"></label>
+                                    <div class="col-lg-10">
+                                        <div class="checkbox checkbox-primary">
+                                            <input name="sample-checkbox" id="checkbox-03" class="styled"
+                                                   type="checkbox"
+                                                   {% if customer.is_active %}checked{% endif %}/>
+                                            <label for="checkbox-03">
+                                                Active
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div> -->
+                                <div class="form-group">
+                                    <div class="col-lg-offset-2 col-lg-10">
+                                        <button type="submit" class="btn btn-success">Save</button>
+                                        {% if 'customers.delete_customer' in user.get_all_permissions %}
+                                            <a href="#delete-dialog" data-toggle="modal"
+                                               class="btn btn-danger">Delete</a>
+                                        {% endif %}
+                                        <a type="submit" class="btn btn-default"
+                                           href="{% url 'customer_list' %}">Cancel</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+                <div class="tab-pane" id="bank_tab">
+                    <div class="col-sm-12">
+                        <section class="panel">
+                            <div class="panel-body">
+                                <div class="adv-table">
+                                    <table class="display table table-bordered table-striped"
+                                           id="banks-table">
+                                        <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Account Owner</th>
+                                            <th>Account Number</th>
+                                            <th>Customer</th>
+                                            <th class="text-center">Active</th>
+                                            {% if 'banks.change_bank' in user.get_all_permissions %}
+                                                <th class="text-center">Edit</th>
+                                            {% endif %}
+                                        </tr>
+                                        </thead>
+                                        {% if bank_list %}
+                                            <tbody>
+                                            {% for c in bank_list %}
+                                                <tr class="gradeX">
+                                                    <td>{{ c.name|default_if_none:"" }}</td>
+                                                    <td>{{ c.account_owner|default_if_none:"" }}</td>
+                                                    <td>{{ c.account_number|default_if_none:"" }}</td>
+                                                    <td>
+                                                        ({{ c.customer.name|default_if_none:"" }})-{{ c.customer.name|default_if_none:"" }}</td>
+                                                    <td class="center"> {% if c.is_active %}
+                                                        <span class="label label-success label-mini">{{ c.is_active }}</span>
+                                                    {% else %}
+                                                        <span class="label label-danger label-mini">{{ c.is_active }}</span>
+                                                    {% endif %}
+                                                    </td>
+                                                    {% if 'banks.change_bank' in user.get_all_permissions %}
+                                                        <td class="center"><a href="{% url 'bank_edit' c.id %}"
+                                                                              class="fa fa-pencil btn btn-primary btn-xs"></a>
+                                                        </td>
+                                                    {% endif %}
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        {% endif %}
+                                        <tfoot>
+                                        <tr>
+                                            <td colspan="12" style="text-align: left;">
+                                                <a data-toggle="modal"
+                                                   href="{% url 'bank_add' %}"
+                                                   class="btn btn-white fa fa-plus"></a>
+                                            </td>
+                                        </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+                <div class="tab-pane" id="delivery_tab">
+                    <div class="col-sm-12">
+                        <section class="panel">
+                            <div class="panel-body">
+                                <div class="adv-table">
+                                    <table class="display table table-bordered table-striped" id="delivery-table">
+                                        <thead>
+                                        <tr>
+                                            <th>Code</th>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Phone</th>
+                                            <th>City</th>
+                                            <th>Country</th>
+                                            <th class="text-center">Active</th>
+                                            {% if 'customers.change_customeraddress' in user.get_all_permissions %}
+                                                <th class="text-center">Edit</th>
+                                            {% endif %}
+                                        </tr>
+                                        </thead>
+                                        {% if customer_address_list %}
+                                            <tbody>
+                                            {% for c in customer_address_list %}
+                                                <tr class="gradeX">
+                                                    <td>{{ c.code|default_if_none:"" }}</td>
+                                                    <td>{{ c.name|default_if_none:"" }}</td>
+                                                    <td>{{ c.email|default_if_none:"" }}</td>
+                                                    <td>{{ c.phone|default_if_none:"" }}</td>
+                                                    <td>{{ c.city|default_if_none:"" }}</td>
+                                                    <td>{{ c.country.name }}</td>
+                                                    <td class="center"> {% if c.is_active %}
+                                                        <span class="label label-success label-mini">{{ c.is_active }}</span>
+                                                    {% else %}
+                                                        <span class="label label-danger label-mini">{{ c.is_active }}</span>
+                                                    {% endif %}
+                                                    </td>
+                                                    {% if 'customers.change_customeraddress' in user.get_all_permissions %}
+                                                        <td class="center"><a
+                                                                href="{% url 'customer_address_edit' c.customer.id c.id %}"
+                                                                class="fa fa-pencil btn btn-primary btn-xs"></a>
+                                                        </td>
+                                                    {% endif %}
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        {% endif %}
+                                        <tfoot>
+                                        <tr>
+                                            <td colspan="12" style="text-align: left;">
+                                                <a data-toggle="modal"
+                                                   href="{% url 'customer_address_add' customer.id %}"
+                                                   class="btn btn-white fa fa-plus"></a>
+                                            </td>
+                                        </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+                <div {% if active_tab_index == '1' %}
+                    class="tab-pane active"
+                {% else %}
+                    class="tab-pane"
+                {% endif %} id="item_tab">
+                    {#                    <div class="col-sm-12">#}
+                    <input type="hidden" name="hdIdJson" id="hdIdJson" value={{ customer.id }}>
+                    <section class="panel">
+                        <div class="panel-body">
+                            <div class="adv-table">
+                                <table class="display table table-bordered table-striped table-condensed"
+                                       id="item-table" style="width: 100%">
+                                    <thead>
+                                    <tr>
+                                        <th>Update Date</th>
+                                        <th>Part Number</th>
+                                        <th>Part Name</th>
+                                        <th>Part Group</th>
+                                        <th>Sales Price</th>
+                                        <th class="text-center">Active</th>
+                                        {% if 'items.change_item' in user.get_all_permissions %}
+                                            <th class="text-center">Edit</th>
+                                        {% endif %}
+                                    </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+                    {#                    </div>#}
+                </div>
+                <div {% if active_tab_index == '2' %}
+                    class="tab-pane active"
+                {% else %}
+                    class="tab-pane"
+                {% endif %} id="contact_tab">
+                    <div class="col-sm-12">
+                        <section class="panel">
+                            <div class="panel-body">
+                                <div class="adv-table">
+                                    <table class="display table table-bordered table-striped"
+                                           id="contact-table">
+                                        <thead>
+                                        <tr>
+                                            <th style="display: none;">Code</th>
+                                            <th style="display: none;">Name</th>
+                                            <th>Attention</th>
+                                            <th style="display: none;">Customer</th>
+                                            <th>Phone</th>
+                                            <th class="text-center">Active</th>
+                                            {% if 'contacts.change_contact' in user.get_all_permissions %}
+                                                <th class="text-center">Edit</th>
+                                            {% endif %}
+                                        </tr>
+                                        </thead>
+                                        {% if contact_list %}
+                                            <tbody>
+                                            {% for c in contact_list %}
+                                                <tr class="gradeX">
+                                                    <td style="display:none;">{{ c.code|default_if_none:"" }}</td>
+                                                    <td style="display: none;">{{ c.name|default_if_none:"" }}</td>
+                                                    <td>{{ c.attention|default_if_none:"" }}</td>
+                                                    <td style="display: none;">
+                                                        ({{ c.customer.code|default_if_none:"" }})-{{ c.customer.name|default_if_none:"" }}</td>
+                                                    <td>{{ c.phone|default_if_none:"" }}</td>
+                                                    <td class="center"> {% if c.is_active %}
+                                                        <span class="label label-success label-mini">{{ c.is_active }}</span>
+                                                    {% else %}
+                                                        <span class="label label-danger label-mini">{{ c.is_active }}</span>
+                                                    {% endif %}
+                                                    </td>
+                                                    {% if 'contacts.change_contact' in user.get_all_permissions %}
+                                                        <td class="center"><a href="{% url 'contact_refer_edit' c.id %}"
+                                                                              class="fa fa-pencil btn btn-primary btn-xs"></a>
+                                                        </td>
+                                                    {% endif %}
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        {% endif %}
+                                        <tfoot>
+                                        <tr>
+                                            <td colspan="12" style="text-align: left;">
+                                                <a data-toggle="modal"
+                                                   href="{% url 'contact_refer_add' 1 customer.id %}" class="btn btn-white fa fa-plus"></a> {# CONTACT_TYPES_DICT['Customer'] #}
+                                            </td>
+                                        </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+                <div {% if active_tab_index == '3' %}
+                    class="tab-pane active"
+                {% else %}
+                    class="tab-pane"
+                {% endif %} id="consignee_tab">
+                    <div class="col-sm-12">
+                        <section class="panel">
+                            <div class="panel-body">
+                                <div class="adv-table">
+                                    <table class="display table table-bordered table-striped"
+                                           id="consignee-table">
+                                        <thead>
+                                        <tr>
+                                            <th style="display:none;">Code</th>
+                                            <th>Contact Person</th>
+                                            <th style="display: none;">Attention</th>
+                                            <th style="display: none;">Customer</th>
+                                            <th>Consignee Tel</th>
+                                            <th class="text-center">Active</th>
+                                            {% if 'contacts.change_contact' in user.get_all_permissions %}
+                                                <th class="text-center">Edit</th>
+                                            {% endif %}
+                                        </tr>
+                                        </thead>
+                                        {% if consignee_list %}
+                                            <tbody>
+                                            {% for c in consignee_list %}
+                                                <tr class="gradeX">
+                                                    <td style="display:none;">{{ c.code|default_if_none:"" }}</td>
+                                                    <td>{{ c.name|default_if_none:"" }}</td>
+                                                    <td style="display: none;">{{ c.attention|default_if_none:"" }}</td>
+                                                    <td style="display: none;">
+                                                        ({{ c.customer.code|default_if_none:"" }})-{{ c.customer.name|default_if_none:"" }}</td>
+                                                    <td>{{ c.phone|default_if_none:"" }}</td>
+                                                    <td class="center"> {% if c.is_active %}
+                                                        <span class="label label-success label-mini">{{ c.is_active }}</span>
+                                                    {% else %}
+                                                        <span class="label label-danger label-mini">{{ c.is_active }}</span>
+                                                    {% endif %}
+                                                    </td>
+                                                    {% if 'contacts.change_contact' in user.get_all_permissions %}
+                                                        <td class="center"><a href="{% url 'contact_refer_edit' c.id %}"
+                                                                              class="fa fa-pencil btn btn-primary btn-xs"></a>
+                                                        </td>
+                                                    {% endif %}
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        {% endif %}
+                                        <tfoot>
+                                        <tr>
+                                            <td colspan="12" style="text-align: left;">
+                                                <a data-toggle="modal"
+                                                   href="{% url 'contact_refer_add' 5 customer.id %}" class="btn btn-white fa fa-plus"></a> {# CONTACT_TYPES_DICT['Consignee'] #}
+                                            </td>
+                                        </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+         class="modal fade">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                    <h4 class="modal-title">Delete Confirm Dialog</h4>
+                </div>
+                <div class="modal-body">
+                    <form role="form" action="{% url 'customer_delete' customer.id %}" method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                        </div>
+                        <button type="submit" class="btn btn-success">OK</button>
+                        <a class="btn btn-default" href="{% url 'customer_edit' customer.id %}">Cancel</a>
+                    </form>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+            var hdIdJson = $('#hdIdJson').val();
+            $('#item-table').dataTable({
+                "order": [[0, "desc"]],
+                "serverSide": true,
+                "ajax": {
+                    url: '/customers/edit/' + hdIdJson + '/pagination',
+                },
+                "columns": [
+                    {"data": "update_date"},
+                    {"data": "item_code"},
+                    {"data": "item_name"},
+                    {"data": "category_name"},
+                    {"data": "sales_price"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            if (full.is_active == 'True') {
+                                var mSpan = '<span class="label label-success label-mini">True</span>'
+                                return mSpan
+                            }
+                            else {
+                                var mSpan = '<span class="label label-danger label-mini">False</span>'
+                                return mSpan
+                            }
+                        }
+                    },
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            var button_edit = '<a href="/customers/item_edit/' + full.id + '/" class="fa fa-pencil btn btn-primary btn-xs"></a> ';
+                            return button_edit;
+                        }
+                    }
+                ]
+            });
+
+            $('#item-table').append("<tfoot>" +
+                    '<tr>' + "<td  colspan='12' style='text-align: left;'>" +
+                    "<a data-toggle='modal' href='{% url 'customer_add_item' customer.id %}' class='btn btn-white fa fa-plus'></a>" +
+                    "</td>" + "</tr>" + "</tfoot>");
+
+        });
+
+        $(document).ready(function ($) {
+            $('#tabs').tab();
+            $('#banks-table').dataTable({
+                "aaSorting": [[0, "desc"]]
+            });
+            $('#contact-table').dataTable({
+                "aaSorting": [[0, "desc"]]
+            });
+            $('#delivery-table').dataTable({
+                "aaSorting": [[0, "desc"]]
+            });
+            $('#consignee-table').dataTable({
+                "aaSorting": [[0, "desc"]]
+            });
+            var arrAddress = $('.divAddress');
+            for (var i = 0; i < arrAddress.length; i++) {
+                var divAddress = arrAddress[i];
+                divAddress.childNodes[1].innerHTML = 'Address ' + (i + 1);
+            }
+        });
+        $('#add_more_address').click(function () {
+            var divAddress1 = $('.divAddress').last();
+            var divNewAddress = divAddress1.clone(true);
+            var indexAddress = $('.divAddress').length + 1;
+            divNewAddress.find('label')[0].innerHTML = 'Address ' + indexAddress;
+            var divMinusAddress = divNewAddress.find('#divMinusAddress');
+            var divAreaAddress = divNewAddress.find('#divAreaAddress');
+            divMinusAddress.css("display", "block");
+            divAreaAddress.removeClass("col-lg-12");
+            divAreaAddress.addClass("col-lg-11");
+            divAddress1.after(divNewAddress);
+        });
+        $('.removerow').click(function () {
+            var arrAddress = $('.divAddress');
+            if (arrAddress.length > 1) {
+                this.parentNode.parentNode.parentNode.parentNode.remove();
+                arrAddress = $('.divAddress');
+                for (var i = 0; i < arrAddress.length; i++) {
+                    var divAddress = arrAddress[i];
+                    divAddress.childNodes[1].innerHTML = 'Address ' + (i + 1);
+                }
+            }
+        });
+    </script>
+{% endblock %}

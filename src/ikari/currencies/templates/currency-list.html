@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" href="{% static "css/table.css" %}">
+{% endblock %}
+
+{% block title %}Exchange Rate List{% endblock %}
+
+{% block currency_active %}
+{% if menu_type == '0' %} {# TRN_CODE_TYPE_DICT['Global'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_system_setting_a_active %}
+{% if menu_type == '0' %} {# TRN_CODE_TYPE_DICT['Global'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_system_setting_i_active %}
+{% if menu_type == '0' %} {# TRN_CODE_TYPE_DICT['Global'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_order_a_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_order_i_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_a_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_i_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block currency_sp_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    Currency List
+                    <span class="tools pull-right">
+                        {% if request.session.staff_admin %}
+                            <a class="btn btn-success start" href="{% url 'currency_add' menu_type %}">
+                                <i class="glyphicon glyphicon-plus"></i>
+                                <span>Add new</span>
+                            </a>
+                        {% endif %}
+                    </span>
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table table-responsive">
+                        <table class="display table table-bordered table-striped table-hover"
+                               id="dynamic-table">
+                            <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Symbol</th>
+                                <th>Description</th>
+                                <!-- <th>Format</th>
+                                <th class="text-center">Decimal</th>-->
+                                <th>Last Update</th>
+                                {% if request.session.staff_admin %}
+                                    <th class="text-center">Edit</th>
+                                {% endif %}
+                            </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+
+    <script>
+        $(document).ready(function () {
+            var menu_type = "{{ menu_type }}";
+            $('#dynamic-table').dataTable({
+                "order": [[ 1, "asc" ]],
+                "serverSide": true,
+                "scrollX": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'Currencies__asJson' %}"
+                },
+                "columns": [
+                    {"data": "code"},
+                    {"data": "symbol"},
+                    {"data": "name", "width":"200px"},
+                    {"data": "update_date", "width":"55px"},
+                    {% if request.session.staff_admin %}
+                        {
+                            "className": 'text-center',
+                            "orderable": false,
+                            "data": null,
+                            "render": function (data, type, full, meta) {
+                                var button_edit = '<a href=../edit/' + full.id +'/'+menu_type +' class="fa fa-pencil fa-lg btn btn-primary btn-sm"></a>'
+                                return button_edit;
+                            }
+                        }
+                    {% endif %}
+                ]
+            });
+            $('.dataTables_scrollHeadInner').attr('style', 'margin-left: auto !important; margin-right: auto !important');
+        });
+    </script>
+{% endblock %}

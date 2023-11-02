@@ -1,0 +1,1021 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    {% load humanize %}
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <style>
+        .hide_column, .ui-helper-hidden-accessible {
+            display: none;
+        }
+
+        .hide_column {
+            display: none;
+        }
+
+    </style>
+{% endblock %}
+
+{% block title %}
+    {% if supplier.id %}
+        Edit Supplier Info
+    {% else %}
+        Add Supplier Info
+    {% endif %}
+{% endblock %}
+{% block ap_vendor_active %}active{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block parent_AP_a_active %}active{% endblock %}
+{% block parent_AP_i_active %}active{% endblock %}
+
+{% block content %}
+    <div id="content">
+        <div class="col-lg-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    {% if supplier.id %}
+                        Edit Vendor
+                    {% else %}
+                        Add Vendor
+                    {% endif %}
+                </header>
+                <div class="panel-body">
+                    <form class="form-horizontal"
+                          {% if supplier.id %}action="{% url 'acc_vendor_edit' supplier.id %}"
+                          {% else %}action="{% url 'acc_Vendor_add' %}"{% endif %}
+                          role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="form-group">
+                            <label for="customer_number" class="col-lg-2 col-sm-2 control-label">Vendor Number<span
+                                    class="span-required">(*)</span></label>
+                            <div class="col-md-2 col-sm-2">
+                                {{ form.code }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="customer_number" class="col-lg-2 col-sm-2 control-label">Vendor Name<span
+                                    class="span-required">(*)</span></label>
+                            <div class="col-md-6 col-sm-6">
+                                {{ form.name }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="email" class="col-lg-2 col-sm-2 control-label">Email</label>
+                            <div class="col-lg-4">
+                                {{ form.email }}
+                            </div>
+                            <label for="phone" class="col-lg-2 col-sm-2 control-label">Phone</label>
+                            <div class="col-lg-4">
+                                {{ form.phone }}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="account_set" class="col-lg-2 col-sm-2 control-label">Account Set<span
+                                    class="span-required">(*)</span></label>
+                            <div class="col-lg-2 col-sm-2">
+                                {{ form.account_set }}
+                            </div>
+                            <div class="col-lg-1 col-sm-2">
+                                <button id="btnSearchAccount" type="button" class="btn btn-info" data-toggle="modal"
+                                        href="#AccountListModal"><i class="fa fa-search"></i></button>
+                            </div>
+                            <div class="col-lg-7 col-sm-2">
+                                {{ form.account_name }}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="account_payable" class="col-lg-2 col-sm-2 control-label">Account Payable</label>
+                            <div class="col-lg-2 col-sm-2">
+                                {{ form.account_payable }}
+                            </div>
+                            <div class="col-lg-1 col-sm-2">
+                                <button id="btnSearchAccountPayable" type="button" class="btn btn-info" data-toggle="modal"
+                                        href="#AccountPayableListModal"><i class="fa fa-search"></i></button>
+                            </div>
+                            <div class="col-lg-7 col-sm-2">
+                                {{ form.account_payable_name }}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_terms_code" class="col-lg-2 col-sm-2 control-label">Terms Code</label>
+                            <div class="col-lg-2 col-sm-2">
+                                {{ form.term_days }}
+                            </div>
+                            <div class="col-lg-1 col-sm-1">
+                                <button id="btnSearchTermsCode" type="button" class="btn btn-info" data-toggle="modal"
+                                        href="#TermsCodeListModal"><i class="fa fa-search"></i></button>
+                            </div>
+                            <div class="col-lg-7 col-md-3">
+                                <input class="form-control" name="term_days_value" id="term_days_value"
+                                       readonly="true" type="text"
+                                       value="{{ form.term_days.value }} days">
+                            </div>
+                        </div>
+
+
+                        <div class="form-group">
+                            <label for="id_bank_code" class="col-lg-2 col-sm-2 control-label">Bank Code</label>
+                            <div class="col-lg-2 col-sm-2">
+                                {{ form.bank_code }}
+                            </div>
+                            <div class="col-lg-1 col-sm-1">
+                                <button id="btnSearchBank" type="button" class="btn btn-info" data-toggle="modal"
+                                            href="#BankListModal"><i class="fa fa-search"></i></button>
+                            </div>
+                            <div class="col-lg-7 col-md-3">
+                                {{ form.bank_name }}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_payment_code" class="col-lg-2 col-sm-2 control-label">Payment Code</label>
+                            <div class="col-lg-2 col-sm-2">
+                                {{ form.payment_code }}
+                            </div>
+                            <div class="col-lg-1 col-sm-1">
+                                <button id="btnSearchPaymentCode" type="button" class="btn btn-info" data-toggle="modal"
+                                        href="#PaymentCodeListModal"><i class="fa fa-search"></i></button>
+                            </div>
+                            <div class="col-lg-7 col-md-3">
+                                {{ form.payment_code_name }}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_distribution" class="col-lg-2 col-sm-2 control-label">Distribution Code</label>
+                            <div class="col-lg-2 col-sm-2">
+                                {{ form.distribution }}
+                            </div>
+                            <div class="col-lg-1 col-sm-1">
+                                <button id="btnSearchDisCode" type="button" class="btn btn-info" data-toggle="modal"
+                                        href="#DisCodeListModal"><i class="fa fa-search"></i></button>
+                            </div>
+                            <div class="col-lg-7 col-md-3">
+                                {{ form.dis_name }}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_tax" class="col-lg-2 col-sm-2 control-label">Tax Code</label>
+                            <div class="col-lg-2 col-sm-2">
+                                {{ form.tax }}
+                            </div>
+                            <div class="col-lg-1 col-sm-1">
+                                <button id="btnSearchTaxCode" type="button" class="btn btn-info" data-toggle="modal"
+                                        href="#TaxCodeListModal"><i class="fa fa-search"></i></button>
+                            </div>
+                            <div class="col-lg-7 col-md-3">
+                                {{ form.tax_name }}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_currency" class="col-lg-2 col-sm-2 control-label">Currency Code</label>
+                            <div class="col-lg-2 col-sm-2">
+                                {{ form.currency }}
+                            </div>
+                            <div class="col-lg-1 col-sm-1">
+                                <button id="btnSearchCurrencyCode" type="button" class="btn btn-info"
+                                        data-toggle="modal"
+                                        href="#CurrencyCodeListModal"><i class="fa fa-search"></i></button>
+                            </div>
+                            <div class="col-lg-7 col-md-3">
+                                {{ form.currency_name }}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="credit_limit" class="col-lg-2 col-sm-2 control-label">Credit Limit</label>
+                            <div class="col-lg-4">
+                                {{ form.credit_limit }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="address" class="col-lg-2 col-sm-2 control-label">Address</label>
+                            <div class="col-lg-10">
+                                {{ form.address }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="postal_code" class="col-lg-2 col-sm-2 control-label">Postal Code</label>
+                            <div class="col-lg-4">
+                                {{ form.postal_code }}
+                            </div>
+                            <label for="country" class="col-lg-2 col-sm-2 control-label">Country</label>
+                            <div class="col-lg-4">
+                                {{ form.country }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="email_msg" class="col-lg-2 col-sm-2 control-label">Email Msg</label>
+                            <div class="col-lg-10">
+                                {{ form.email_msg }}
+                            </div>
+                        </div>
+                        {% if supplier.id %}
+                            <div class="form-group">
+                                <label for="credit_limit" class="col-lg-2 col-sm-2 control-label">Last Update</label>
+                                <div style="margin-bottom: 15px" class="col-lg-4">
+                                    <input type="text" class="form-control" disabled="true"
+                                           value="{{ supplier.update_date }}">
+                                </div>
+                            </div>
+                        {% endif %}
+                        <div class="form-group">
+                            <div class="col-lg-offset-2 col-lg-10">
+                                <button type="submit" name="btnSave" class="btn btn-success">Save</button>
+                                {% if 'suppliers.delete_supplier' in user.get_all_permissions and supplier.id %}
+                                    <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger">Delete</a>
+                                {% endif %}
+                                <a class="btn btn-default" href="{% url 'acc_vendor_list' %}">Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+            </section>
+        </div>
+
+    <div class="modal fade" id="BankListModal" tabindex="-1" role="dialog"
+         aria-labelledby="BankListModal" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Bank</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section>
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="bank-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Bank Code</th>
+                                                    <th>Description</th>
+                                                    <th>Currency ID</th>
+                                                    <th id="curr">Currency</th>
+                                                    <th>Account</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button data-dismiss="modal" class="btn btn-success" type="button" id="btnSelectBank">Select
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+         class="modal fade">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                    <h4 class="modal-title">Delete Confirm Dialog</h4>
+                </div>
+                {% if supplier.id %}
+                    <div class="modal-body">
+                        <form role="form" action="{% url 'supplier_delete' supplier.id '2' %}" method="post"> {# PAGE_TYPE['Accounting'] #}
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                            </div>
+                            <button type="submit" class="btn btn-success">OK</button>
+                            <a data-dismiss="modal" class="btn btn-default" type="button">Cancel</a>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="TermsCodeListModal" tabindex="-1" role="dialog"
+         aria-labelledby="TermsCodeListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Terms Code</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="terms-code-div">
+                                            <table id="terms-code-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Term Code</th>
+                                                    <th>Description</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for term_code_item in terms_code_list %}
+                                                    <tr class="gradeX">
+                                                        <td class="text-left">{{ term_code_item.0 }}</td>
+                                                        <td class="text-left">{{ term_code_item.1 }}</td>
+                                                        <td>
+                                                            <input type="radio" name="term-code-choices"
+                                                                   id="{{ term_code_item.0 }}" class="call-checkbox"
+                                                                   value="{{ term_code_item.1 }}">
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" id="btnTermCodeSelect">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="PaymentCodeListModal" tabindex="-1" role="dialog"
+         aria-labelledby="PaymentCodeListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Payment Code</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="payment-code-div">
+                                            <table id="payment-code-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Payment Code</th>
+                                                    <th>Description</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for payment_code_item in payment_code_list %}
+                                                    <tr class="gradeX">
+                                                        <td class="text-left">{{ payment_code_item.code }}</td>
+                                                        <td class="text-left">{{ payment_code_item.name }}</td>
+                                                        <td>
+                                                            <input type="radio" name="payment-code-choices"
+                                                                   id="{{ payment_code_item.id }}" class="call-checkbox"
+                                                                   value="{{ payment_code_item }}">
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" id="btnPaymentCodeSelect">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="DisCodeListModal" tabindex="-1" role="dialog"
+         aria-labelledby="DisCodeListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Distribute Code</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="dis-code-div">
+                                            <table id="dis-code-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Distribute Code</th>
+                                                    <th>Description</th>
+                                                    <th>G/L Account</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for dis_code_item in dis_code_list %}
+                                                    <tr class="gradeX">
+                                                        <td class="text-left">{{ dis_code_item.code }}</td>
+                                                        <td class="text-left">{{ dis_code_item.name }}</td>
+                                                        <td class="text-left">{{ dis_code_item.gl_account.code }}</td>
+                                                        <td>
+                                                            <input type="radio" name="dis-code-choices"
+                                                                   id="{{ dis_code_item.id }}" class="call-checkbox"
+                                                                   value="{{ dis_code_item }}">
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" id="btnDisCodeSelect">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="TaxCodeListModal" tabindex="-1" role="dialog"
+         aria-labelledby="TaxCodeListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Tax Code</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="tax-code-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Tax Code</th>
+                                                    <th>Name</th>
+                                                    <th>Rate</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for tax_code_item in tax_code_list %}
+                                                    <tr class="gradeX">
+                                                        <td class="text-left">{{ tax_code_item.code }}</td>
+                                                        <td class="text-left">{{ tax_code_item.name }}</td>
+                                                        <td class="text-left">{{ tax_code_item.rate|stringformat:'1.1f' }}</td>
+                                                        <td>
+                                                            <input type="radio" name="tax-code-choices"
+                                                                   id="{{ tax_code_item.id }}" class="call-checkbox"
+                                                                   value="{{ tax_code_item }}">
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" id="btnTaxCodeSelect">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="AccountListModal" tabindex="-1" role="dialog"
+         aria-labelledby="AccountListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Account</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div id="account_error" class="messages"
+                             style="font-size: 12.5px !important;"></div>
+                    </div>
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="account-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Account Code</th>
+                                                    <th>Account Name</th>
+                                                    <th>Control Account</th>
+                                                    <th>Currency Code</th>
+                                                    <th>Revaluation Account</th>
+                                                    <th>Currency ID</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button id="btnAccountSelect" class="btn btn-success" type="button">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="AccountPayableListModal" tabindex="-1" role="dialog"
+         aria-labelledby="AccountPayableListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Account</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="account-payable-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Account Code</th>
+                                                    <th>Account Name</th>
+                                                    <th>Account Type</th>
+                                                    <th>Balance Type</th>
+                                                    <th>Account Group</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" id="btnAccountPayableSelect">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="CurrencyCodeListModal" tabindex="-1" role="dialog"
+         aria-labelledby="CurrencyCodeListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Currency Code</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="currency-code-div">
+                                            <table id="currency-code-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Code</th>
+                                                    <th>Name</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for currency_code_item in currency_code_list %}
+                                                    <tr class="gradeX">
+                                                        <td class="text-left">{{ currency_code_item.code }}</td>
+                                                        <td class="text-left">{{ currency_code_item.name }}</td>
+                                                        <td>
+                                                            <input type="radio" name="currency-code-choices"
+                                                                   id="{{ currency_code_item.id }}"
+                                                                   class="call-checkbox"
+                                                                   value="{{ currency_code_item }}">
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" id="btnCurrencyCodeSelect">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="application/javascript" src="{% static 'js/accounting/Acc_Vendor.js' %}"></script>
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+
+    <script>
+        var url_load_bank_list = "{% url 'load_bank_list' %}";
+        
+        $(document).ready(function () {
+            $( "#id_distribution" ).change(function() {
+            var item_select_id = $( "#id_distribution" ).val();
+            var data_dis_code = $('#id_tax').data('dis-code');
+            for (var i = 0; i < data_dis_code.length; i++) {
+                var idtax  = data_dis_code[i].idtax;
+                var dis_code  = data_dis_code[i].dis_code;
+                    if (dis_code == item_select_id) {
+                        $("#id_tax").val(idtax).trigger('change');
+                        break
+                    }else{
+                        $("#id_tax").val(0).trigger('change');
+                    }
+                }
+            });
+            $('#id_credit_limit').val(parseFloat($('#id_credit_limit').val()).toFixed(2));
+            $('#dis-code-table').on( 'draw.dt', function () {
+                selectTableRow('#dis-code-table', 3);
+                $("input[type='radio']").each(function () {
+                    $(this).closest('tr').css('background-color', '#f9f9f9');
+                });
+            });
+            $('#account-table').on( 'draw.dt', function () {
+                selectTableRow('#account-table', 6);
+                $("input[type='radio']").each(function () {
+                    $(this).closest('tr').css('background-color', '#f9f9f9');
+                });
+            });
+            $('#interest-profile-table').on( 'draw.dt', function () {
+                selectTableRow('#interest-profile-table', 6);
+                $("input[type='radio']").each(function () {
+                    $(this).closest('tr').css('background-color', '#f9f9f9');
+                });
+            });
+            $('#terms-code-table').on( 'draw.dt', function () {
+                selectTableRow('#terms-code-table', 2);
+                $("input[type='radio']").each(function () {
+                    $(this).closest('tr').css('background-color', '#f9f9f9');
+                });
+            });
+            $('#payment-code-table').on( 'draw.dt', function () {
+                selectTableRow('#payment-code-table', 2);
+                $("input[type='radio']").each(function () {
+                    $(this).closest('tr').css('background-color', '#f9f9f9');
+                });
+            });
+            $('#tax-code-table').on( 'draw.dt', function () {
+                selectTableRow('#tax-code-table', 3);
+                $("input[type='radio']").each(function () {
+                    $(this).closest('tr').css('background-color', '#f9f9f9');
+                });
+            });
+            $('#currency-code-table').on( 'draw.dt', function () {
+                selectTableRow('#currency-code-table', 2);
+                $("input[type='radio']").each(function () {
+                    $(this).closest('tr').css('background-color', '#f9f9f9');
+                });
+            });
+
+            $('#btnSearchDisCode').on('click', function () {
+                $('#dis-code-table').DataTable().destroy();
+                $('#dis-code-table').DataTable({
+                    iDisplayLength: 5,
+                    bFilter: false,
+                    bLengthChange: false
+                });
+            })
+
+            $('#btnSearchCurrencyCode').on('click', function () {
+                $('#currency-code-table').DataTable().destroy();
+                $('#currency-code-table').DataTable({
+                    iDisplayLength: 5,
+                    bFilter: false,
+                    bLengthChange: false
+                });
+            })
+
+            $('#btnSearchTaxCode').on('click', function () {
+                $('#tax-code-table').DataTable().destroy();
+                $('#tax-code-table').DataTable({
+                    iDisplayLength: 5,
+                    bFilter: false,
+                    bLengthChange: false
+                });
+            })
+
+            $('#btnSearchTermsCode').on('click', function () {
+                $('#terms-code-table').DataTable().destroy();
+                $('#terms-code-table').DataTable({
+                    iDisplayLength: 5,
+                    bFilter: false,
+                    bLengthChange: false
+                });
+            })
+
+            $('#btnSearchPaymentCode').on('click', function () {
+                $('#payment-code-table').DataTable().destroy();
+                $('#payment-code-table').DataTable({
+                    iDisplayLength: 10,
+                    bFilter: false,
+                    bLengthChange: false
+                });
+            })
+            $('#id_country').select2({
+                placeholder: "Select Country",
+                allowClear: true,
+            });
+            $('#id_currency').select2({
+                placeholder: "Select Currency Code",
+            });
+
+            $('#id_term_days').select2({
+                placeholder: "Select Terms ",
+                allowClear: true,
+            });
+
+            $('#id_account_set').select2({
+                placeholder: "Select Account Set ",
+            });
+
+            $('#id_bank_code').select2({
+                placeholder: "Select Bank Code ",
+            });
+
+            $('#id_payment_code').select2({
+                placeholder: "Select Payment Code ",
+                allowClear: true,
+            });
+
+            $('#id_distribution').select2({
+                placeholder: "Select Distribution Code ",
+                allowClear: true,
+            });
+
+            $('#id_tax').select2({
+                placeholder: "Select Tax Code ",
+                allowClear: true,
+            });
+            $('#id_account_payable').select2({
+                placeholder: "Select Account Payable ",
+                allowClear: true,
+            });
+
+            $('#id_account_set').on('select2:close', function (e) {
+                $('#id_account_payable').focus();
+            });
+            $('#id_account_payable').on('select2:close', function (e) {
+                $('#id_term_days').focus();
+            });
+            $('#id_term_days').on('select2:close', function (e) {
+                $('#id_bank_code').focus();
+            });
+            $('#id_bank_code').on('select2:close', function (e) {
+                $('#id_payment_code').focus();
+            });
+            $('#id_payment_code').on('select2:close', function (e) {
+                $('#id_distribution').focus();
+            });
+            $('#id_distribution').on('select2:close', function (e) {
+                $('#id_tax').focus();
+            });
+            $('#id_tax').on('select2:close', function (e) {
+                $('#id_credit_limit').select();
+            });
+            $('#id_country').on('select2:close', function (e) {
+                $('#id_email_msg').select();
+            });
+            $('#id_country').on('select2:open', function (e) {
+                $('#id_currency').select2('close');
+                $('#id_tax').select2('close');
+                $('#id_distribution').select2('close');
+                $('#id_payment_code').select2('close');
+                $('#id_bank_code').select2('close');
+                $('#id_term_days').select2('close');
+                $('#id_account_payable').select2('close');
+                $('#id_account_set').select2('close');
+            });
+            $('#id_currency').on('select2:open', function (e) {
+                $('#id_country').select2('close');
+                $('#id_tax').select2('close');
+                $('#id_distribution').select2('close');
+                $('#id_payment_code').select2('close');
+                $('#id_bank_code').select2('close');
+                $('#id_term_days').select2('close');
+                $('#id_account_payable').select2('close');
+                $('#id_account_set').select2('close');
+            });
+            $('#id_tax').on('select2:open', function (e) {
+                $('#id_country').select2('close');
+                $('#id_currency').select2('close');
+                $('#id_distribution').select2('close');
+                $('#id_payment_code').select2('close');
+                $('#id_bank_code').select2('close');
+                $('#id_term_days').select2('close');
+                $('#id_account_payable').select2('close');
+                $('#id_account_set').select2('close');
+            });
+            $('#id_distribution').on('select2:open', function (e) {
+                $('#id_country').select2('close');
+                $('#id_currency').select2('close');
+                $('#id_tax').select2('close');
+                $('#id_payment_code').select2('close');
+                $('#id_bank_code').select2('close');
+                $('#id_term_days').select2('close');
+                $('#id_account_payable').select2('close');
+                $('#id_account_set').select2('close');
+            });
+            $('#id_payment_code').on('select2:open', function (e) {
+                $('#id_country').select2('close');
+                $('#id_currency').select2('close');
+                $('#id_tax').select2('close');
+                $('#id_distribution').select2('close');
+                $('#id_bank_code').select2('close');
+                $('#id_term_days').select2('close');
+                $('#id_account_payable').select2('close');
+                $('#id_account_set').select2('close');
+            });
+            $('#id_bank_code').on('select2:open', function (e) {
+                $('#id_country').select2('close');
+                $('#id_currency').select2('close');
+                $('#id_tax').select2('close');
+                $('#id_distribution').select2('close');
+                $('#id_payment_code').select2('close');
+                $('#id_term_days').select2('close');
+                $('#id_account_payable').select2('close');
+                $('#id_account_set').select2('close');
+            });
+            $('#id_term_days').on('select2:open', function (e) {
+                $('#id_country').select2('close');
+                $('#id_currency').select2('close');
+                $('#id_tax').select2('close');
+                $('#id_distribution').select2('close');
+                $('#id_payment_code').select2('close');
+                $('#id_bank_code').select2('close');
+                $('#id_account_payable').select2('close');
+                $('#id_account_set').select2('close');
+            });
+            $('#id_account_payable').on('select2:open', function (e) {
+                $('#id_country').select2('close');
+                $('#id_currency').select2('close');
+                $('#id_tax').select2('close');
+                $('#id_distribution').select2('close');
+                $('#id_payment_code').select2('close');
+                $('#id_bank_code').select2('close');
+                $('#id_term_days').select2('close');
+                $('#id_account_set').select2('close');
+            });
+            $('#id_account_set').on('select2:open', function (e) {
+                $('#id_country').select2('close');
+                $('#id_currency').select2('close');
+                $('#id_tax').select2('close');
+                $('#id_distribution').select2('close');
+                $('#id_payment_code').select2('close');
+                $('#id_bank_code').select2('close');
+                $('#id_term_days').select2('close');
+                $('#id_account_payable').select2('close');
+            });
+
+            $('#btnSearchAccountPayable').on('click', function () {
+                $('#account-payable-table').DataTable().destroy();
+                $('#account-payable-table').dataTable({
+                    "iDisplayLength": 10,
+                    //"bLengthChange": false,
+                    "order": [[0, "desc"]],
+                    "serverSide": true,
+                    "ajax": {
+                        "url": "/customers/account_list/"
+                    },
+                    "columns": [
+                        {"data": "code", "sClass": "text-left"},
+                        {"data": "name", "sClass": "text-left"},
+                        {"data": "account_type", "sClass": "text-left"},
+                        {"data": "balance_type", "sClass": "text-left"},
+                        {"data": "account_group", "sClass": "text-left hide_column"},
+                        {
+                            "orderable": false,
+                            "data": null,
+                            "sClass": "hide_column",
+                            "render": function (data, type, full, meta) {
+                                return '<input type="radio" name="account-choices" id="' +
+                                        full.id + '" class="call-checkbox" value="' + meta.row + '">';
+                            }
+                        }
+                    ]
+                });
+            });
+
+            $('#account-payable-table').on( 'draw.dt', function () {
+                selectTableRow('#account-payable-table', 5);
+                $("input[type='radio']").each(function () {
+                    $(this).closest('tr').css('background-color', '#f9f9f9');
+                });
+            });
+
+            $('#btnAccountPayableSelect').on('click', function () {
+                var item_select_id = $("input[name='account-choices']:checked").attr('id');
+                var nRow = $("input[name='account-choices']:checked").parents('tr')[0];
+                var jqInputs = $('td', nRow);
+
+                $('#id_account_payable').val(item_select_id).trigger('change');
+
+                $('#id_account_payable_name').val('');
+                $('#id_account_payable_name').val(jqInputs[1].innerText);
+
+                $(this).attr('data-dismiss', 'modal');
+            });
+
+        });
+    </script>
+{% endblock %}

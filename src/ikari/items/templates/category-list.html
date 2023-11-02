@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% load staticfiles %}
+
+{% block title %}Part Group{% endblock %}
+
+{% block parent_order_a_active %}
+{% if menu_type == '1' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_order_i_active %}
+{% if menu_type == '1' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_a_active %}
+{% if menu_type == '1' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_i_active %}
+{% if menu_type == '1' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block part_group_sp_active %}
+{% if menu_type == '1' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block ics_a_active %}
+{% if menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Inventory Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block inv_category_active %}
+{% if menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Inventory Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block inv_setting_i_active %}
+{% if menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Inventory Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block inv_setting_a_active %}
+{% if menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Inventory Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    Item Group List
+                    <span class="tools pull-right">
+                        {% if 'items.add_itemcategory' in user.get_all_permissions %}
+                            <a class="btn btn-success start" href="{% url 'category_add' menu_type %}">
+                                <i class="glyphicon glyphicon-plus"></i>
+                                <span>Add new</span>
+                            </a>
+                        {% endif %}
+                    </span>
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table">
+                        <table class="display table table-bordered table-striped table-condensed"
+                               id="custom-table" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Update Date</th>
+                                <th>Code</th>
+                                <th>Description</th>
+                                {% if 'items.change_itemcategory' in user.get_all_permissions %}
+                                    <th class="text-center">Edit</th>
+                                {% endif %}
+                            </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#custom-table').dataTable({
+                "order": [[0, "desc"]],
+                "serverSide": true,
+                "scrollX": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'CategoryList__asJson' menu_type %}"
+                },
+                "columns": [
+                    {"data": "update_date"},
+                    {"data": "code"},
+                    {"data": "name"},
+                    {% if 'items.change_itemcategory' in user.get_all_permissions %}
+                        {
+                            "className": "text-center",
+                            "orderable": false,
+                            "data": null,
+                            "render": function (data, type, full, meta) {
+                                var button_edit = '<a href="../../items/category/edit/' + full.id + '/' + {{menu_type}} + '/" class="fa fa-pencil fa-lg btn btn-primary btn-sm"></a>'
+                                return button_edit;
+                            }
+                        }
+                    {% endif %}
+                ]
+            });
+        });
+    </script>
+{% endblock %}
+
+
+

@@ -1,0 +1,965 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap3-editable/css/bootstrap-editable.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+
+    <style>
+        .hide_column {
+            display: none;
+        }
+        #orderItemModal {
+             line-height: 2;
+        }
+        #orderItemModal label{
+            float: left;
+            font-weight: 700;
+            padding-top: 5px;
+        }
+        #orderItemModal .col-lg-8 {
+            padding-bottom: 10px;
+        }
+        .required {
+            color: red;
+        }
+        .datepicker {
+            display: none !important
+        }
+        .search-partno, .search-refer {
+            background-color: #58c9f3;
+            border-color: #58c9f3;
+            color: #ffffff;
+            height: 34px;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}
+    {% if order.id == None %} New Goods Receive
+    {% elif is_copy != None %} Copy Goods Receive
+    {% else %} Edit Goods Receive {% endif %}
+{% endblock %}
+{% block parent_order_a_active %}active{% endblock %}
+{% block parent_order_i_active %}active{% endblock %}
+{% block order_good_receive_active %}active{% endblock %}
+{% block document_entry_a_active %}active{% endblock %}
+{% block document_entry_i_active %}active{% endblock %}
+
+
+{% block content %}
+
+    <form class="form-horizontal" role="form" method="post" id="form"
+            {% if order.id == None %}
+                action="{% url 'good_receive_new' 'old' %}"
+            {% elif is_copy != None %}
+                action="{% url 'good_receive_copy' order.id 0 %}"
+            {% else %}
+                action="{% url 'good_receive_edit' order.id 'old' %}"
+            {% endif %}
+          enctype="multipart/form-data"> {# 0 = ORDER_STATUS['Undefined'] #}
+        {% csrf_token %}
+        <div class="col-lg-12" style="display: none;">
+            <section class="panel">
+                <header class="panel-heading">Goods Receive Header
+                    {% if order.id != None %}<label id="order_id" class="control-label"
+                                                    style="display: none">{{ order.id }}</label>{% endif %}
+                    <label id="list_url" class="control-label" style="display: none">{% url 'grList__asJson' %}</label>
+                    <span class="tools pull-right">
+                        <a href="javascript:;" class="fa fa-chevron-down"></a>
+                    </span>
+                </header>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <div class="col-md-12">
+                                    <div>
+                                        <img src="{{ media_url }}{{ company.logo }}" alt="" style="width: 100%;"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-lg-12">
+                                <input id="company_is_inventory" type="hidden" value="{{ company.is_inventory }}">
+                                    <a href="#" id="companyname" data-name="company_name" name="company_name"
+                                       data-params="{csrfmiddlewaretoken:'{{ csrf_token }}'}"
+                                       datatype="text">{{ company.name }}</a>
+                                </div>
+                                <div class="col-lg-12 col-sm-12">
+                                    <a href="#" id="address" data-name="company_address" name="company_address"
+                                       data-params="{csrfmiddlewaretoken:'{{ csrf_token }}'}"
+                                       datatype="text">{{ company.address }}</a>
+                                </div>
+                                <div class="col-lg-12 col-sm-12">
+                                    <a href="#" id="email" data-name="company_email" name="company_email"
+                                       data-params="{csrfmiddlewaretoken:'{{ csrf_token }}'}"
+                                       datatype="text">{{ company.email }}</a>
+                                </div>
+                            </div>
+                            {{ formset_left.management_form }}
+                            {% for form in formset_left.forms %}
+                                <input type="hidden" id="request_method" value="{{ request_method }}">
+                                <div class='table-left'>
+                                    <table class='no_error'>
+                                        <div class="form-group" style="margin-bottom: 5px!important;">
+                                            <div class="col-lg-12">
+                                                {{ form.label }}
+                                                <span class="messages">{{ form.errors.label_left }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-lg-12">
+                                                {{ form.value }}
+                                                <span class="messages">{{ form.errors.somevalue_left }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-lg-12">
+                                                <button type="button" class="removerow-left btn btn-white fa fa-minus"
+                                                        id="removerow-left"
+                                                        name="removerow-left"
+                                                        value="Remove"></button>
+                                            </div>
+                                        </div>
+                                    </table>
+                                </div>
+                            {% endfor %}
+                            <div class="form-group">
+                                <div class="col-lg-12">
+                                    <button type="button" id="add_more_left" class="btn btn-white fa fa-plus"></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-8">
+                            <div class="form-group">
+                                <label for="title" class="col-lg-4 col-sm-4 control-label"
+                                       style="text-align: right"><span
+                                        class="span-required">(*)</span></label>
+                                <div class="col-lg-8">
+                                    {{ form.label }}
+                                    <span class="messages">{{ form.errors.label }}</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="subtitle" class="col-lg-4 col-sm-4 control-label" style="text-align: right"><span
+                                        class="span-required">(*)</span></label>
+                                <div class="col-lg-8">
+                                    {{ form.value }}
+                                    <span class="messages">{{ form.errors.value }}</span>
+                                </div>
+                            </div>
+                            {{ formset_right.management_form }}
+                            {% for form in formset_right.forms %}
+                                <div class='table-right'>
+                                    <table class='no_error'>
+                                        <div class="form-group" style="margin-bottom: 5px!important;">
+                                            <label for="label" class="col-lg-4 col-sm-4 control-label"></label>
+                                            <div class="col-lg-8">
+                                                {{ form.label }}
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="somevalue" class="col-lg-4 col-sm-4 control-label"></label>
+                                            <div class="col-lg-8">
+                                                {{ form.value }}
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-lg-12">
+                                                <button type="button" class="removerow-right btn btn-white fa fa-minus"
+                                                        id="removerow-right"
+                                                        name="removerow-right"
+                                                        value="Remove"
+                                                        style="float: right"></button>
+                                            </div>
+                                        </div>
+                                    </table>
+                                </div>
+                            {% endfor %}
+                            <div class="form-group">
+                                <label for="add_more_right" class="col-lg-4 col-sm-4 control-label"></label>
+                                <div class="col-lg-8">
+                                    <button type="button" style="float: right;" id="add_more_right"
+                                            class="btn btn-white fa fa-plus"></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <div class="col-lg-12">
+            <section class="panel">
+                <header class="panel-heading">Goods Receive Master
+                    <span class="tools pull-right">
+                        <a href="javascript:;" class="fa fa-chevron-down"></a>
+                    </span>
+                </header>
+                <div class="panel-body good-master">
+                    <div class="form-group">
+                        <div class="col-lg-6">
+                            <input type="text" class="hide" id="initial_item_qty_data" name="initial_item_qty_data">
+                            <div class="form-group">
+                                <label for="transaction_code" class="col-lg-4 col-sm-4 control-label">Transaction
+                                    Code</label>
+                                <div class="col-lg-8">{{ form_info.transaction_code }}</div>
+                            </div>
+                            <div class="form-group">
+                                <input type="hidden" name="hdSupplierId" id="hdSupplierId"
+                                       {% if order.id %}value="{{ supplier.id }}"
+                                       {% else %}value="0"{% endif %}>
+                                <label for="supplier_code" class="col-lg-4 col-sm-4 control-label">Supplier Code</label>
+                                <div class="col-lg-4">
+                                    <input class="form-control" id="id_supplier_code" name="supplier_code" type="text" value={{ form_info.supplier_code.value|default_if_none:"" }}>
+                                    <input class="form-control hidden" id="id_supplier" name="supplier" type="text" value={{ form_info.supplier.value|default_if_none:"" }}>
+                                    <input class="form-control hidden" id="form_supplier_code" name="form_supplier_code" type="text">
+                                </div>
+                                <div class="col-lg-4">
+                                    <button id="btnSearchSupplier" tabindex="-1" type="button" class="btn btn-info"
+                                            data-toggle="modal" href="#mySupplierListModal">
+                                        <i class="fa fa-search"></i> Search
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="document_number" class="col-lg-4 col-sm-4 control-label">Document Number
+                                    <span class="span-required">(*)</span></label>
+                                <div class="col-lg-8">
+                                    {% if is_copy == None %}
+                                    {{ form_info.document_number|default_if_none:"" }}{% endif %}
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="order_date" class="col-lg-4 col-sm-4 control-label">Document Date</label>
+                                <div class="col-lg-8">
+                                    <input type="text" name="copy_date_doc" id="copy_date_doc" class="form-control form-control-inline input-medium default-date-picker">
+                                    {{ form_info.document_date|default_if_none:"" }}
+                                    <span class="messages">{{ form_info.errors.document_date }}</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="document_number" class="col-lg-4 col-sm-4 control-label">Supplier Currency</label>
+                                <div class="col-md-8">
+                                    <input type="text" tabindex="-1" name="name_currency" id="name_currency" class="form-control" disabled="true">
+                                    <div id='selector_currency'>
+                                    {{ form_info.currency }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="supplier_payment_term" class="col-lg-4 col-sm-4 control-label">Tax Currency</label>
+                                <div class="col-lg-8">
+                                    <input tabindex="-1" id="tax_currency" type="text" name="curr" class="form-control" value="{{ tax_authority.currency.code}}" disabled="true">
+                                </div>
+                            </div>
+
+
+                            <div class="form-group" style="display: none">
+                                <label for="invoice_date" class="col-lg-4 col-sm-4 control-label">Invoice Date</label>
+                                <div class="col-lg-8">{{ form_info.invoice_date }}</div>
+                            </div>
+                            <div class="form-group" style="display: none">
+                                <label for="delivery" class="col-lg-4 col-sm-4 control-label">Delivery Date</label>
+                                <div class="col-lg-8">
+                                    {{ form_info.delivery_date }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group" style="display: none;">
+                                <label class="col-lg-4 col-sm-4 control-label">Debit Account</label>
+                                <div class="col-lg-8">{{ form_info.debit_account }}</div>
+                            </div>
+                            <div class="form-group" style="display: none;">
+                                <label class="col-lg-4 col-sm-4 control-label">Credit Account</label>
+                                <div class="col-lg-8">{{ form_info.credit_account }}</div>
+                            </div>
+                            <div class="form-group" style="display: none;">
+                                <label class="col-lg-4 col-sm-4 control-label">Cost Center</label>
+                                <div class="col-lg-8">{{ form_info.cost_center }}</div>
+                            </div>
+                            {% if order_type == '3' %} {# ORDER_TYPE['SALES DEBIT NOTE'] #}
+                                </div>
+                                <div class="col-lg-6">
+                            {% endif %}
+                            <div class="form-group">
+                                <label for="supplier_payment_term" class="col-lg-4 col-sm-4 control-label">Document Type</label>
+                                <div class="col-lg-8">{{form_info.document_type}}</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="supplier_payment_term" class="col-lg-4 col-sm-4 control-label">Supplier Exchange Rate</label>
+                                <div class="col-lg-8">{{form_info.supllier_exchange_rate}}</div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-lg-4 col-sm-4 control-label">Exchange Rate</label>
+                                <div class="col-lg-8">
+                                    <input type="text" tabindex="-1" name="id_exchange_rate_value" id="id_exchange_rate_value" class="hidden">
+                                    <input type="hidden" name="exchange_rate_fk_id" id="exchange_rate_fk_id" value="{{order.exchange_rate_fk_id}}">
+                                    {{ form_info.exchange_rate_date}}
+                                    {{ form_info.exchange_rate}}
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="supplier_payment_term" class="col-lg-4 col-sm-4 control-label">Tax Exchange Rate</label>
+                                <div class="col-lg-8">{{form_info.tax_exchange_rate}}</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="supplier_payment_term" class="col-lg-4 col-sm-4 control-label">Distribution Code</label>
+                                <div class="col-lg-8">
+                                    <select name="distribution_code" id="id_distribution_code" class="form-control trs-field sended">
+                                        <option></option>
+                                        {% for distribution_code in distribution_code_list %}
+                                            {% if order.id and distribution_code.id == order.distribution_code_id %}
+                                                <option value="{{distribution_code.id}}" selected="selected">{{distribution_code.code}}</option>
+                                            {% else %}
+                                                <option value="{{distribution_code.id}}">{{distribution_code.code}}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="supplier_payment_term" class="col-lg-4 col-sm-4 control-label">Tax code</label>
+                                <div class="col-lg-6">{{form_info.tax}}</div>
+                                <div class="col-lg-1 col-sm-1">
+                                <button tabindex="-1" id="btnSearchTaxCode" type="button" class="btn btn-info" data-toggle="modal"
+                                        href="#TaxCodeListModal"><i class="fa fa-search"></i></button>
+                                </div>
+                            </div>
+
+
+                            <div class="form-group hidden">
+                                 <label for="supplier_payment_term" class="col-lg-4 col-sm-4 control-label">Payment
+                                            Term : </label>
+
+                                            <div class="col-lg-8" >
+                                            <b id="supplier_payment_term" class="form-control">
+                                            {% if order.id %}{{ supplier.term_days }} Days {% endif %}
+                                            </b>
+                                            </div>
+                            </div>
+                            <div class="form-group hidden ">
+                                 <label for="supplier_payment_mode" class="col-lg-4 col-sm-4 control-label">Payment
+                                            Mode : </label>
+
+                                            <div class="col-lg-8" >
+                                            <b id="supplier_payment_mode" class="form-control">
+                                            {% if order.id %}{{ supplier.payment_mode.name }}  {% endif %}
+                                            </b>
+                                            </div>
+                            </div>
+                            <div class="form-group hidden">
+                                 <label for="supplier_credit_limit" class="col-lg-4 col-sm-4 control-label">Credit
+                                            Limit : </label>
+                                            <div class="col-lg-8" >
+                                            <b id="supplier_credit_limit" class="form-control">
+                                            {% if order.id %}
+                                                {% if supplier.credit_limit %}
+                                                {{ supplier.credit_limit }}
+                                                {% endif %}
+                                            {% endif %}
+                                            </b>
+                                            </div>
+                            </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="mySupplierListModal" tabindex="-1" role="dialog"
+                     aria-labelledby="myModalLabel"
+                     aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal"
+                                        aria-hidden="true">&times;</button>
+                                <h4 class="modal-title">Search Supplier</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                                    <section class="panel">
+                                        <div class="row">
+                                            <div class="col-lg-12">
+                                                <div class="panel-body"
+                                                     style="padding: 0px!important; font-size: 12.5px !important;">
+                                                    <div class="adv-table">
+                                                        <table id="supplier-table" style="width: 100% !important;"
+                                                               class="display table table-bordered table-striped table-condensed">
+                                                            <thead>
+                                                            <tr>
+                                                                <th>Supplier Code</th>
+                                                                <th>Supplier Name</th>
+                                                                <th>Payment Term</th>
+                                                                <th>Payment Mode</th>
+                                                                <th>Credit Limit</th>
+                                                                <th></th>
+                                                            </tr>
+                                                            </thead>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </section>
+
+                                </div>
+                                <div class="modal-footer">
+                                    <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                                    <button class="btn btn-success" type="button" id="btnSupplierSelect">Select</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <div class="col-lg-12">
+            <section class="panel">
+                <header class="panel-heading">Good Receive Items
+                    <span class="tools pull-right">
+                        <a href="javascript:;" class="fa fa-chevron-down"></a>
+                    </span>
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table table-responsive"
+                         style="overflow-x: scroll; overflow-y: auto; margin-bottom: 20px">
+                        <table class="display table table-bordered table-striped header-fixed"
+                               id="dynamic-table" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th></th>
+                                <th>No</th>
+                                <th>Refer Number</th>
+                                <th>Ref. Ln</th>
+                                <th>Customer P.O No</th>
+                                {% if company.is_inventory %}
+                                <th>Loc. Code</th>
+                                {% endif %}
+                                <th>Part Number</th>
+                                <th style="display: none;">Part Name</th>
+                                <th>Quantity</th>
+                                <th>Curr.</th>
+                                <th>Unit Price</th>
+                                <th style="display: none;">Exchange Rate</th>
+                                <th>Amount</th>
+                                <th>Part Group</th>
+                                <th>Order Qty</th>
+                                <th>Rcvd Qty</th>
+                                <th>Supplr Code</th>
+                                <th style="display: none">Reference ID</th>
+                                <th style="display: none">Minimum Order</th>
+                                <th style="display: none">Outstanding Qty</th>
+                                <th style="text-align: center">Unit</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            {% for form in formset_item.forms %}
+                                <tr class="gradeX" data-is_database="{{ form.line_number.value }}" data-row_index="{{ forloop.counter0 }}">
+                                    <td>
+                                        <div class="btn-group" style="width:160px">
+                                            <button type="button" tabindex="-1" class="prependrow btn btn-white fa fa-level-up" name="prependrow" value="Prepend" ></button>
+                                            <button type="button" tabindex="-1" class="appendrow btn btn-white fa fa-level-down" name="appendrow" value="Append" style="margin-left:0.4rem;"></button>
+                                            <button type="button" class="editrow btn btn-white fa fa-square-o" name="editrow" value="Edit" data-toggle="modal" data-target="#orderItemModal" style="margin-left:0.4rem;"></button>
+                                            <button type="button" tabindex="-1" class="removerow btn btn-white fa fa-minus" name="removerow" value="Remove" style="margin-left:0.4rem;"></button>
+                                        </div>
+                                    </td>
+                                    <td><label class="control-label-item" id="id_formset_item-{{forloop.counter0}}-line_number"
+                                               name="formset_item-{{forloop.counter0}}-line_number">{{ form.line_number.value }}</label>
+                                        {{ form.line_number }}
+                                        {{ form.id }}
+                                    </td>
+                                    <td>
+                                        <div class="col-md-12" style="width: 200px; padding: 0px !important">
+                                            <div class="col-md-9" style="width: 170px; padding: 0px !important">
+                                                <input class="form-control-item" id="id_formset_item-{{forloop.counter0}}-ref_number" name="formset_item-{{forloop.counter0}}-ref_number" value="{{form.ref_number.value|default_if_none:""}}" style="width: 170px;" type="text">
+                                            </div>
+                                            <div class="col-md-3" style="width: 10px; padding: 0px !important">
+                                                <button tabindex="-1" type="button" style="" class="btn btn-white fa fa-search search-refer" name="search-refer" data-toggle="modal"></button>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="col-md-12" style="width: 80px; padding: 0px !important">
+                                            <div class="col-md-9" style="width: 50px; padding: 0px !important">
+                                                <input class="form-control-item" id="id_formset_item-{{forloop.counter0}}-refer_line" name="formset_item-{{forloop.counter0}}-refer_line" value="{{form.refer_line.value|default_if_none:""}}" style="width: 50px;" type="text">
+                                            </div>
+                                            <div class="col-md-3" style="width: 10px; padding: 0px !important">
+                                                <button tabindex="-1" type="button" style="" class="btn btn-white fa fa-search search-refer" name="search-refer" data-toggle="modal"></button>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <label class="control-label-item" id="id_formset_item-{{forloop.counter0}}-customer_po_no"
+                                            name="formset_item-{{forloop.counter0}}-customer_po_no"
+                                            style="width: 180px; text-align: center;">{{ form.customer_po_no.value|default_if_none:"" }}</label>
+                                        {{ form.customer_po_no }}
+                                    </td>
+                                    {% if company.is_inventory %}
+                                    <td class="location_select">{{ form.location }}</td>
+                                    {% endif %}
+                                    <td>
+                                        <label class="control-label-item" id="id_formset_item-{{forloop.counter0}}-code"
+                                            name="formset_item-{{forloop.counter0}}-code"
+                                            style="width: 200px; text-align: center;">{{ form.code.value|default_if_none:"" }}</label>
+                                        {{ form.code }}
+                                    </td>
+                                    <td style="width: 10%; display: none;">
+                                        <label class="form-label-item" id="id_formset_item-{{forloop.counter0}}-item_name"
+                                               name="formset_item-{{forloop.counter0}}-item_name"
+                                               style="width: 220px;">{{ form.item_name.value }}</label>
+                                        {{ form.item_name }}
+                                        {{ form.item_id }}
+                                    </td>
+                                    <td>{{ form.quantity|default_if_none:"" }}</td>
+                                    <td><label
+                                            class="control-label-item lblCurrency" id="id_formset_item-{{forloop.counter0}}-original_currency"
+                                            name="formset_item-{{forloop.counter0}}-original_currency">{{ currency_symbol|default_if_none:"" }}</label>
+                                        {{ form.original_currency|default_if_none:"" }}
+                                        {{ form.currency_id|default_if_none:"" }}
+                                    </td>
+                                    <td>{{ form.price }}
+                                    </td>
+                                    <td style="display: none;">{{ form.exchange_rate }}</td>
+                                    <td><label id="id_formset_item-{{forloop.counter0}}-amount"
+                                            class="control-label-item" name="formset_item-{{forloop.counter0}}-amount"
+                                            style="width: 130px; text-align: right;">{{ form.amount.value|default_if_none:"" }}</label>{{ form.amount }}
+                                    </td>
+                                    <td><label class="control-label-item" id="id_formset_item-{{forloop.counter0}}-category"
+                                               name="formset_item-{{forloop.counter0}}-category"
+                                               style="width: 70px;">{{ form.category.value|default_if_none:"" }}</label>
+                                        {{ form.category|default_if_none:"" }}
+                                    </td>
+                                    <td>
+                                        <label class="control-label-item" id="id_formset_item-{{forloop.counter0}}-order_quantity"
+                                             name="formset_item-{{forloop.counter0}}-order_quantity"
+                                             style="width: 65px; text-align: right;">{{ form.order_quantity.value|default_if_none:"" }}</label>
+                                        {{ form.order_quantity }}
+                                    </td>
+                                    <td>
+                                        <label class="control-label-item" id="id_formset_item-{{forloop.counter0}}-receive_quantity"
+                                             name="formset_item-{{forloop.counter0}}-receive_quantity"
+                                             style="width: 65px; text-align: right;">{{ form.receive_quantity.value|default_if_none:"" }}</label>
+                                        {{ form.receive_quantity }}
+                                    </td>
+                                    <td><label class="control-label-item" id="id_formset_item-{{forloop.counter0}}-supplier"
+                                               name="formset_item-{{forloop.counter0}}-supplier" style="width: 80px;">{{ form.supplier_code.value|default_if_none:"" }}</label>
+                                        {{ form.supplier_code|default_if_none:"" }}
+                                        {{ form.supplier_code_id|default_if_none:"" }}
+                                    </td>
+                                    <td style="display: none">{{ form.reference_id|default_if_none:"" }}</td>
+                                    <td style="display: none">{{ form.minimun_order|default_if_none:"" }}</td>
+                                    <td style="display: none;"><input type="text" name="txt_outstanding_qty" value="0"></td>
+                                    <td><label class="control-label-item" id="id_formset_item-{{forloop.counter0}}-uom"
+                                               name="formset_item-{{forloop.counter0}}-uom">{{ form.uom.value|default_if_none:"" }}</label>
+                                        {{ form.uom|default_if_none:"" }}
+                                    </td>
+                                </tr>
+
+                            {% endfor %}
+                            {{ formset_item.management_form }}
+                            </tbody>
+                            <tfoot>
+                            <tr>
+                                <span id="items_error" class="messages">Please add at least one product !</span>
+                                <br>
+                                <span id="minimum_order_error" class="messages" style="display: none"></span>
+                                <br>
+                                <span id="currency_error" class="messages" style="display: none"></span>
+                                <br>
+                                <span id="validate_error" class="messages" style="display: none"></span>
+                            </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+                         aria-hidden="true">
+                        <div class="modal-dialog modal-lg" style="width: 100%; padding-left: 10%; padding-right: 10%;">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal"
+                                            aria-hidden="true">&times;</button>
+                                    <h4 class="modal-title">Search Product</h4>
+                                </div>
+                                <div class="modal-body" style="padding-bottom: 0px!important;">
+                                    <div class="form-group"></div>
+                                    <section class="panel" style="margin-bottom: 0px!important;">
+                                        <div class="row">
+                                            <div class="col-lg-12">
+                                                <div class="panel-body"
+                                                     style="padding: 0px!important; font-size: 12.5px !important;">
+                                                    <div class="adv-table" id="myDialog">
+                                                        {% include 'gr_items.html' %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </section>
+                                </div>
+                                <div class="modal-footer">
+                                    <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                                    <button class="btn btn-success" type="button" id="btnAddItems">Select</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group"></div>
+                    <div class="form-group">
+                        <label class="col-lg-9 control-label" style="text-align: right" name="gr_subtotal" id="gr_subtotal">
+                            Subtotal ({{ currency_symbol }}) :</label>
+                        <div class="col-lg-3">{{ form_info.subtotal }}</div>
+                    </div>
+                    <div class="form-group">
+                        <input type="hidden" name="hdTaxRate" id="hdTaxRate" {% if order.id != None %} value="{{ order.tax.rate }}"{% endif %}>
+                        <label class="col-lg-9 control-label" style="text-align: right" name="gr_tax" id="gr_tax">
+                            Tax ({{ currency_symbol }}) :</label>
+                        <div class="col-lg-3">{{ form_info.tax_amount }}</div>
+                    </div>
+
+                    <div class="form-group" style="display: none;">
+                        <label class="col-md-7 control-label" style="text-align: right">Discount: </label>
+                        <div class="col-md-5">
+                            <label class="control-label col-md-8">
+                                <div class="col-md-10"></div>
+                                <label class="control-label col-md-2 lblCurrency"
+                                       style="text-align: right">{{ currency_symbol }}</label>
+                            </label>
+                            <div class="col-md-4">{{ form_info.discount }}</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-lg-9 control-label" style="text-align: right" name="gr_total" id="gr_total">
+                            Total ({{ currency_symbol }}) :</label>
+                        <div class="col-lg-3">{{ form_info.total }}</div>
+                    </div>
+                    <div class="form-group" style="display: none">
+                        <div class="col-md-12">
+                            {{ form_info.note }}
+                        </div>
+                    </div>
+                    <div class="form-group" style="display: none">
+                        <div class="col-md-12">
+                            {{ form_info.footer }}
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-lg-12">
+            <section class="panel">
+                <div class="panel-body">
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            {{ form_info.remark }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-4"></div>
+                        <div class="col-md-4" style="text-align: center; margin-top: 20px">
+                            <button type="submit" class="btn btn-success" id="btnSave" name="btnSave"
+                                {% if order.id != None  %}
+                                    formaction="{% url 'good_receive_edit' order.id 'old' %}"
+                                {% else %}
+                                    formaction="{% url 'good_receive_new' 'old' %}"
+                                {% endif %}>Save
+                            </button>
+                            {% if order.id and copy_id != '1' %}
+                                <a type="button" class="btn btn-danger" id="btnRemove" name="btnRemove" onclick="deleteOrderModal({{order.id}})">Delete</a>
+                            {% endif %}
+                            <a type="submit" class="btn btn-default" href="{% url 'order_list' 5 %}">Cancel</a> {# ORDER_TYPE['PURCHASE INVOICE'] #}
+                        </div>
+                        <div class="col-md-4"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </form>
+    <div class="modal fade" id="orderItemModal" role="dialog"
+            aria-labelledby="OrderItem" style="overflow:hidden;"
+            aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" style="width: 882px; margin-left: auto; margin-right: auto;">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Good Receive Item</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                    <div class="panel-body"
+                                            style="padding: 0px!important; font-size: 14px !important;">
+                                            <div class="col-lg-6">
+                                                <div class="col-sm-4"><label>Line</label></div>
+                                                <div class="col-lg-8" style="padding-left: 15%"><input id="modal_line_number" tabindex="-1" class="form-control" readonly="readonly" type="text"
+                                                    name="modal_line_number" style="width: 150px; text-align: center;"></input></div>
+                                                <div class="col-lg-4"><label>Ref. Number</label> </div>
+                                                <div class="col-lg-8">
+                                                <div class="col-lg-10" style="padding: 0px !important">
+                                                    <input id="modal_ref_number" class="form-control" tabindex="-1" type="text"
+                                                    name="modal_ref_number"></input>
+                                                </div>
+                                                <div class="col-lg-2" style="padding: 0px !important">
+                                                    <button tabindex="-1" type="button" class="btn btn-white fa fa-search search-refer" name="search-refer" data-toggle="modal"></button>
+                                                </div>
+                                                </div>
+                                                <div class="col-lg-4"><label>Ref. Ln.</label> </div>
+                                                <div class="col-lg-8">
+                                                <div class="col-lg-10" style="padding: 0px !important">
+                                                    <input id="modal_refer_line" class="form-control" tabindex="-1" type="text"
+                                                    name="modal_refer_line"></input>
+                                                </div>
+                                                <div class="col-lg-2" style="padding: 0px !important">
+                                                    <button tabindex="-1" type="button" class="btn btn-white fa fa-search search-refer" name="search-refer" data-toggle="modal"></button>
+                                                </div>
+                                                </div>
+                                                <div class="col-lg-4"><label>Cust. PO No.</label></div>
+                                                <div class="col-lg-8">
+                                                    <input id="modal_customer_po_no" tabindex="-1" class="form-control" readonly="readonly" type="text" name="modal_customer_po_no">
+                                                </div>
+                                                <div class="col-lg-4" id="loc_item"><label>Location Code</label> </div>
+                                                <div class="col-lg-8" id="modal_loc_item_code"></div>
+                                                <div class="col-lg-4"><label>Part Number</label></div>
+                                                <div class="col-lg-8">
+                                                    <input id="modal_code"  class="form-control" tabindex="-1" readonly="readonly" type="text" name="modal_code">
+                                                </div>
+                                                <div class="col-lg-4"><label>Supplier Code</label></div>
+                                                <div class="col-lg-8"><input id="modal_supplier" tabindex="-1" class="form-control" readonly="readonly" type="text"
+                                                    name="modal_supplier"></div>
+                                                <div class="col-lg-4"><label>Currency</label></div>
+                                                <div class="col-lg-8"><input class="form-control"tabindex="-1" id="modal_original_currency" name="modal_original_currency" required="required" type="text" readonly="readonly"></div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div class="col-lg-4"><label>Unit of M'Ment</label></div>
+                                                <div class="col-lg-8"><input id="modal_uom" tabindex="-1" class="form-control" readonly="readonly" type="text"
+                                                    name="modal_uom"></div>
+                                                <div class="col-lg-4"><label>Part Group</label></div>
+                                                <div class="col-lg-8"><input id="modal_category" tabindex="-1" class="form-control" readonly="readonly" type="text"
+                                                    name="modal_category"></div>
+                                                <div class="col-lg-4"><label>Quantity <span class="required">*</span></label></div>
+                                                <div class="col-lg-8"><input class="form-control text-right numeric_qty" tabindex="0" id="modal_quantity" name="modal_quantity" type="text"></div>
+                                                <div class="col-lg-4"><label>Unit Price <span class="required">*</span></label></div>
+                                                <div class="col-lg-8"><input class="form-control text-right numeric_price" tabindex="0" id="modal_price" name="modal_price" type="text"></div>
+                                                <div class="col-lg-4"><label>Amount</label></div>
+                                                <div class="col-lg-8"><input id="modal_amount" tabindex="-1" class="form-control text-right" readonly="readonly" type="text"
+                                                    name="modal_amount"></div>
+                                                <div class="col-lg-4"><label>Order Qty</label></div>
+                                                <div class="col-lg-8"><input class="form-control text-right" tabindex="-1" id="modal_order_quantity" name="modal_order_quantity" type="text" readonly="readonly"></div>
+                                                <div class="col-lg-4"><label>Receive Qty</label></div>
+                                                <div class="col-lg-8"><input class="form-control text-right" tabindex="-1" id="modal_receive_quantity" name="modal_receive_quantity" type="text" readonly="readonly"></div>
+                                            </div>
+                                    </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer row">
+                        <div class="col-lg-offset-4 col-lg-8">
+                            <button class="btn btn-info" tabindex="-1" type="button" id="btnOrderItemPrev"><span class="glyphicon glyphicon-fast-backward"></button>
+                            <button class="btn btn-info" tabindex="0" type="button" id="btnOrderItemNext"><span class="glyphicon glyphicon-fast-forward"></button>
+                            <button class="btn btn-primary" tabindex="0" type="button" id="btnOrderItemNew">New</button>
+                            <button class="btn btn-success" tabindex="0" type="button" id="btnOrderItemSave">Save</button>
+                            <button class="btn btn-danger" tabindex="0" type="button" id="btnOrderItemDelete">Delete</button>
+                            <button class="btn btn-default" tabindex="0" type="button" id="btnOrderItemCancel">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="TaxCodeListModal" tabindex="-1" role="dialog"
+         aria-labelledby="TaxCodeListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Tax Code</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="tax-code-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Tax Code</th>
+                                                    <th>Name</th>
+                                                    <th>Rate</th>
+                                                    <th>Select</th>
+                                                </tr>
+                                                </thead>
+                                                
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" id="btnTaxCodeSelect">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  {% include 'order_popup_confirm.html' %}
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="text/javascript" src="{% static 'js/order/common-order.js' %}?{% now 'H' %}"></script>
+    <script type="text/javascript" src="{% static 'js/order/order_good_receive_page_foxpro.js' %}?{% now 'H' %}"></script>
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}"></script>
+    <script type="text/javascript" src="{% static 'assets/bootstrap3-editable/js/bootstrap-editable.js' %}"></script>
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript" src="{% static 'js/valib.js' %}?{% now 'H' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+        decimal_place = '{{decimal_place}}';
+        if (decimal_place == 'True') {
+            decimal_place = 2;
+        } else {
+            decimal_place = 0;
+        }
+        var is_sp_locked = "{{ request.session.is_sp_locked }}";
+        $(document).ready(function () {
+            $('#id_subtotal').val(comma_format(float_format($('#id_subtotal').val()).toFixed(decimal_place), decimal_place));
+            $('#id_total').val(comma_format(float_format($('#id_total').val()).toFixed(decimal_place), decimal_place));
+            $('#id_tax_amount').val(comma_format(float_format($('#id_tax_amount').val()).toFixed(decimal_place), decimal_place));
+            var odr = $('#dynamic-table tr.gradeX:visible').length;
+            for (var i = 0; i < odr; i++) {
+                var amount = float_format($('#id_formset_item-'+i+'-amount').text());
+                var quantity = float_format($('#id_formset_item-'+i+'-quantity').val());
+                var order_quantity = float_format($('#id_formset_item-'+i+'-order_quantity').text());
+                var receive_quantity = float_format($('#id_formset_item-'+i+'-receive_quantity').text());
+                //$('#id_formset_item-'+i+'-amount').val(comma_format(amount.toFixed(decimal_place), decimal_place));
+                $('#id_formset_item-'+i+'-quantity').val(comma_format(quantity));
+                $('#id_formset_item-'+i+'-order_quantity').text(comma_format(order_quantity));
+                $('#id_formset_item-'+i+'-receive_quantity').text(comma_format(receive_quantity));
+                $('#id_formset_item-'+i+'-amount').text(comma_format(amount.toFixed(decimal_place), decimal_place));
+                $('#id_formset_item-'+i+'-amount').val(amount.toFixed(decimal_place)); 
+            }
+
+            if (is_sp_locked == "True") {
+                $('.prependrow').attr('disabled', true);
+                $('.appendrow').attr('disabled', true);
+                $('.removerow').attr('disabled', true);
+
+                $('input[id^=id_formset_item-][id$=-quantity]').attr('readonly', 'readonly');
+                $('input[id^=id_formset_item-][id$=-quantity]').attr('disabled', true);
+                $('input[id^=id_formset_item-][id$=-quantity]').addClass('control-disabled');
+
+                $('input[id^=id_formset_item-][id$=-price]').attr('readonly', 'readonly');
+                $('input[id^=id_formset_item-][id$=-price]').attr('disabled', true);
+                $('input[id^=id_formset_item-][id$=-price]').addClass('control-disabled');
+
+                $('.good-master input').attr('disabled', true);
+                $('.good-master button').attr('disabled', true);
+                $('.good-master select').attr('disabled', true);
+
+                // disable popup
+                $('#modal_quantity').attr('disabled', true);
+                $('#modal_price').attr('disabled', true);
+                $('#btnOrderItemNew').attr('disabled', true);
+                $('#btnOrderItemSave').attr('disabled', true);
+                $('#btnOrderItemDelete').attr('disabled', true);
+
+                $('#id_remark').attr('disabled', true);
+
+                $('#btnSave').addClass('hide');
+                $('#btnRemove').addClass('hide');
+
+                $('.location_select select').attr('disabled', true);
+                $('#modal_loc_item_code select').attr('disabled', true);
+            }
+
+            let order_id = "{{ order.id }}";
+            if (order_id) {
+                $('#id_supplier_code').focus();
+                //$('#id_supplier').prop('disabled', true);
+                $('#id_supplier_code').prop('disabled', true);
+                $('#tax_currency').prop('disabled', true);
+                {#load_supp();#}
+            }
+            disableAutoComplete();
+        });
+        var tax_curr = "{{ company.currency.code}}";
+        var order_id = "{{ order.id }}";
+        var order_status = "{{ order.status }}";
+        if(order_status == '' || order_status == undefined) {
+            order_status = 0;
+        } else {
+            order_status = parseInt(order_status);
+        }
+
+        function deleteOrderModal(id) {
+            var url = '/orders/order_remove/'+id+'/5/old/';
+            $("#comfirmDeleteOrderModal").modal("show");
+            $("#comfirmDeleteOrderForm").attr("action", url);
+        }
+
+        $('#tax-code-table').on('draw.dt', function () {
+            selectTableRow('#tax-code-table', 3);
+            $("input[type='radio']").each(function () {
+                $(this).closest('tr').css('background-color', '#f9f9f9');
+            });
+        });
+
+        $('#btnSearchTaxCode').on('click', function () {
+            $('#tax-code-table').DataTable().destroy();
+            $('#tax-code-table').dataTable({
+                "iDisplayLength": 5,
+                "bLengthChange": false,
+                "order": [[0, "desc"]],
+                "columnDefs": [
+                    {
+                        className: "hide_column",
+                        targets: [3,]
+                    },
+                ],
+                "serverSide": true,
+                "ajax": {
+                    "url": "/suppliers/tax_set_list/"
+                },
+                "columns": [
+                    {"data": "code", "sClass": "text-left"},
+                    {"data": "name", "sClass": "text-left"},
+                    {"data": "rate", "sClass": "text-left"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            return '<input type="radio" name="tax-code-choices" id="' +
+                                    full.id + '" class="call-checkbox" value="' + meta.row + '">';
+                        }
+                    }
+                ]
+            });
+        });
+
+        $('#btnTaxCodeSelect').on('click', function () {
+            var item_select_id = $("input[name='tax-code-choices']:checked").attr('id');
+            var nRow = $("input[name='tax-code-choices']:checked").parents('tr')[0];
+            var jqInputs = $('td', nRow);
+            $('#id_tax').val(item_select_id).trigger('change');
+            $(this).attr('data-dismiss', 'modal');
+        });
+    </script>
+
+{% endblock %}

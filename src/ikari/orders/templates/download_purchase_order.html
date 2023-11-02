@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Download Purchase Orders{% endblock %}
+{% block parent_order_a_active %}active{% endblock %}
+{% block parent_order_i_active %}active{% endblock %}
+{% block order_purchase_active %}active{% endblock %}
+
+{% block content %}
+    <br/>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="border-head">
+                <h3>Download Purchase Orders</h3>
+            </div>
+        </div>
+    </div>
+    <section class="panel">
+        <form class="form-horizontal"
+              role="form"
+              method="post"
+              enctype="multipart/form-data" id="search-order-form" action="{% url 'download_purchase_order' %}">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <div class="row" style="padding-top:10px">
+                                <div class="col-lg-5">
+                                    <div class="col-lg-4">
+                                        <label class="control-label">From Purchase Order</label>
+                                    </div>
+                                    <div class="col-lg-8">
+                                        <select id='from_so' name="from_po" class="form-control" required="required">
+                                            <option></option>
+                                            {% for so in so_list %}
+                                                <option value="{{so.order_id}}">{{so.order__document_number}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-lg-5">
+                                    <div class="col-lg-4">
+                                        <label class="control-label col-md-12">To Purchase Order</label>
+                                    </div>
+                                    <div class="col-lg-8">
+                                        <div id="sandbox-container">
+                                            <select id='to_so' name="to_po" class="form-control" required="required">
+                                            <option></option>
+                                        </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-2">
+                                    <div class="form-group">
+                                        <div class=" col-lg-10">
+                                            <button id="check" class="btn btn-success"
+                                                    formaction="{% url 'download_purchase_load' %}">View
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12">
+                    <section class="panel">
+                        <div class="panel-body">
+                            {% if messages %}
+                                <div id="message" class="col-lg-12 alert alert-danger">
+                                    {% for message in messages %}
+                                        <strong id="me2">+{{ message }}</strong><br>
+                                    {% endfor %}
+                                    <strong name="nomessage" id="nomessage"
+                                            value=""></strong>
+                                </div>
+                            {% endif %}
+                            <div class="adv-table">
+                                <table class="display table table-bordered table-striped table-condensed"
+                                       id="purchase-order-table-info">
+                                    <thead>
+                                    <tr>
+                                        <th>Supplier</th>
+                                        <th>P.O Document Number</th>
+                                        <th>Order Date</th>
+                                        <th style="display: none;">Debit Account</th>
+                                        <th style="display: none;">Credit Account</th>
+                                        <th>Total</th>
+                                        <th style="display: none">Select</th>
+                                    </tr>
+                                    </thead>
+                                    {% if supplier_list %}
+                                        <tbody>
+                                        {% for e in supplier_list %}
+                                            <tr class="gradeX">
+                                                <td>{{ e.supplier__name }}</td>
+                                                <td>{{ e.order__document_number }}</td>
+                                                <td>{{ e.order__document_date }}</td>
+                                                <td style="display: none;">{{ e.debit_account_name }}</td>
+                                                <td style="display: none;">{{ e.credit_account_name }}</td>
+                                                <td>{{ e.supplier_total }}</td>
+                                                <td class="text-center" style="display: none">
+                                                    <input class="suppler-checkbox" type="checkbox" name="choices"
+                                                           id="{{ e.supplier_id }}"
+                                                           value="{{ e.supplier_id }}" checked>
+                                                    <input type="hidden" value="{{ e.order_id }}"
+                                                           name="purchase_order_id">
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    {% endif %}
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                <div class="form-group bottom-group">
+                    <div class="col-lg-12 text-center">
+                        <button class="btn btn-success" id="btnDownload"
+                                {% if supplier_list == None %}style="display: none" {% endif %}>Download
+                        </button>
+                        <a class="btn btn-default" href="{% url 'order_list' 2 %}">Cancel</a> {# ORDER_TYPE['PURCHASE ORDER'] #}
+                    </div>
+                </div>
+            </div>
+        </form>
+    </section>
+
+{% endblock %}
+{% block extrafoot %}
+    {% load staticfiles %}
+
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <!--dynamic table initialization -->
+    <script src="{% static 'js/order/generate_purchase_table_init.js' %}?{% now 'H' %}"></script>
+
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript"> 
+        (function(){
+            var so_list_enchanced = [];
+            {% for elem in so_list %}
+                var obj = {};
+                obj.id = "{{elem.order_id}}";
+                obj.document_number = "{{elem.order__document_number}}";
+                so_list_enchanced.push(obj);
+            {% endfor %}
+            var arrSaleOrders = [];
+
+            $('.sale_order_id').each(function () {
+                arrSaleOrders.push($(this).val());
+            });
+            $('#so_list').val(arrSaleOrders);
+
+            $(document).ready(function () {
+                var from_so = "{{from_po}}";
+                var to_so = "{{to_po}}";
+                $('#check').hide();
+                if (to_so != 0) {
+                     for (var i in so_list_enchanced) {
+                    if (parseInt(so_list_enchanced[i].id,10)>=to_so){
+                        $("#to_so").append($('<option>', {value: so_list_enchanced[i].id, text: so_list_enchanced[i].document_number}));
+                    }
+                    $("#to_so").val(to_so);
+                }
+                if (from_so != 0) {
+                   
+                    $("#from_so").val(from_so);
+
+                }
+                }
+                $('#from_so').select2({
+                    placeholder: "Select Sales Order",
+                });
+                $('#to_so').select2({
+                    placeholder: "Select Sales Order",
+                });
+                if (!$('#from_so').val()){
+                    $('#to_so').prop('disabled', true);
+                }
+            });
+
+            $('#to_so').change(function(){
+                $('#check').click();
+            });
+            $('#from_so').change(function(){
+                var selected_id = parseInt($(this).val(),10);
+                $('#to_so').prop('disabled', false);
+                $("#to_so").empty();
+                for (var i in so_list_enchanced) {
+                    if (parseInt(so_list_enchanced[i].id,10)>=selected_id){
+                        $("#to_so").append($('<option>', {value: so_list_enchanced[i].id, text: so_list_enchanced[i].document_number}));
+                    }
+                }
+                $('#to_so').val('').trigger('change');
+            });
+        }());
+
+    </script>
+{% endblock %}
+
+

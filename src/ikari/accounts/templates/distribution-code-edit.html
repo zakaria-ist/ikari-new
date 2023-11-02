@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Edit Distribution Code{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block ar_distribution_code_active %}{% if type == '1' %}active{% endif %}{% endblock %}
+{% block ap_distribution_code_active %}{% if type == '2' %}active{% endif %}{% endblock %}
+{% block parent_AR_a_active %}{% if type == '1' %}active{% endif %}{% endblock %}
+{% block parent_AR_i_active %}{% if type == '1' %}active{% endif %}{% endblock %}
+{% block parent_AP_a_active %}{% if type == '2' %}active{% endif %}{% endblock %}
+{% block parent_AP_i_active %}{% if type == '2' %}active{% endif %}{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                Edit Distribution Code
+            </header>
+            <div class="panel-body">
+                <form class="form-horizontal" action="{% url 'dist_code_edit' distribution_code.id %}" role="form" method="post"
+                       onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="code" class="col-lg-2 col-sm-2 control-label">Code<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-8">
+                            <input type="text" class="form-control" id="code" name="code" value="{{ distribution_code.code }}"
+                                   required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Description</label>
+                        <div class="col-lg-8">
+                            <input type="text" class="form-control" id="name" name="name" value="{{ distribution_code.name }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="account" class="col-lg-2 col-sm-2 control-label">G/L Account</label>
+                        <div class="col-lg-8">
+                            <select class="form-control" id="account" name="account">
+                                <option value=""></option>
+                                {% for account in account_list %}
+                                    <option value="{{ account.id }}"
+                                     {% if account.id == distribution_code.gl_account_id %} selected {% endif %}>
+                                        {{account.code}} - {{ account.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Last Update</label>
+                        <div class="col-lg-8">
+                            <input type="text" class="form-control" value="{{ distribution_code.update_date }}" disabled="true">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="label_check" class="col-lg-2 col-sm-2 control-label"></label>
+                        <div class="col-lg-2">
+                            <div class="checkbox checkbox-primary">
+                                <input name="sample-checkbox" id="checkbox-01" class="styled" type="checkbox"
+                                       {% if distribution_code.is_active %}checked{% endif %}/>
+                                <label for="checkbox-01">
+                                    Active
+                                </label>
+                            </div>
+                        </div>
+                        
+                    </div>
+                    <div class="form-group bottom-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" name="btnSave" class="btn btn-success">Save
+                            </button>
+                             {% if 'accounts.delete_account' in user.get_all_permissions%}
+                                {% if user.is_superuser and not account.company_id %}
+                                    <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger">Delete</a>
+                                {% elif request.session.login_company_id == account.company_id %}
+                                    <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger">Delete</a>
+                                {% endif %}
+                            {% endif %} 
+                            <a type="submit" class="btn btn-default" href="{% url 'dist_code_list' type %}">Cancel</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+                 class="modal fade">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                            <h4 class="modal-title">Delete Confirm Dialog</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form role="form" action="{% url 'dist_code_delete' distribution_code.id %}" method="post">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                                </div>
+                                <button type="submit" class="btn btn-success">OK</button>
+                                <a type="submit" class="btn btn-default" href="{% url 'dist_code_edit' distribution_code.id %}">Cancel</a>
+                            </form>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+{% endblock %}
+
+{% block js %}
+<script src="{% static "js/select2/select2.js" %}"></script>
+<script>
+    $('select').select2({
+        'placeholder': 'Select Account'
+    });
+
+</script>
+{% endblock %}

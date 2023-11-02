@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Custom Account Group{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block account_setting_a_active %}active{% endblock %}
+{% block account_setting_i_active %}active{% endblock %}
+{% block rpt_template_a_active %}active{% endblock %}
+{% block rpt_template_i_active %}active{% endblock %}
+{% block rpt_acct_group_active %}active{% endblock %}
+
+{% block content %}
+    <div class="panel">
+        <header class="panel-heading">
+            Custom Account Group in Report
+        </header>
+        <div class="panel-body">
+            <form id="frm_rpt_acctgrp" class="form-horizontal" action="{% url 'report_account_group' '0' %}" role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data" novalidate> <!-- REPORT_TEMPLATE_TYPES_DICT['Profit & Loss'] -->
+                {% csrf_token %}
+                <div id="content">
+                    <ul id="tabs" class="nav nav-tabs" data-tabs="tabs"
+                        style="padding-left: 20px; margin-left: 18px; margin-right: 24px;">
+                        <li {% if active_tab_index == '0' %}class="active"{% else %}class=""{% endif %}>
+                            <a href="#pl_tab" data-toggle="tab">Profit & Loss</a>
+                        </li>
+                        <li {% if active_tab_index == '1' %}class="active"{% else %}class=""{% endif %}>
+                            <a href="#bs_tab" data-toggle="tab">Balance Sheet</a>
+                        </li>
+                    </ul>
+
+                    <div id="my-tab-content" class="tab-content">
+                        <div id="pl_tab"
+                            {% if active_tab_index == '0' %}class="tab-pane active"
+                            {% else %}class="tab-pane"{% endif %}>
+                            <div class="col-sm-12">
+                                <section class="panel">
+                                    <input type="text" class="hide" id="template_pl" name="template_pl">
+                                    <div class="panel-body">
+                                        <div class="adv-table table-responsive">
+                                            <table id="pl-table" class="table table-striped table-bordered" cellspacing="0" width="100%">
+                                                <thead>
+                                                    <tr>
+                                                        <th id="acc_grp_line">No</th>
+                                                        <th id="acc1_code">From<br />Account</th>
+                                                        <th id="acc2_code">To<br />Account</th>
+                                                        <th id="acc_code_txt">Account Code to display in report</th>
+                                                        <th id="acc_grp_desc">Description</th>
+                                                        <th id="options">Options</th>
+                                                        <th id="acc1_id" class="hide"></th>
+                                                        <th id="acc2_id" class="hide"></th>
+                                                        <th id="acc_grp_id" class="hide"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="pl_table_body">
+                                                {% for pl_acct_grp in acct_grp_list1 %}
+                                                    <tr>
+                                                        <td>{{ forloop.counter }}</td>
+                                                        <td>{{ pl_acct_grp.account_from.code|default:"" }}</td>
+                                                        <td>{{ pl_acct_grp.account_to.code|default:"" }}</td>
+                                                        <td>{{ pl_acct_grp.account_code_text|default:"" }}</td>
+                                                        <td>{{ pl_acct_grp.name|default:"" }}</td>
+                                                        <td>
+                                                            <a class="btn btn-white fa fa-pencil" onclick="editOldTransactionModal({{ pl_acct_grp.id }}, {{ forloop.counter }}, {{ pl_acct_grp.report_template_type }})"></a><a class="btn btn-white fa fa-minus" onclick="deleteOldTransactionModal({{ pl_acct_grp.id }}, {{ pl_acct_grp.report_template_type }})"></a>
+                                                        </td>
+                                                        <td class="hide">{{ pl_acct_grp.account_from.id|default:"" }}</td>
+                                                        <td class="hide">{{ pl_acct_grp.account_to.id|default:"" }}</td>
+                                                        <td class="hide">{{ pl_acct_grp.id|default:"" }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                                <tfoot>
+                                                    <tr>
+                                                        <td colspan="6" style="text-align: left;">
+                                                            <a id="addRowPL" class="btn btn-white fa fa-plus sended fieldset"></a>
+                                                        </td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="form-group bottom-group">
+                                        <div class="col-lg-6">
+                                            <button id="btnSavePL" name="btnSave" type="submit" class="btn btn-success pull-right">Save</button>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                        <div id="bs_tab"
+                            {% if active_tab_index == '1' %}class="tab-pane active"
+                            {% else %}class="tab-pane"{% endif %}>
+                            <div class="col-sm-12">
+                                <section class="panel">
+                                    <input type="text" class="hide" id="template_bs" name="template_bs">
+                                    <div class="panel-body">
+                                        <div class="table-responsive">
+                                            <table id="bs-table" class="table table-striped table-bordered" cellspacing="0" width="100%">
+                                                <thead>
+                                                    <tr>
+                                                        <th id="acc_grp_line">No</th>
+                                                        <th id="acc1_code">From<br />Account</th>
+                                                        <th id="acc2_code">To<br />Account</th>
+                                                        <th id="acc_code_txt">Account Code to display in report</th>
+                                                        <th id="acc_grp_desc">Description</th>
+                                                        <th id="options">Options</th>
+                                                        <th id="acc1_id" class="hide"></th>
+                                                        <th id="acc2_id" class="hide"></th>
+                                                        <th id="acc_grp_id" class="hide"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="bs_table_body">
+                                                {% for bs_acct_grp in acct_grp_list2 %}
+                                                    <tr>
+                                                        <td>{{ forloop.counter }}</td>
+                                                        <td>{{ bs_acct_grp.account_from.code|default:"" }}</td>
+                                                        <td>{{ bs_acct_grp.account_to.code|default:"" }}</td>
+                                                        <td>{{ bs_acct_grp.account_code_text|default:"" }}</td>
+                                                        <td>{{ bs_acct_grp.name|default:"" }}</td>
+                                                        <td>
+                                                            <a class="btn btn-white fa fa-pencil" onclick="editOldTransactionModal({{ bs_acct_grp.id }}, {{ forloop.counter }}, {{ bs_acct_grp.report_template_type }})"></a><a class="btn btn-white fa fa-minus" onclick="deleteOldTransactionModal({{ bs_acct_grp.id }}, {{ bs_acct_grp.report_template_type }})"></a>
+                                                        </td>
+                                                        <td class="hide">{{ bs_acct_grp.account_from.id|default:"" }}</td>
+                                                        <td class="hide">{{ bs_acct_grp.account_to.id|default:"" }}</td>
+                                                        <td class="hide">{{ bs_acct_grp.id|default:"" }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                                <tfoot>
+                                                    <tr>
+                                                        <td colspan="6" style="text-align: left;">
+                                                            <a id="addRowBS" class="btn btn-white fa fa-plus sended fieldset"></a>
+                                                        </td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="form-group bottom-group">
+                                        <div class="col-lg-6">
+                                            <button id="btnSaveBS" type="submit" class="btn btn-success pull-right">Save</button>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <input type="text" class="hide" id="template_type" name="template_type" value="">
+            </form>
+        </div>
+    </div>
+
+    <!-- modal add account group row -->
+    <div class="form-group form-horizontal">
+        <div class="col-lg-12">
+            <div class="modal fade" id="AddAcctGrpRow" tabindex="false" role="dialog"
+                 aria-labelledby="myModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog modal-lg"
+                     style="width: 60%; padding-left: 10%; padding-right: 10%;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"
+                                    aria-hidden="true">&times;</button>
+                            <h4 class="modal-title"><strong>Add/Edit Account Group</strong></h4>
+                        </div>
+                        <div class="modal-body" style="margin-bottom: 0px; padding-bottom: 0px">
+                            <section class="panel">
+                                <div class="row">
+                                    <div class="panel-body" style="font-size: 14px!important;">
+                                        <div class="adv-table" id="myDialog">
+                                            <div class="form-group">
+                                                <label for="from_account" class="col-lg-3 col-sm-3 control-label">From Account</label>
+                                                <div class="col-lg-4 col-sm-4">
+                                                    <select id="from_account" 
+                                                        class="form-control" 
+                                                        name="from_account"
+                                                        required="required">
+                                                        <option value="" selected="selected">Account</option>
+                                                        {% for acc in account_list %}
+                                                        <option value="{{acc.id}}">{{acc.code}}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="to_account" class="col-lg-3 col-sm-3 control-label">To Account</label>
+                                                <div class="col-lg-4 col-sm-4">
+                                                    <select id="to_account" 
+                                                        class="form-control" 
+                                                        name="to_account"
+                                                        required="required">
+                                                        <option value="" selected="selected">Account</option>
+                                                        {% for acc in account_list %}
+                                                        <option value="{{acc.id}}">{{acc.code}}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="acc_code_text" class="col-lg-3 col-sm-3 control-label">Account Code</label>
+                                                <div class="col-lg-4 col-sm-4">
+                                                    <input id="acc_code_text" name="acc_code_text" type="text" class="form-control" value="">
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="description" class="col-lg-3 col-sm-3 control-label">Description</label>
+                                                <div class="col-lg-9 col-sm-9">
+                                                    <input id="description" name="description" type="text" class="form-control" value="">
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <button data-dismiss="modal" class="btn btn-default" type="button">Cancel</button>
+                                                <button class="btn btn-primary" id="AddRow" type="button">Add</button>
+                                            </div>
+                                            <div id="div_error_msg" class="form-group hide text-center">
+                                                <span id="error_msg" class="col-lg-12 col-sm-12 messages" style="font-size: 14.5px !important;"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- modal add account group row -->
+
+    {#notification#}
+    <div class="modal fade" id="notificationModal" tabindex="-1" role="dialog"
+         aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title"><strong><span id='notificationModal_title'>Notification Title</span></strong></h4>
+                </div>
+                <div class="modal-body" style="padding-bottom: 0px!important;">
+                    <div class="form-group">
+                        <div id="notificationModal_text1" class="text-left">Notification #1</div>
+                        <div id="notificationModal_text2" class="text-left">Notification #2</div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="text-align: center">
+                    <button class="btn btn-primary" type="button" data-dismiss="modal">Ok</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {#End notification#}
+
+    {# Comfirm Delete Transaction #}
+    <div class="modal fade" id="comfirmDeleteTransactionModal" tabindex="-1" role="dialog"
+         aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <form id="comfirmDeleteTransactionForm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-hidden="true">&times;</button>
+                        <h4 class="modal-title"><strong>Delete Confirm Dialog</strong></h4>
+                    </div>
+                    <div class="modal-body" style="padding-bottom: 0px!important;">
+                        <div class="form-group">
+                            <label>Are you sure want to delete?</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="text-align: center">
+                        <button class="btn btn-default" type="button" data-dismiss="modal">No
+                        </button>
+                        <a>
+                            <button class="btn btn-success" id="comfirm-yes">Yes</button>
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    {# End Comfirm delete Transaction #}
+
+{% endblock %}
+
+{% block js %}
+<script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>    
+<script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+<script src="{% static "js/select2/select2.js" %}"></script>
+<script type="application/javascript" src="{% static 'js/accounting/report_acct_grp.js' %}?{% now 'H' %}"></script>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#from_account").select2({ placeholder: "Select Account" });
+        $("#to_account").select2({ placeholder: "Select Account" });
+    });
+
+    $(document).ready(function () {
+        $("#btnSavePL").prop('disabled', true);
+
+        $('#pl-table').DataTable({
+            "bFilter": false,
+            "bLengthChange": false,
+            "ordering": false,
+            "bInfo": false,
+            "bPaginate": false,
+            "columnDefs": [
+                { "width": "5%", "targets": 0 },
+                { "width": "10%", "targets": 1 },
+                { "width": "10%", "targets": 2 },
+                { "width": "15%", "targets": 3 },
+                { "width": "50%", "targets": 4 },
+                { "width": "10%", "targets": 5 },
+                { "className": "hide", "targets": [6,7,8] },
+                { "className": "text-right", "targets": [0] }
+            ]
+        });
+
+        $('#addRowPL').click(function() {
+            clearTransactionForm();
+            $("#AddRow").attr("onclick", "addTransaction('0')");
+            $("#AddAcctGrpRow").modal("show");
+        });
+    });
+
+    $(document).ready(function () {
+        $("#btnSaveBS").prop('disabled', true);
+
+        $('#bs-table').DataTable({
+            "bFilter": false,
+            "bLengthChange": false,
+            "ordering": false,
+            "bInfo": false,
+            "bPaginate": false,
+            "columnDefs": [
+                { "width": "5%", "targets": 0 },
+                { "width": "10%", "targets": 1 },
+                { "width": "10%", "targets": 2 },
+                { "width": "15%", "targets": 3 },
+                { "width": "50%", "targets": 4 },
+                { "width": "10%", "targets": 5 },
+                { "className": "hide", "targets": [6,7,8] },
+                { "className": "text-right", "targets": [0] }
+            ]
+        });
+
+        $('#addRowBS').click(function() {
+            clearTransactionForm();
+            $("#AddRow").attr("onclick", "addTransaction('1')");
+            $("#AddAcctGrpRow").modal("show");
+        });
+    });
+</script>
+{% endblock %}

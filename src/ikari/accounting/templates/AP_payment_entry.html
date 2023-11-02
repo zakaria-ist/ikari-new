@@ -1,0 +1,2043 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load humanize %}
+    {% load staticfiles %}
+    {% load addFloat %}
+    {% load documentType %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <link href="{% static "css/standard_header.css" %}" rel="stylesheet">
+    <!-- <link rel="stylesheet" href="{% static 'css/table.css' %}"> -->
+    <style>
+        
+        .disabled {
+            pointer-events: none;
+            cursor: not-allowed;
+            background-color: #eee;
+        }
+        .hide_column, .ui-helper-hidden-accessible {
+            display: none;
+        }
+
+        select::-ms-expand {
+            display: none;
+        }
+
+        .no-select {
+        /*for firefox*/
+        -moz-appearance: none;
+        /*for chrome*/
+        -webkit-appearance:none;
+        }
+
+        .modal-backdrop {
+          overflow: hidden !important
+        }
+
+        .adv-table ::-webkit-scrollbar {
+          -webkit-appearance: none;
+        }
+        .adv-table ::-webkit-scrollbar-thumb {
+          background-color: rgba(0, 0, 0, 0.3);
+          border-radius: 5px;
+        }
+        @media (min-width: 1200px) {
+            .modal-xlg {
+                width: 80%; 
+            }
+            .modal-pylg {
+                width: 70%; 
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block title %}
+    {% if rec_entry.id %}
+         Edit AP Payment Recurring Entry
+    {% elif is_rec_entry %}
+         Add AP Payment Recurring Entry
+    {% elif journal.id %}
+        Edit AP Payment Entry
+    {% else %}
+        Add AP Payment Entry
+    {% endif %}
+{% endblock %}
+{% block ap_payment_active %}active{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block parent_AP_a_active %}active{% endblock %}
+{% block parent_AP_i_active %}active{% endblock %}
+
+{% block content %}
+    <section class="panel">
+        <header class="panel-heading">
+            {% if rec_entry.id %}
+                <strong>Edit AP Payment Recurring Entry</strong>
+            {% elif is_rec_entry %}
+                <strong>Add AP Payment Recurring Entry</strong>
+            {% elif journal.id %}
+                <strong>Edit AP Payment Entry</strong>
+            {% else %}
+                <strong>Add AP Payment Entry</strong>
+            {% endif %}
+        </header>
+        <div class="panel-body">
+            <form class="form-horizontal" onsubmit="return  getTransactionTableData(this);"
+                    {% if rec_entry.id %}
+                        action="{% url 'edit_appayment_recurring_entry' rec_entry.id %}"
+                    {% elif is_rec_entry %}
+                        action="{% url 'add_appayment_recurring_entry' batch_id %}"
+                    {% elif journal.id %}
+                        action="{% url 'journal_AP_Payment_edit' batch.id journal.id %}"
+                    {% elif batch.id %}
+                        action="{% url 'journal_AP_Payment_add' batch.id %}"
+                    {% else %}
+                        action="{% url 'journal_AP_Payment_add' '0' %}"
+                    {% endif %}
+                  role="form" method="post" enctype="multipart/form-data"> {#batch_id #}
+                {% csrf_token %}
+                {% if is_rec_entry %}
+                    {% include 'RE_entry_common.html' %}
+                {% endif %}
+
+                <!-- Message row -->
+                <div class="form-group">
+                    <div id="journal_error" class="messages" text="adasd"
+                         style="font-size: 12.5px !important;  padding-left: 20px"></div>
+                </div>
+
+                <!-- First row -->
+                <div class="form-group">
+                    <div class=" col-xs-6 display_block">
+                      <label for="id_batch_no" class="col-lg-12 control-label">Batch Number</label>
+                      <div class="col-lg-12 full_width" style="display: flex">
+                          {% comment %} {% if not is_rec_entry %} {% endcomment %}
+                            <div class="">
+                                {% if prev_batch != 0 %}
+                                    <button type="button" tabindex="-1" class="btn btn-white" onclick="checkInput({{p_batch}},{{prev_batch}})"><i class="fa fa-chevron-left"></i></button>
+                                {% else %}
+                                    <button type="button" tabindex="-1" class="btn btn-white" disabled><i class="fa fa-chevron-left"></i></button>
+                                {% endif %}
+                            </div>
+                          {% comment %} {% endif %} {% endcomment %}
+                          <div class="" style="margin: 0 10px 0 10px">
+                              <div class="center date_length">
+                                {{ batch_form.batch_no }}
+                              </div>
+                          </div>
+                          {% comment %} {% if not is_rec_entry %} {% endcomment %}
+                            <div class="">
+                                {% if next_batch != 0 %}
+                                    <button type="button" class="btn btn-white" tabindex="-1" onclick="checkInput({{n_batch}},{{next_batch}})"><i class="fa fa-chevron-right"></i></button>
+                                {% else %}
+                                    <button type="button" class="btn btn-white" tabindex="-1" disabled><i class="fa fa-chevron-right"></i></button>
+                                {% endif %}
+                            </div>
+                          {% comment %} {% endif %} {% endcomment %}
+                          {% if not is_rec_entry %}
+                            <div class="" style="margin: 0 10px 0 10px">
+                                <a class="btn btn-success start" href="/accounting/add/APPayment/0/">
+                                    <i class="glyphicon glyphicon-plus"></i>
+                                </a>
+                            </div>
+                          {% endif %}
+                      </div>
+                    </div>
+                    <div class="col-xs-6 display_block">
+                      <label for="id_description" class="col-lg-12 control-label">Batch Description<span
+                              class="span-required">(*)</span></label>
+                      <div class="col-lg-12 full_width">
+                          <div class="dscrp_length">
+                            {{ batch_form.description|default:"" }}
+                          </div>
+                      </div>
+                    </div>
+                </div>
+
+                <!-- Second row -->
+                <div class="form-group">
+                    <div class="col-xs-3 display_block">
+                      <label for="id_batch_date" class="col-lg-12 control-label">Batch Date</label>
+                      <div class="col-lg-12 full_width">
+                          <div class="date_length center">
+                            {{batch_form.batch_date}}
+                            <input type="text" name="batch_view_date" id="batch_view_date" class="sended form-control form-control-inline input-medium default-date-picker">
+                          </div>
+                      </div>
+                    </div>
+                    <div class="col-xs-3">
+                      <label for="id_no_entries" class="col-lg-12 control-label">No of Entries</label>
+                      <div class="col-lg-12 full_width">
+                          <div class="center" style="width: 60px">
+                            {{batch_form.no_entries}}
+                          </div>
+                      </div>
+                    </div>
+                    <div class="col-xs-6 display_block">
+                      <label for="id_batch_amount" class="col-lg-12 control-label">Total Amount</label>
+                      <div class="col-lg-12 full_width">
+                          <div class="amount_length">
+                            {{ batch_form.batch_amount }}
+                          </div>
+                      </div>
+                    </div>
+                </div>
+
+                <!-- Third row -->
+                <div class="form-group">
+                    <div class="col-xs-6 display_block">
+                      <label for="id_bank" class="col-lg-12 control-label">Bank<span
+                              class="span-required">(*)</span></label>
+                      <div class="col-lg-12 display_flex search_dscrp_length">
+                        <div class="col-xs-9" style="padding-left: 0">
+                            {{form.bank}}
+                        </div>
+                        <div class="col-xs-3" style="padding-left: 0">
+                            <button id="btnSearchBank" tabindex="-1" type="button" class="btn btn-info" data-toggle="modal"
+                                    href="#BankListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-xs-6 display_block">
+                      <label for="id_currency" class="col-lg-12 control-label">Bank Currency</label>
+                      <div class="col-lg-12 full_width">
+                        <input type="text" name="id_currency_text" id="id_currency_text" class="hidden">
+                          <div class="center currency_to_middle" style="width: 80px;">
+                            {{form.currency}}
+                          </div>
+                      </div>
+                    </div>
+                </div>
+                <hr>
+
+                <!-- Fourth row -->
+                <div class="form-group">
+                    <div class="col-xs-6 display_block">
+                      <label for="id_code" class="col-lg-6 control-label">Entry Number</label>
+                      <div class="col-lg-12 display_flex full_width">
+                          {% comment %} {% if not is_rec_entry %} {% endcomment %}
+                            <div class="">
+                                {% if first_journal != 0 %}
+                                    <button type="button" tabindex="-1" class="btn btn-white" onclick="checkInput({{batch.id}},{{first_journal}})"><i class="fa fa-step-backward"></i></button>
+                                {% else %}
+                                    <button type="button" tabindex="-1" class="btn btn-white" disabled><i class="fa fa-step-backward"></i></button>
+                                {% endif %}
+                            </div>
+                            <div class="" style="margin: 0 10px 0 10px;">
+                                {% if prev_journal != 0 %}
+                                    <button type="button" tabindex="-1" class="btn btn-white" onclick="checkInput({{batch.id}},{{prev_journal}})"><i class="fa fa-chevron-left"></i></button>
+                                {% else %}
+                                    <button type="button" tabindex="-1" class="btn btn-white" disabled><i class="fa fa-chevron-left"></i></button>
+                                {% endif %}
+                            </div>
+                          {% comment %} {% endif %} {% endcomment %}
+                          <div class="center" style="max-width: 50px; min-width: 50px">
+                              {{ form.code }}
+                          </div>
+                          {% comment %} {% if not is_rec_entry %} {% endcomment %}
+                            <div class="" style="margin: 0 10px 0 10px;">
+                                {% if next_journal != 0 %}
+                                    <button type="button" tabindex="-1" class="btn btn-white" onclick="checkInput({{batch.id}},{{next_journal}})"><i class="fa fa-chevron-right"></i></button>
+                                {% else %}
+                                    <button type="button" tabindex="-1" class="btn btn-white" disabled><i class="fa fa-chevron-right"></i></button>
+                                {% endif %}
+                            </div>
+                            <div class="" style="padding-left: 0px;">
+                                {% if last_journal != 0 %}
+                                    <button type="button" tabindex="-1" class="btn btn-white" onclick="checkInput({{batch.id}},{{last_journal}})"><i class="fa fa-step-forward"></i></button>
+                                {% else %}
+                                    <button type="button" tabindex="-1" class="btn btn-white" disabled><i class="fa fa-step-forward"></i></button>
+                                {% endif %}
+                            </div>
+                            <button id="btnSearchEntry" type="button" class="btn btn-info" style="margin: 0 10px 0 10px" tabindex="-1"
+                                    data-toggle="modal" href="#searchEntryModal"><i class="fa fa-search"></i></button>
+                          {% comment %} {% endif %} {% endcomment %}
+                            {% if batch.id and batch.id != '0' and not is_rec_entry %}
+                                <a class="btn btn-success start sended" href="/accounting/add/APPayment/{{ batch.id }}/">
+                                    <i class="glyphicon glyphicon-plus"></i>
+                                </a>
+                            {% endif %}
+                      </div>
+                    </div>
+                    <div class="col-xs-6 display_block">
+                      <label for="id_name" class="col-lg-12 control-label">Description<span
+                              class="span-required">(*)</span></label>
+                      <div class="col-lg-12 full_width">
+                          <div class="dscrp_length">
+                            {{ form.name|default:"" }}
+                          </div>
+                      </div>
+                    </div>
+                </div>
+
+                <!-- Fifth row -->
+                <div class="form-group">
+                    <div class="col-xs-3 display_block">
+                      <label for="id_transaction_type" class="col-lg-12 control-label" style="padding-right: 0">Transaction Type<span
+                              class="span-required">(*)</span></label>
+                      <div class="col-lg-12 full_width">
+                          <div style="width: 130px">
+                            {{ form.transaction_type }}
+                          </div>
+                      </div>
+                    </div>
+                    <!-- <div class="col-lg-1 col-sm-1">
+                    </div> -->
+                    <div class="col-xs-3 display_block">
+                      <label for="id_payment_date" class="col-lg-12 control-label">Pay Date</label>
+                      <div class="col-lg-12 full_width">
+                          <div class=" center date_length">
+                            {{ form.document_date }}
+                            <input type="text" name="doc_date_view" id="doc_date_view" class="sended form-control form-control-inline input-medium default-date-picker">
+                          </div>
+                      </div>
+                    </div>
+                    <!-- </div>
+                                    <div class="form-group"> -->
+                    <div class="col-xs-3 display_block">
+                      <label for="posting_date" class="col-lg-12 control-label">Posting Date</label>
+                      <div class="col-lg-12 full_width">
+                          <div class="center date_length">
+                            {{ form.posting_date }}
+                            <input type="text" name="post_date_view" id="post_date_view" class="sended form-control form-control-inline input-medium default-date-picker">
+                          </div>
+                      </div>
+                    </div>
+
+                    <!-- <label for="year_period" class="col-lg-2 col-md-2 control-label">Year/Period</label> -->
+                    <div class="col-xs-3">
+                      <label class="control-label col-lg-12">Period-Year</label>
+                      <div class="col-lg-12 full_width">
+                          <div class="center" style="width: 80px">
+                            {% if rec_entry %}
+                            <input type="text" class="hide" tabindex="-1" id="perd_year" name="perd_year" value="{{rec_entry.perd_year}}">
+                            <input type="text" class="hide" tabindex="-1" id="perd_month" name="perd_month" value="{{rec_entry.perd_month}}">
+                            <input id="year_period" class="form-control" tabindex="-1" name="year_period" value="{{rec_entry.perd_month}}-{{rec_entry.perd_year}}"
+                                required="required" disabled>
+                            {% else %}
+                            <input type="text" class="hide" id="perd_year" tabindex="-1" name="perd_year" value="{{journal.perd_year}}">
+                            <input type="text" class="hide" id="perd_month" tabindex="-1" name="perd_month" value="{{journal.perd_month}}">
+                            <input id="year_period" class="form-control" tabindex="-1" name="year_period" value="{{journal.perd_month}}-{{journal.perd_year}}" required="required"
+                                disabled>
+                            {% endif %}
+                          </div>
+                          <!-- <select id="year_period" class="form-control trs-field fieldset" name="year_period" required="required"> -->
+                          <!-- </select> -->
+                      </div>
+                    </div>
+                </div>
+
+                <!-- Sixth row -->
+                <div class="form-group" id="id_supplier_group">
+                    <div class="col-xs-6 display_block">
+                      <label for="id_supplier" id="id_supplier_label" class="col-lg-12 control-label">Vendor Code<span
+                              class="span-required">(*)</span></label>
+                      <div class="col-lg-12 full_width">
+                        <div class="col-xs-9" id="id_supplier_div" style="padding-left: 0">
+                            {{form.supplier}}
+                        </div>
+                        <div class="col-xs-3" style="padding-left: 0">
+                            <button id="btnSearchSupplier" tabindex="-1" type="button" class="btn btn-info sended" data-toggle="modal"
+                                    href="#SupplierListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-xs-6 display_block">
+                      <label for="id_supplier_name" id="id_supplier_name_label" class="col-lg-12 control-label">Vendor Name</label>
+                      <div class="col-lg-12 full_width">
+                          <div class="dscrp_length">
+                            {{form.supplier_name}}
+                          </div>
+                      </div>
+                    </div>
+                </div>
+
+                <!-- Seventh row -->
+                <div class="form-group" id="id_account_set_group">
+                    <div class="col-xs-6 display_block">
+                      <label for="id_account_set" id="id_account_set_label" class="col-lg-12 control-label">Account Set<span
+                              class="span-required">(*)</span></label>
+                      <div class="col-lg-12 full_width display_flex">
+                        <div class="col-xs-9" id="id_account_set_div" style="padding-left: 0">
+                            {{form.account_set}}
+                        </div>
+                        <div class="col-xs-3" style="padding-left: 0">
+                            <button id="btnSearchAccountSet" tabindex="-1" type="button" class="btn btn-info sended" data-toggle="modal"
+                                    href="#AccountListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-xs-6">
+                      <label id="id_supplier_currency_label" for="id_supplier_currency" class="col-lg-12 control-label">Vendor Currency</label>
+                      <div class="col-lg-12">
+                          <!--<input class="form-control" id="id_supplier_currency" name="supplier_currency" readonly="true" type="text">-->
+                          <div class="dscrp_length">
+                            {{form.supplier_currency}}
+                          </div>
+                      </div>
+                    </div>
+                </div>
+
+                <!-- Eighth row -->
+                <div class="form-group">
+                    <div class="col-xs-6">
+                      <label for="id_payment_code" class="col-lg-12 control-label">Payment Code<span
+                              class="span-required">(*)</span></label>
+                      <div class="col-lg-12 full_width search_dscrp_length">
+                        <div class="col-xs-9" style="padding-left: 0">
+                            {{form.payment_code}}
+                        </div>
+                        <div class="col-xs-3" style="padding-left: 0">
+                            <button id="btnSearchPaymentCode" tabindex="-1" type="button" class="btn btn-info sended" data-toggle="modal"
+                                    href="#PaymentCodeListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-xs-6">
+                      <label id="id_payment_check_number_label" for="id_payment_check_number" class="col-lg-12 control-label hidden">Check Number</label>
+                      <div class="col-lg-12 full_width">
+                          {{form.payment_check_number}}
+                      </div>
+                    </div>
+                </div>
+
+                <!-- Tenth row -->
+                <div class="form-group">
+                    <div class="col-xs-6 display_block">
+                      <label for="id_document_number" class="col-lg-12 control-label">Document Number</label>
+                      <div class="col-lg-9">
+                          <div class="search_dscrp_length">
+                            {{ form.document_number|default_if_none:"" }}
+                          </div>
+                      </div>
+                    </div>
+                    <div class="col-xs-6 display_block">
+                        <div id="tax_reporting_rate_div">
+                            <label for="tax_exchange_rate" class="col-lg-12 control-label">Tax Reporting Exchange Rate</label>
+                            <div class="col-lg-12 display_flex search_dscrp_length full_width">
+                                <div class="col-xs-9" style="padding-left: 0">
+                                    {{ form.tax_exchange_rate|default:"0" }}
+                                </div>
+                                <div class="col-xs-3" style="padding-left: 0">
+                                    <button id="btnSearchTaxExchangeRate" tabindex="-1" type="button" class="btn btn-info sended" data-toggle="modal"
+                                            href="#TaxExchangeRateListModal"><i class="fa fa-search"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                  <div class="col-xs-6">
+                    <div class="col-lg-12 checkbox checkbox-primary" style="padding-top: 0px; margin-left: 15px;">
+                        {{ form.is_manual_doc }}
+                        <label for="id_is_manual_doc">
+                            Add Document Manually
+                        </label>
+                    </div>
+                  </div>
+                </div>
+
+
+                <!-- Eleventh row -->
+                <div class="form-group">
+                    {% comment %} <label for="id_serial_no" class="col-lg-2 col-sm-2 control-label">Ref. Serial Number</label>
+                    <div class="col-lg-3 col-sm-3">
+                        <input class="form-control sended" id="id_serial_no" name="serial_no" type="text">
+                    </div> {% endcomment %}
+                    <div class="col-xs-6 display_block">
+                      <label for="id_reference" class="col-lg-12 control-label">Reference</label>
+                      <div class="col-lg-12 full_width">
+                          <div class="dscrp_length">
+                            {{ form.reference }}
+                          </div>
+                      </div>
+                    </div>
+                    <div class="col-xs-6 display_block" id="id_tax_group">
+                        <label for="id_invoice_number" class="col-lg-12 control-label">Invoice Number</label>
+                        <div class="col-lg-12 full_width">
+                            <div class="dscrp_length">
+                              {{ form.invoice_number }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Twelvth row -->
+                {% comment %} <div class="form-group" id="id_tax_group">
+                    <label for="id_invoice_number" class="col-lg-2 col-sm-2 control-label">Invoice Number</label>
+                    <div class="col-lg-3 col-sm-3">
+                        {{ form.invoice_number }}
+                    </div>
+                </div> {% endcomment %}
+                <hr width="100%">
+                <div class="form-group">
+                    <div class="col-lg-12" id="payment_div">
+                        <div class="form-group">
+                            <label for="id_payment_amount" class="col-lg-2 col-sm-2 control-label">Payment Amount</label>
+                            <div class="col-lg-2 col-sm-2">
+                                {{ form.payment_amount }}
+                            </div>
+                            <div class="col-lg-1 col-sm-1">
+                                <input class="form-control payment_currency" tabindex="-1" id="payment_currency" name="payment_currency" readonly="true" type="text">
+                            </div>
+                            <div id="" class="col-lg-1 col-sm-1">
+                                {{ form.original_currency_id }}
+                                {{ form.payment_currency_id }}
+                                {{ form.orig_exch_rate }}
+                                {{ form.exchange_rate }}
+                                {{ form.exchange_rate_fk }}
+                            </div>
+                            <label for="id_original_amount" class="col-lg-2 col-sm-2 control-label">Vendor Amount</label>
+                            <div class="col-lg-2 col-sm-2">
+                                {{ form.original_amount }}
+                            </div>
+                            <div class="col-lg-1 col-sm-1">
+                                <input class="form-control supp_currency" tabindex="-1" id="supp_currency" name="supp_currency" readonly="true" type="text">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="form-group">
+                            <div class="col-xs-3">
+                              <label class="col-lg-12 control-label full_width">&nbsp</label>
+                                <button id="btnShowRateOverrideModal" type="button" class="btn btn-info" data-toggle="modal"
+                                    onclick="showRateOverrideModal()">Exchange Rates</button>
+                            </div>
+                            <div id="subtotal-div">
+                                <div class="col-xs-2 display_block">
+                                  <label for="amount" class="col-lg-12 control-label">Subtotal</label>
+                                  <div class="col-lg-12 full_width">
+                                      <div class="amount_length">
+                                        {{ form.amount }}
+                                      </div>
+                                  </div>
+                                  <div class="col-sm-5" style="margin-top: 5px">
+                                    <input class="form-control payment_currency" tabindex="-1" 
+                                        id="subtotal_currency" name="subtotal_currency" readonly="true" type="text">
+                                  </div>
+                                </div>
+                                <div class="col-xs-2 display_block">
+                                  <label for="amount" class="col-lg-12 control-label">Tax Amount</label>
+                                  <div class="col-lg-12 full_width">
+                                      <div class="amount_length">
+                                        {{ form.tax_amount }}
+                                      </div>
+                                  </div>
+                                  <div class="col-sm-5" style="margin-top: 5px">
+                                    <input class="form-control payment_currency" tabindex="-1" 
+                                        id="tax_currency" name="tax_currency" readonly="true" type="text">
+                                  </div>
+                                </div>
+                                <div class="col-xs-2 display_block">
+                                  <label class="col-lg-12 control-label">Tax Rep. Amount</label>
+                                    <div class="col-lg-12 full_width">
+                                        <div class="amount_length">
+                                            <input class="form-control text-right" id="id_tax_report_amount" 
+                                            name="id_tax_report_amount" readonly="readonly" tabindex="-1" type="text" value="0.00">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-5" style="margin-top: 5px">
+                                        <input class="form-control" tabindex="-1" 
+                                            id="tax_report_currency" name="tax_report_currency" readonly="true" type="text" value="SGD">
+                                    </div>
+                                </div>
+                                <div class="col-xs-3 display_block">
+                                  <label for="id_total_amount" class="col-lg-12 control-label">Total</label>
+                                  <div class="col-lg-12 full_width">
+                                      <div class="amount_length">
+                                        {{ form.total_amount }}
+                                      </div>
+                                  </div>
+                                  <div class="col-sm-4" style="margin-top: 5px">
+                                    <input class="form-control payment_currency" tabindex="-1" 
+                                        id="total_currency" name="total_currency" readonly="true" type="text">
+                                  </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Save transaction data for both kind of payment-->
+                        <input type="hidden" id="transaction_list_data" name="transaction_list_data">
+
+                        <!-- TABLE FOR MISC-PAYMENT TRANSACTION -->
+                        <div class="adv-table table-responsive" id="misc_transaction_div"
+                             style="overflow-x: scroll; overflow-y: auto; margin-bottom: 20px">
+                            <table class="display table table-bordered table-striped header-fixed"
+                                   id="misc-transaction-table"
+                                   style="100%">
+                                <thead>
+                                <tr>
+                                    <th id="trs-line">Line</th>
+                                    <th id="trs-distribution_code">Distribution Code</th>
+                                    <th id="trs-description">Description</th>
+                                    <th id="trs-account_code">Account Code</th>
+                                    <th id="trs-account_name">Account Name</th>
+                                    <th id="trs-amount">Amount</th>
+                                    <th id="trs-tax_amount">Tax Amount</th>
+                                    <th id="trs-total_amount">Total Amount</th>
+                                    <th id="trs-action" style="min-width: 100px!important;">Action</th>
+                                    <th id="trs-id">ID</th>
+                                    <th id="trs-distribution_id">Distribution Id</th>
+                                    <th id="trs-account_id">Account Id</th>
+                                    <th id="trs-tax_included">Tax Included</th>
+                                    <th id="trs-tax_transaction">Tax Only</th>
+                                    <th id="trs-tax_id">Tax ID</th>
+                                    <th id="trs-manual_tax_input">Manual Tax</th>
+                                    <th id="trs-base_tax_amount">Base Tax Amount</th>
+                                    <th id="trs-row_number" style="display: none;">Row Number</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for transaction in transactions %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ transaction.distribution_code.code|default:"" }}</td>
+                                        <td>{{ transaction.description|default:"" }}</td>
+                                        <td>{{ transaction.account.code|default:"" }}</td>
+                                        <td>{{ transaction.account.name|default:"" }}</td>
+                                        {% if transaction.currency.is_decimal %}
+                                            <td style="text-align: right;">{{ transaction.amount|floatformat:2|intcomma }}</td>
+                                            <td style="text-align: right;">{{ transaction.tax_amount|floatformat:2|intcomma  }}</td>
+                                            <td style="text-align: right;">{{ transaction.total_amount|floatformat:2|intcomma }}</td>
+                                        {% else %}
+                                            <td style="text-align: right;">{{ transaction.amount|floatformat:0|intcomma }}</td>
+                                            <td style="text-align: right;">{{ transaction.tax_amount|floatformat:0|intcomma  }}</td>
+                                            <td style="text-align: right;">{{ transaction.total_amount|floatformat:0|intcomma }}</td>
+                                        {% endif %}
+                                        <td>
+                                            <div class="btn-group dropup">
+                                                <button type="button" class="btn btn-primary btn-sm dropdown-toggle set_line"
+                                                        data-toggle="dropdown" aria-haspopup="true"
+                                                        aria-expanded="false" style="min-width: 40px!important;">Action<span
+                                                        class="caret" style="margin-left:15px;"></span><span
+                                                        class="sr-only">Toggle Dropdown</span></button>
+                                                <ul class="dropdown-menu dropdown-menu-right">
+                                                    <li>
+                                                    {% if rec_entry %}
+                                                        <a onclick="editOldTransactionModal({{ transaction.id }}, {{ forloop.counter }}, true)">Edit</a>
+                                                        <a onclick="deleteOldTransactionModal({{ forloop.counter }})">Delete</a>
+                                                    {% elif journal.status == 1 %} {#STATUS_TYPE_DICT['Open']#}
+                                                        <a onclick="editOldTransactionModal({{ transaction.id }}, {{ forloop.counter }}, false)">Edit</a>
+                                                        <a onclick="deleteOldTransactionModal({{ forloop.counter }})">Delete</a>
+                                                    {% else %}
+                                                        <a onclick="editOldTransactionModal({{ transaction.id }}, {{ forloop.counter }}, false)">View</a>
+                                                    {% endif %}
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                        <td>{{ transaction.id }}</td>
+                                        <td>{{ transaction.distribution_code.id }}</td>
+                                        <td>{{ transaction.account_id }}</td>
+                                        <td>{{ transaction.is_tax_include|yesno:"1,0" }}</td>
+                                        <td>{{ transaction.is_tax_transaction|yesno:"1,0" }}</td>
+                                        <td>{{ transaction.tax_id|default:"" }}</td>
+                                        <td>{{ transaction.is_manual_tax_input|yesno:"1,0" }}</td>
+                                        <td>{{ transaction.base_tax_amount|floatformat:2|intcomma }}</td>
+                                        <td>{{ forloop.counter }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                <tr>
+                                    <th colspan="9" style="text-align: left;">
+                                        <a id="btnAddMiscPaymentTransDialog" onclick="showTransactionModal()"
+                                           data-toggle="modal" class="btn btn-white fa fa-plus sended"></a>
+                                    </th>
+                                </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <!-- TABLE FOR PAYMENT TRANSACTION -->
+                        <div class="adv-table table-responsive" id="transaction_div"
+                             style="overflow-x: scroll; overflow-y: auto; margin-bottom: 20px">
+                            <table class="display table table-bordered table-striped header-fixed"
+                                   id="py-transaction-table">
+                                <div class="form-group">
+                                    <div id="appliedAmount_error" class="messages"
+                                        style="font-size: 12.5px !important; padding-left: 20px"></div>
+                                </div>
+                                <thead>
+                                <tr>
+                                    <th id="trs-doc-num">Document Number</th>
+                                    <th id="trs-doc-type">Document Type</th>
+                                    <th id="trs-py-num">Payment Number</th>
+                                    <th id="trs-out-amount">Pending Balance</th>
+                                    <th id="trs-apply-amount">Applied Amount</th>
+                                    <th id="trs-discount-amount">Discount</th>
+                                    <th id="trs-net-amount">Net Balance</th>
+                                    <th id="trs-doc-amount">Original Amount</th>
+                                    <th id="trs-doc-date">Document Date</th>
+                                    <th id="trs-due-date">Due Date</th>
+                                    <th style="width:100px">Action</th>
+                                    <th id="trs-py-id" >ID</th>
+                                    <th id="trs-invoice-id">Invoice ID</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for transaction in transactions %}
+                                    <tr>
+                                        <td>{{ transaction.related_invoice.document_number }}</td>
+                                        <td>{{ transaction.related_invoice.document_type|return_doc_type_str }}</td>
+                                        <td>{{ transaction.related_invoice.payment_number }}</td>
+                                        {% if transaction.currency.is_decimal %}
+                                            <td>{{ transaction.pending_balance|floatformat:2|intcomma}}</td>
+                                            <td><input class="applied-amount sended text-right" name="appliedAmount"
+                                                    value="{{ transaction.total_amount|floatformat:2|intcomma }}"
+                                                    onblur="checkValue({{ transaction.related_invoice_id }})"
+                                                    id="appliedAmount-{{ transaction.related_invoice_id }}"
+                                                    style=""></td>
+                                            <td><input class="discount-amount sended text-right" name="discountAmount"
+                                                    value="{{ transaction.discount_amount|floatformat:2|intcomma }}"
+                                                    onblur="checkValue({{ transaction.related_invoice_id }})"
+                                                    id="discountAmount-{{ transaction.related_invoice_id }}"
+                                                    style=""></td>
+                                            <td>{{ transaction.outstanding_amount|floatformat:2|intcomma }}</td>
+                                            <td>{{ transaction.related_invoice.document_amount|floatformat:2|intcomma }}</td>
+                                        {% else %}
+                                            <td>{{ transaction.pending_balance|floatformat:0|intcomma}}</td>
+                                            <td><input class="applied-amount sended text-right" name="appliedAmount"
+                                                    value="{{ transaction.total_amount|floatformat:0|intcomma }}"
+                                                    onblur="checkValue({{ transaction.related_invoice_id }})"
+                                                    id="appliedAmount-{{ transaction.related_invoice_id }}"
+                                                    style=""></td>
+                                            <td><input class="discount-amount sended text-right" name="discountAmount"
+                                                    value="{{ transaction.discount_amount|floatformat:0|intcomma }}"
+                                                    onblur="checkValue({{ transaction.related_invoice_id }})"
+                                                    id="discountAmount-{{ transaction.related_invoice_id }}"
+                                                    style=""></td>
+                                            <td>{{ transaction.outstanding_amount|floatformat:0|intcomma }}</td>
+                                            <td>{{ transaction.related_invoice.document_amount|floatformat:0|intcomma }}</td>
+                                        {% endif %}
+                                        <td>{{ transaction.related_invoice.document_date|date:"d-m-Y" }}</td>
+                                        <td>{{ transaction.related_invoice.due_date|date:"d-m-Y" }}</td>
+                                        <td class="text-center">
+                                            <div class="btn-group dropup">
+                                                <button type="button" class="btn btn-primary btn-sm dropdown-toggle sended"
+                                                        data-toggle="dropdown" aria-haspopup="true"
+                                                        aria-expanded="false" style="min-width: 40px!important;">Action<span
+                                                        class="caret" style="margin-left:15px;"></span><span
+                                                        class="sr-only">Toggle Dropdown</span></button>
+                                                <ul class="dropdown-menu dropdown-menu-right">
+                                                    <li>
+                                                        <a onclick="deleteOldPaymentTransactionModal({{ transaction.id}}, {{ transaction.related_invoice_id }}, {{ transaction.total_amount }})">Delete</a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                        <td>{{ transaction.id}}</td>
+                                        <td>{{ transaction.related_invoice_id }}</td>
+
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                <tr>
+                                    <th colspan="11" style="text-align: left;">
+                                        <a id="btnAddPaymentTransDialog" href="#Payment_TransModal"
+                                           data-toggle="modal" class="btn btn-white fa fa-plus sended"></a>
+                                    </th>
+                                </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- last column -->
+                <div class="form-group">
+                    <div class="col-xs-12 text-center">
+                        {% if journal.id and journal.status != 2 and not rec_entry %}
+                            <a class="btn btn-danger sended" onclick="deleteAPP('{{journal.id}}')">Delete</a>
+                        {% endif %}
+                        <button style="display: none" type="submit" class="btn btn-info" name="is_posted" onclick="getTransactionTableData()">Send
+                        </button>
+                        {% if journal.status != 2 %}
+                        <button id="btnSaveAPPayment" type="submit" name="btnSave" class="btn btn-success sended">Save</button>
+                        {% endif %}
+                        {% if rec_entry %}
+                            <a class="btn btn-default" href="{% url 'recurring_batch_list' '4' %}">Cancel</a> {#['AP RECURRING'] #}
+                        {% elif is_rec_entry %}
+                            <a class="btn btn-default" href="{% url 'recurring_batch_list' '4' %}">Cancel</a> {#['AP RECURRING'] #}
+                        {% elif batch.id %}
+                            <a class="btn btn-default" href="{% url 'journal_list' '4' batch.id %}">Cancel</a> {#TRANSACTION_TYPES['AP Payment'] #}
+                        {% else %}
+                            <a class="btn btn-default" href="{% url 'batch_list' '4' %}">Cancel</a> {#TRANSACTION_TYPES['AP Payment'] #}
+                        {% endif %}
+                        <button id="btnShowHistoryModal" type="button" class="btn btn-info" data-toggle="modal"
+                                    onclick="showHistoryModal()">History</button>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+        <div class="form-group form-horizontal">
+                    <div class="col-lg-12">
+                        {% include 'AP_payment_trans_modal.html' %}
+                    </div>
+        </div>
+    </section>
+    {% if journal.id %}
+        <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+             class="modal fade">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                        <h4 class="modal-title">Delete Confirm Dialog</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form role="form" action="{% url 'journal_AR_delete' journal.id %}" method="post">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                            </div>
+                            <button type="submit" class="btn btn-success">OK</button>
+                            <a class="btn btn-default" data-dismiss="modal">Cancel</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    <div class="modal fade" id="BankListModal" tabindex="-1" role="dialog"
+         aria-labelledby="BankListModal" aria-hidden="true">
+        <div class="modal-dialog modal-xs">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Bank</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                      <div class="row">
+                          <div class="col-xs-12">
+                              <div class="panel-body"
+                                   style="padding: 0px!important; font-size: 12.5px !important;">
+                                  <div class="table-responsive">
+                                      <table id="bank-table" style="width: 100%"
+                                             class="display table table-bordered table-striped table-hover">
+                                          <thead>
+                                          <tr>
+                                              <th>Bank Code</th>
+                                              <th>Description</th>
+                                              <th>Currency ID</th>
+                                              <th id="curr">Currency</th>
+                                              <th>Account</th>
+                                              <th></th>
+                                          </tr>
+                                          </thead>
+                                      </table>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button data-dismiss="modal" class="btn btn-success" type="button" id="btnSelectBank">Select
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="SupplierListModal" tabindex="-1" role="dialog"
+         aria-labelledby="myCustomerListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Vendor</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div id="supplier_error" class="messages"
+                             style="font-size: 12.5px !important;"></div>
+                    </div>
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="supplier-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th id="sup-code">Vendor Code</th>
+                                                    <th id="sup-name">Vendor Name</th>
+                                                    <th id="sup-payment_term">Payment Term</th>
+                                                    <th id="sup-payment_mode">Payment Mode</th>
+                                                    <th id="sup-credit_limit">Credit Limit</th>
+                                                    <th id="sup-id" style="display: none;">ID</th>
+                                                    <th id="sup-tax" style="display: none;">Tax ID</th>
+                                                    <th id="sup-currency" style="display: none;">Currency ID</th>
+                                                    <th id="sup-currency_code" style="display: none;">Currency Code</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" onclick="changeSupllier()">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="modalSearchDocument" tabindex="-1" role="dialog"
+         aria-labelledby="modalSearchDocument" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Document</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section>
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="document-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Document Number</th>
+                                                    <th>Document Date</th>
+                                                    <th>Reference Number</th>
+                                                    <th>Total Amount</th>
+                                                    <th>Customer Name</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" id="btnDocumentSelect">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="myCustomerListModal" tabindex="-1" role="dialog"
+         aria-labelledby="myCustomerListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Customer</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="supplier-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Customer Code</th>
+                                                    <th>Customer Name</th>
+                                                    <th>Payment Term</th>
+                                                    <th>Payment Mode</th>
+                                                    <th>Credit Limit</th>
+                                                    <th style="display: none;">Tax ID</th>
+                                                    <th style="display: none;">Currency ID</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" id="btnCustomerSelect">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="AccountListModal" tabindex="-1" role="dialog"
+         aria-labelledby="AccountListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Account Set</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="account-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th id="acc-code">Account Set Code</th>
+                                                    <th id="acc-name">Description</th>
+                                                    <th id="acc-type">Control Account</th>
+                                                    <th id="acc-balance_type">Currency Code</th>
+                                                    <th id="acc-group">Revaluation Account</th>
+                                                    <th id="acc-id">Id</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" id="btnAccountSelect" onclick="changeAccount()">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="PaymentCodeListModal" tabindex="-1" role="dialog"
+         aria-labelledby="PaymentCodeListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Payment</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="payment-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Payment Code</th>
+                                                    <th>Description</th>
+                                                    <th>Payment Type</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button data-dismiss="modal" class="btn btn-success" type="button" id="btnPaymentSelect">
+                            Select
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="searchEntryModal" tabindex="-1" role="dialog"
+         aria-labelledby="searchEntryModal" aria-hidden="true">
+        <div class="modal-dialog modal-xlg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Entry</h4>
+                </div>
+                <div class="modal-body">
+                  <div class="adv-table table-responsive">
+                      <table class="display table table-bordered table-striped table-hover"
+                             id="search_entry_table" style="width: 100%">
+                          <thead>
+                          <tr>
+                              <th>ID</th>
+                              <th>Entry Number</th>
+                              <th>Check Number</th>
+                              <th>Vendor Number</th>
+                              <th>Check Amount</th>
+                              <th>Document Number</th>
+                              <th class="text-center" style="min-width:90px!important;">Options</th>
+                          </tr>
+                          </thead>
+                      </table>
+                  </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="paymentHystoryModal" tabindex="-1" role="dialog"
+        aria-labelledby="paymentHystoryModal" aria-hidden="true">
+        <div class="modal-dialog modal-xlg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Document History</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div class="col-xs-12 full_width" style="padding-bottom: 10px">
+                            <label for="supplier" class="col-lg-2 control-label" style="padding-top: 7px;">Supplier</label>
+                            <div class="col-lg-3">
+                                <input type="text" name="supp_code" id="supp_code" class="sended form-control form-control-inline" readonly>
+                            </div>
+                            <div class="col-lg-7">
+                                <input type="text" name="supp_name" id="supp_name" class="sended form-control form-control-inline" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-xs-12 full_width" style="padding-bottom: 10px">
+                            <label for="customer" class="col-lg-2 control-label" style="padding-top: 7px;">Document</label>
+                            <div class="col-lg-2">
+                                <input type="text" name="invoice_type" id="invoice_type" class="sended form-control form-control-inline" readonly>
+                            </div>
+                            <div class="col-lg-3">
+                                <input type="text" name="invoice_name" id="invoice_name" class="sended form-control form-control-inline" readonly>
+                            </div>
+                            <label for="customer" class="col-lg-2 control-label" style="padding-top: 7px;">Document Date</label>
+                            <div class="col-lg-3">
+                                <input type="text" name="doc_date" id="doc_date" class="sended form-control form-control-inline" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-xs-12 full_width" style="padding-bottom: 10px">
+                            <label for="customer" class="col-lg-2 control-label" style="padding-top: 7px;">Document Total</label>
+                            <div class="col-lg-2">
+                                <input type="text" name="doc_total" id="doc_total" class="sended form-control form-control-inline text-right" readonly>
+                            </div>
+                            <label for="customer" class="col-lg-2 control-label" style="padding-top: 7px;">Current Balance</label>
+                            <div class="col-lg-3">
+                                <input type="text" name="balance" id="balance" class="sended form-control form-control-inline text-right" readonly>
+                            </div>
+                            <div class="col-lg-3">
+                                <input type="text" name="currency_code" id="currency_code" class="sended form-control form-control-inline" readonly>
+                            </div>
+                        </div>
+                    </div>
+                <div class="adv-table table-responsive">
+                    <table class="display table table-bordered table-striped table-hover"
+                            id="payment_history_table" style="width: 100%">
+                        <thead>
+                        <tr>
+                            <th>Transaction Type</th>
+                            <th>Check</th>
+                            <th>Posting Date</th>
+                            <th>Applied Amount</th>
+                            <th>Transaction Description</th>
+                            <th>Ref. No.</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+                </div>
+                <div class="modal-footer" style="text-align: center">
+                    <button class="btn btn-default" tabindex="-1" type="button" data-dismiss="modal">Ok</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="TaxExchangeRateListModal" tabindex="-1" role="dialog"
+         aria-labelledby="ExchListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Exchange Rate</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div id="account_error" class="messages"
+                             style="font-size: 12.5px !important;"></div>
+                    </div>
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="tax-exchange-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th id="exc-from">From Currency</th>
+                                                    <th id="exc-to">To Currency</th>
+                                                    <th id="exc-date">Rate Date</th>
+                                                    <th id="exc-rate">Rate</th>
+                                                    <th id="exc-id">Id</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" onclick="changeTaxExchangeRate()">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {#Comfirm Delete journal#}
+    <div class="modal fade" id="comfirmDeleteJournalModal" tabindex="-1" role="dialog"
+         aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title"><strong>Delete Confirm Dialog</strong></h4>
+                </div>
+                <div class="modal-body" style="padding-bottom: 0px!important; padding: 0 3%;">
+                    <form action="">
+                        <div class="form-group">
+                            <label>Are you sure want to delete?</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer" style="text-align: center">
+                    <button class="btn btn-default" type="button" data-dismiss="modal">No
+                    </button>
+                    <a id="comfirm-yes" class="comfirm-yes" href="">
+                        <button class="btn btn-success" type="button">Yes</button>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {#End Comfirm delete journal#}
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="text/javascript">
+        var bank_is_decimal = 1;
+        var vendor_is_decimal = 1;
+        var is_rec_entry = "{{is_rec_entry}}";
+        var transaction_new = [];
+        var transaction_update = [];
+        var jrn_status = "{{journal.status}}";
+        var tax_reporting_rate = 1;
+    </script>
+    <script type="application/javascript" src="{% static 'js/accounting/AP_Payment_Transaction.js' %}?{% now 'H' %}"></script>
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}"></script>
+    <!-- jQuery autocomplete -->
+    <script src="{% static "js/select2/select2.js" %}"></script>
+
+    <script type="text/javascript">
+        var PAYMENT_TRANSACTION_TYPES_PAYMENT = 1;
+        var PAYMENT_TRANSACTION_TYPES_MISC_PAYMENT = 2;
+
+        var current_line = 0;
+        var selected_row = [];
+        var alreadyDrawed = [];
+        var selected_doc = [];
+        var stashedInvoices = [];
+        var url_load_bank_list = "{% url 'load_bank_list' %}";
+        var url_load_currency = "{% url 'AccLoad_currency' %}";
+        var url_load_applied_doc_history = "{% url 'load_applied_doc_history' %}";
+        var jrn_id = '{{journal.id}}';
+        var journal_id = '{{journal.id}}';
+        var post_date_click = '';
+        var post_date_enter = '';
+        var batchId = "{{batch.id}}";
+        var has_old_rate = "{{has_old_rate}}";
+
+        //applied History
+        
+        {% comment %} $('#py-transaction-table').on( 'draw.dt', function () {
+            selectTableRow('#bank-table', 4);
+            $("input[type='radio']").each(function () {
+                $(this).closest('tr').css('background-color', '#f9f9f9');
+            });
+        }); {% endcomment %}
+        var doc_number;
+        var doc_type;
+        var doc_balance;
+        var doc_total;
+        var doc_date;
+        $('#py-transaction-table').on( 'draw.dt', function () {
+            $('#py-transaction-table tbody tr').on('click', function () {
+                var table = $('#py-transaction-table').DataTable();
+                var row = $(this).index();
+                doc_number = table.cell(row, $("#trs-doc-num").index()).data();
+                doc_type = table.cell(row, $("#trs-doc-type").index()).data();
+                doc_balance = table.cell(row, $("#trs-net-amount").index()).data();
+                doc_total = table.cell(row, $("#trs-doc-amount").index()).data();
+                doc_date = table.cell(row, $("#trs-doc-date").index()).data();
+
+                $('#py-transaction-table tbody tr').each(function () {
+                    $(this).closest('tr').css('background-color', '#f9f9f9');
+                });
+
+                $(this).closest('tr').css('background-color', '#3ff3f3');
+            });
+        });
+
+        function deleteAPP(id) {
+            var url = '/accounting/delete/APPayment/' + id + '/';
+            $("#comfirmDeleteJournalModal").modal("show");
+            $(".comfirm-yes").attr("href", url);
+        }
+
+        function showHistoryModal() {
+            $('#doc_total').val(doc_total);
+            $('#doc_date').val(doc_date);
+            $('#balance').val(doc_balance);
+            $('#invoice_type').val(doc_type);
+            $('#invoice_name').val(doc_number);
+            $('#currency_code').val($('#id_supplier_currency option:selected').text());
+            $('#supp_code').val($('#id_supplier option:selected').text());
+            $('#supp_name').val($('#id_supplier_name').val());
+            var ven_id = $('#id_supplier').val();
+
+            if (doc_number && ven_id) {
+                $('#payment_history_table').DataTable().destroy();
+                $('#payment_history_table').dataTable({
+                    bLengthChange: false,
+                    searching: false,
+                    paging: false,
+                    info: false,
+                    scrollY: '50vh',
+                    scrollX: true,
+                    scrollCollapse: true,
+                    "serverSide": true,
+                    "ajax": {
+                        method: "POST",
+                        "url": url_load_applied_doc_history,
+                        dataType: 'JSON',
+                        data: {
+                            'doc': doc_number,
+                            'type': 'AP',
+                            'vendor': ven_id
+                        },
+                    },
+                    "columns": [
+                        {"data": "trnx_type", "sClass": "text-left", "orderable": false,},
+                        {"data": "check", "sClass": "text-left", "orderable": false,},
+                        {"data": "posting_date", "sClass": "text-left", "orderable": false,},
+                        {"data": "apply_amount", "sClass": "text-right", "orderable": false,},
+                        {"data": "trnx_desc", "sClass": "text-left", "orderable": false,},
+                        {"data": "doc_number", "sClass": "text-left", "orderable": false,},
+                        
+                    ]
+                });
+
+                setTimeout(() => {
+                    $('#payment_history_table').DataTable().columns.adjust();
+                }, 300);
+
+                $.ajax({
+                    method: "POST",
+                    url: url_load_applied_doc_history,
+                    dataType: 'JSON',
+                    data: {
+                        'doc': doc_number,
+                        'type': 'AP',
+                        'vendor': ven_id
+                    },
+                    success: function (data) {
+                        $('#balance').val(data.data[0].balance);
+                    }
+                });
+
+                $('#paymentHystoryModal').modal('show');
+            }
+        }
+
+        if('True' == is_rec_entry){
+            var d = document,
+                h = d.getElementsByTagName('head')[0],
+                s = d.createElement('script');
+            s.type = 'text/javascript';
+            s.async = true;
+            s.src = "/static/js/accounting/RE_entry_common.js";
+            h.appendChild(s);
+
+            schedule_list = [
+                {% for schedule in schedule_list %}
+                    {% if not forloop.first %}, {% endif %}
+                    {
+                        id: "{{ schedule.id }}",
+                        code: "{{ schedule.code }}",
+                        desc: "{{ schedule.description }}",
+                    }
+                {% endfor %}
+            ]
+
+            var rec_schedule_id = "{{rec_entry.schedule_id}}";
+            if(!rec_schedule_id){
+                rec_schedule_id = '{{schedule_id}}';
+            }
+            if (rec_schedule_id) {
+                schedule_list.forEach(element => {
+                    if (element.id == rec_schedule_id) {
+                        $('#id_schedule_code').val(element.code);
+                        $('#id_schedule_desc').val(element.desc);
+                        $('#schedule_id').val(element.id);
+                    }
+                });
+            }
+
+            var is_expire = "{{rec_entry.is_expire}}";
+            if (is_expire == 'True') {
+                $('#is_expire').attr('checked', 'checked');
+            }
+            var is_active = "{{rec_entry.is_active}}";
+            if (is_active == 'True') {
+                $('#is_active').attr('checked', 'checked');
+            }
+
+            $('#batch_view_date').attr('disabled', true);
+            $('#doc_date_view').attr('disabled', true);
+            $('#post_date_view').attr('disabled', true);
+
+            $('#schedule-code-table').on( 'draw.dt', function () {
+                selectTableRow('#schedule-code-table', 5);
+                $("input[type='radio']").each(function () {
+                    $(this).closest('tr').css('background-color', '#f9f9f9');
+                });
+            });
+        } else {
+            if (has_old_rate == "1") {
+                pop_ok_dialog("Warning",
+                "This journal uses an old exchange rate.",
+                function () {})
+            }
+        }
+
+        $('#start_date').on('change', function(){
+            if (batchId && batchId != '0' && batchId != 'None') {
+                $('#doc_date_view').val($('#start_date').val()).trigger('change');
+            } else {
+                $('#batch_view_date').val($('#start_date').val()).trigger('change');
+            }
+        })
+        {% comment %} var jrn_prd = "{{journal.perd_month}}";
+        var rec_prd = "{{rec_entry.perd_month}}";
+        if(!jrn_prd && !rec_prd) {
+            $('#perd_year').val($('#id_document_date').val().split("-")[0]);
+            $('#perd_month').val($('#id_document_date').val().split("-")[1]);
+            $('#year_period').val($('#id_document_date').val().split("-")[1] + "-" + $('#id_document_date').val().split("-")[0]);
+        } {% endcomment %}
+
+        function checkInput(b_id, j_id){
+            var id = '{{journal.id}}';
+            if('True' == is_rec_entry){
+                id = '{{rec_entry.id}}';
+            }
+            if (id == '') {
+                pop_ok_cancel_dialog(
+                    "Data loss warning!",
+                    "Unsaved data will be lost. Do you want to proceed?",
+                    function () { 
+                        if('True' == is_rec_entry){
+                            window.location.href = '/accounting/edit/APPayment-RE/' + j_id + '/';
+                        } else {
+                            window.location.href = '/accounting/edit/APPayment/' + b_id + '/' + j_id + '/'; 
+                        }
+                    },
+                    function () {
+                        if('True' == is_rec_entry){
+                            window.location.href = '/accounting/add/APPayment-RE/' + batchId + '/';
+                        } else {
+                            window.location.href = '/accounting/add/APPayment/' + batchId + '/'; 
+                        }
+                    }
+                );
+            } else {
+                if('True' == is_rec_entry){
+                    window.location.href = '/accounting/edit/APPayment-RE/' + j_id + '/';
+                } else {
+                    window.location.href = '/accounting/edit/APPayment/' + b_id + '/' + j_id + '/';;
+                }
+            }
+
+        }
+
+        $(document).ready(function () {
+          if("{{ journal_type }}" != '') {
+            var dttbl = $('#search_entry_table').DataTable({
+                "order": [[3, "asc"]],
+                "serverSide": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'JournalList__asJson' journal_type batch.id %}"
+                },
+                "columns": [
+                    {
+                        "data": "id",
+                        "visible": false,
+                    },
+                    {"data": "code", "orderable": false, "width": "10px"},
+                    {"data": "check_number", "orderable": false, "width": "180px"},
+                    {"data": "cust_supp_code", "orderable": false, "width": "50px"},
+                    {"data": "amount", "orderable": false, "sClass": "text-right",},
+                    {"data": "document_number", "orderable": false, "width": "180px"},
+                    {
+                        "sClass": "text-center",
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, row, meta) {
+                            var btn =
+                                    '<div class="btn-group dropdown">' +
+                                    '<button type="button"' +
+                                    'class="btn btn-primary btn-sm dropdown-toggle"' +
+                                    'style="min-width: 30px!important;">';
+                            var btn_blank =
+                                    '<div class="btn-group dropdown">' +
+                                    '<button type="button"' +
+                                    'class="btn btn-default btn-sm dropdown-toggle not-use"' +
+                                    'data-toggle="dropdown" aria-haspopup="true"' +
+                                    'aria-expanded="false"' +
+                                    'style="min-width: 40px!important;">Action' +
+                                    '<span class="caret" style="margin-left:15px"></span>' +
+                                    '<span class="sr-only">Toggle Dropdown</span>' +
+                                    '</button>' +
+                                    '<ul class="dropdown-menu dropdown-menu-right">' +
+                                    '<li>';
+                            if ((row.status == '1') /* STATUS_TYPE_DICT['Open'] */
+                                || (row.status == '2') /* STATUS_TYPE_DICT['Posted'] */
+                                || (row.status == '7') /* STATUS_TYPE_DICT['Prov. Posted'] */
+                                || (row.status == '8')) { /* STATUS_TYPE_DICT['Draft'] */
+                                if (row.batch_type == 4) {
+                                    btn += '<a href="/accounting/edit/APPayment/' + row.batch_id + '/' + row.id + '/" style="text-decoration: none; color: white">View</a></button>';
+                                }
+                            } else {
+                                btn = btn_blank;
+                            }
+
+                            btn += '</li></ul/div>';
+                            return btn;
+                        }
+                    }
+                ]
+            });
+        } else if ('True' == is_rec_entry && batchId != 'None' && batchId != '' && batchId != '0' ) {
+            var dttbl = $('#search_entry_table').DataTable({
+                "order": [[3, "asc"]],
+                "serverSide": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'rec_entries_as_Json' batch.batch_type batch.id %}"
+                },
+                "columns": [
+                    {
+                        "data": "id",
+                        "visible": false,
+                    },
+                    {"data": "code", "orderable": false, "width": "10px"},
+                    {"data": "check_number", "orderable": false, "width": "180px"},
+                    {"data": "cust_supp_code", "orderable": false, "width": "50px"},
+                    {"data": "amount", "orderable": false, "sClass": "text-right",},
+                    {"data": "document_number", "orderable": false, "width": "180px"},
+                    {
+                        "sClass": "text-center",
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, row, meta) {
+                            var btn =
+                                    '<div class="btn-group dropdown">' +
+                                    '<button type="button"' +
+                                    'class="btn btn-primary btn-sm dropdown-toggle"' +
+                                    'style="min-width: 30px!important;">';
+                            if (row.batch_type == 4) {
+                                btn += '<a href="/accounting/edit/APPayment-RE/' + row.id + '/" style="text-decoration: none; color: white">View</a></button>';
+                            }
+                            btn += '</li></ul/div>';
+                            return btn;
+                        }
+                    }
+                ]
+            });
+          } else {
+            $('#btnSearchEntry').attr('disabled', 'disabled')
+          }
+          $('#search_entry_table').parents().eq(0).attr('style', 'overflow: scroll; max-height: 500px');
+
+            //validateDate('#doc_date_view', '#post_date_view');
+
+            var is_decimal = '{{journal.currency.is_decimal}}';
+            if (is_decimal == 'True' || is_decimal == '1' || is_decimal == '') {
+                is_decimal = true;
+                bank_is_decimal = 1;
+            } else {
+                is_decimal = false;
+                bank_is_decimal = 0;
+            }
+            var is_ven_decimal = true;
+            try{
+                
+                if('True' == is_rec_entry){
+                    is_ven_decimal = '{{rec_entry.original_currency.is_decimal}}';
+                } else {
+                    is_ven_decimal = '{{journal.original_currency.is_decimal}}';
+                }
+                if (is_ven_decimal == 'True' || is_ven_decimal == '1' || is_ven_decimal == '') {
+                    is_ven_decimal = true;
+                    vendor_is_decimal = 1;
+                } else {
+                    is_ven_decimal = false;
+                    vendor_is_decimal = 0;
+                }
+            } catch(e) {
+
+            }
+
+            var sup_cur = $('#id_supplier_currency').val();
+            sup_cur = $("#id_supplier_currency option[value=" + sup_cur + "]").text();
+            $('.supp_currency').val(sup_cur);
+
+            $('#id_batch_date').addClass('hide');
+            $('#id_document_date').addClass('hide');
+            $('#id_posting_date').addClass('hide');
+
+            $("#post_date_view").addClass("default-date-picker");
+            var date_view = dateView($("#id_posting_date").val());
+            $("#post_date_view").datepicker('setDate', date_view);
+
+            $("#doc_date_view").addClass("default-date-picker");
+            var date_view = dateView($("#id_document_date").val());
+            $("#doc_date_view").datepicker('setDate', date_view);
+
+            $("#batch_view_date").addClass("default-date-picker");
+            var theday = dateView($("#id_batch_date").val())
+            $("#batch_view_date").datepicker('setDate', theday);
+
+            {% comment %} if($('#id_batch_no').val()) {
+                $("#batch_view_date").prop('disabled', true);
+            } {% endcomment %}
+            if($('#id_batch_amount').val()) {
+                $("#id_batch_amount").val(comma_format($('#id_batch_amount').val()));
+            }
+
+            //$('#id_serial_no').attr('disabled', true);
+
+            $("#id_transaction_type").select2({});
+
+            // FillYearPeriodOptLst();
+            if(is_decimal) {
+                $('#id_amount').val(comma_format($('#id_amount').val()));
+                $('#id_tax_amount').val(comma_format($('#id_tax_amount').val()));
+                $('#id_total_amount').val(comma_format($('#id_total_amount').val()));
+                $('#id_payment_amount').val(comma_format($('#id_payment_amount').val()));
+                
+            } else {
+                $('#id_amount').val(comma_format($('#id_amount').val(), 0));
+                $('#id_tax_amount').val(comma_format($('#id_tax_amount').val(), 0));
+                $('#id_total_amount').val(comma_format($('#id_total_amount').val(), 0));
+                $('#id_payment_amount').val(comma_format($('#id_payment_amount').val(), 0));
+                
+            }
+            if (is_ven_decimal) {
+                $('#id_original_amount').val(comma_format($('#id_original_amount').val()));
+            } else {
+                $('#id_original_amount').val(comma_format($('#id_original_amount').val(), 0));
+            }
+
+
+            $("#id_distribution_code").on('change', function () {
+                name = $(this).find(':selected').data('name');
+                account_code = $(this).find(':selected').data('gl-account');
+                tax_id = $(this).find(':selected').data('tax_id');
+                if (name && name != 'undefined') {
+                    $('#distribution_desc').val(name);
+                    $("#description").val(name);
+                }
+                if (account_code && account_code != 'undefined') {
+                    $('#id_account_code').val(account_code).trigger('change');
+                }
+                if (tax_id != 'None') {
+                    $('#id_tax').val(tax_id).trigger('change');
+                } else {
+                    {% comment %} $('#id_tax').val(0); {% endcomment %}
+                }
+            });
+            $('#misc-transaction-table').DataTable({
+                    "paging":  false,
+                    'ordering': false,
+                    'bFilter': false,
+                    'bLengthChange': false,
+                    'bSort': false,
+                    'columnDefs': [
+                        {
+                            className: "hide_column",
+                            targets: [9, 10, 11, 12, 13, 14, 15, 16, 17],
+                        },
+                        {
+                            className: "text-right",
+                            targets: [5, 6, 7],
+                        }
+                    ]
+                });
+
+
+            $('#py-transaction-table').DataTable({
+                    "paging":  false,
+                    'bFilter': false,
+                    'bLengthChange': false,
+                    'bSort': false,
+                    'columnDefs': [
+                        {
+                            className: "hide_column",
+                            targets: [11,12],
+                        },
+                        {
+                            className: "text-right",
+                            targets: [2, 3, 4, 5, 6, 7],
+                        }
+                    ]
+                });
+
+            $('#id_payment_code').select2({
+                placeholder: "Select Payment Code",
+            });
+
+            $('#id_supplier').select2({
+                placeholder: "Select Vendor",
+                allowClear: true
+            });
+
+            $('#id_account_set').select2({
+                placeholder: "Select Account Set"
+            });
+
+            $('#id_tax').select2({
+                placeholder: "Select Tax",
+                width: '100%',
+                allowClear: true,
+            });
+
+            $('#id_distribution_code').select2({
+                placeholder: "Select Distribution Code",
+                width: '100%',
+                allowClear: true,
+            });
+
+            $('#id_account_code').select2({
+                placeholder: "Select Account Code",
+                width: '100%',
+            });
+
+            //if(!$('#id_code').val()) {
+                //$('#id_code').val({{entry_no}});
+            //}
+
+            {% if bank_id %}
+                $('#id_bank').val({{bank_id}}).trigger('change');
+                $('#btnSearchBank').prop('disabled', true);
+                $('#id_bank').addClass('disabled');
+            {% else %}
+                $('#id_bank').select2({
+                    placeholder: "Select Bank",
+                });
+            {% endif %}
+
+
+
+            transaction_type = $('#id_transaction_type').val();
+            if(transaction_type == PAYMENT_TRANSACTION_TYPES_PAYMENT) {
+
+                //$('#py-transaction-table').DataTable().clear().draw();
+
+                $('#misc_transaction_div').addClass('hidden');
+
+                $("#id_tax").prop('disabled', true);
+                $("#id_tax_group").addClass('hidden');
+                $('#subtotal-div').addClass('hidden');
+                $('#subtotal-span').removeClass('hidden');
+                $('#payment_div').removeClass('hidden');
+                $('#tax_reporting_rate_div').addClass('hidden');
+
+                //$('#id_payment_code').change();
+
+                if(!$('#id_supplier').val()) {
+                    $('#id_account_set').prop('disabled', true);
+                    $('#id_payment_code').prop('disabled', true);
+                    $('#btnAddPaymentTransDialog').attr('disabled', 'disabled');
+                    $('#btnSearchAccountSet').prop('disabled', true);
+                    $('#btnSearchPaymentCode').prop('disabled', true);
+                    $('button[type="submit"]').prop('disabled', true);
+                }
+
+                {% if journal.id %}
+                    $('#id_supplier').select2({
+                        placeholder: "Select Vendor",
+                    });
+                    $('#id_transaction_type').addClass('disabled');
+                    $("#id_supplier").prop('disabled', true);
+                    $('#btnSearchSupplier').prop('disabled', true);
+                {% else %}
+                    $('#id_supplier').select2({
+                        placeholder: "Select Vendor",
+                        allowClear: true
+                    });
+                {% endif %}
+            }
+            else if(transaction_type == PAYMENT_TRANSACTION_TYPES_MISC_PAYMENT) {
+
+                //$('#misc-transaction-table').DataTable().clear().draw();
+                $('#transaction_div').addClass('hidden');
+
+                //$("#id_supplier").prop('disabled', true);
+                $("#id_supplier").prop('required', false);
+                $("#id_account_set").prop('disabled', true);
+                $("#id_account_set").prop('required', false);
+
+                //$('#id_supplier_group').addClass('hidden');
+                //$('#id_account_set_group').addClass('hidden');
+
+                $("#id_tax").prop('disabled', false);
+                $("#id_tax_group").removeClass('hidden');
+                $('#subtotal-div').removeClass('hidden');
+                $('#subtotal-span').addClass('hidden');
+                $('#payment_div').addClass('hidden');
+                $('#tax_reporting_rate_div').removeClass('hidden');
+
+                //$('#id_payment_code').change();
+            }
+
+            {% if journal.id %}
+                $('#id_transaction_type').addClass('disabled');
+                $("#id_supplier").prop('disabled', true);
+                // $("#id_is_manual_doc_label").addClass('disabled');
+                // $("#id_is_manual_doc").addClass('disabled');
+                $("#id_is_manual_doc").prop('disabled', true);
+            {% endif %}
+
+            // count line
+            {% if journal.id %}
+                $('#misc-transaction-table tbody tr').each(function (indx) {
+                    current_line = current_line + 1;
+                });
+                {% if journal.tax_exchange_rate == 0 %}
+                    get_tax_reporting_rate('{{journal.currency_id}}', '{{journal.document_date|date:"Y-m-d"}}');
+                {% else %}
+                    tax_reporting_rate = parseFloat("{{journal.tax_exchange_rate}}");
+                    var tax_report_amount = float_format($('#id_tax_amount').val()) * tax_reporting_rate;
+                    $('#id_tax_report_amount').val(comma_format(tax_report_amount));
+                {% endif %}
+            {% endif %}
+
+            // {% if request.session.is_locked %}
+            //     $("#id_supplier").prop('disabled', true);
+            // {% endif %}
+
+            isManualDoc = $('#id_is_manual_doc:checkbox:checked').length;
+            if(isManualDoc > 0) {
+                //$('#id_document_number').prop('readonly', false);
+                $('#id_document_amount').prop('readonly', false);
+                $('.readonly').off('keydown paste');
+                $('#id_document_number').removeClass('disabled readonly');
+            }
+
+            {% if journal.status == 2 or journal.status == 4 %} /* STATUS_TYPE_DICT['Posted'] or STATUS_TYPE_DICT['Reversed']*/
+                $('input').attr('readonly', 'readonly');
+                $(".sended").attr("disabled", "disabled");
+            {% endif %}
+            $('#search_entry_table_filter label input').removeAttr('readonly');
+
+            $('#id_payment_code').trigger('change');
+            //$('#id_transaction_type').focus();
+            $('#id_description').focus();
+
+            check_if_empty('#btnSaveAPPayment')
+        });
+
+    function dateView(date){
+        var pecahin = date.split('-');
+        var today = pecahin[2]+'-'+pecahin[1]+'-'+pecahin[0];
+        return today
+    }
+    function takeday(date) {
+        var pecahin = date.split('-');
+        var today = pecahin[2]+'-'+pecahin[1]+'-'+pecahin[0];
+        return today
+    }
+    var ref = $('#id_reference').val();
+    var serial_no = '';
+
+    $('#id_serial_no').on('change', function(e){
+        var intRegex = /[0-9]+$/;
+        if($(this).val().match(intRegex)){
+            serial_no = $(this).val();
+            var day = $('#doc_date_view').val();
+            var pecahin = day.split('-');
+            var bulan = pecahin[1];
+            var tahun = pecahin[2].substring(2, 4);
+            var bank_id = $("#id_bank option:selected").val();
+            var supplier_curr = $("#id_currency_text").val();
+            if ((ref == '') & (bank_id > 0) & (serial_no != '')) {
+                bank = $("#id_bank option:selected").text().substring(0, 3);
+                $('#id_reference').val(bank + '-R' + serial_no + '-' + bulan + '/' + tahun + '' + supplier_curr);
+            }
+        } else {
+            pop_ok_dialog("Invalid Serial number",
+                "Serial number should be an integer",
+                function () { $('#id_serial_no').val(''); })
+        }
+    });
+    $("#id_supplier").on('change', function () {
+        var day = $('#doc_date_view').val();
+        var pecahin = day.split('-');
+        var bulan = pecahin[1];
+        var tahun = pecahin[2].substring(2, 4);
+        var bank_id = $("#id_bank option:selected").val();
+        var serial = serial_no;
+        var supplier_curr =$("#id_currency_text").val();
+        if ((ref == '') & (bank_id > 0) & (serial_no != '')){
+            bank = $("#id_bank option:selected").text().substring(0, 3);
+            // id_ven = $("#id_supplier option:selected").val();
+            $('#id_reference').val(bank+'-R'+serial+'-'+bulan+'/'+tahun+''+supplier_curr);
+        }
+        transaction_new.length = 0;
+        transaction_update.length = 0;
+    });
+
+    function FillYearPeriodOptLst() {
+        var year_part = 0;
+        var month_part = 0;
+
+        var yr_prd = $('#perd_year').val();
+        if ((yr_prd) && (parseInt(yr_prd) > 0)) {
+            year_part = yr_prd;
+        } else {
+            yr_prd = new Date($('#doc_date_view').val().split("-").reverse().join("-"));
+            year_part = yr_prd.getFullYear();
+            month_part = yr_prd.getMonth() + 1;
+        }
+        var list_period = [];
+        for (i = 1; i <= 15; i++) {
+            var prd = {};
+            prd.year = year_part;
+            prd.period = i;
+            list_period.push(prd);
+        }
+        $.each(list_period, function (key, value) {
+            var period_part = value.period > 9 ? value.period : '0' + value.period;
+            period_part = value.period == 14 ? 'ADJ' : period_part;
+            period_part = value.period == 15 ? 'CLS' : period_part;
+            var year_period_text = value.year + '-' + period_part;
+            if (value.period != 13) {
+                $('#year_period')
+                    .append($("<option></option>")
+                        .attr("value", value.period)
+                        .text(year_period_text));
+            }
+        });
+        if ((saved_prd) && (parseInt(saved_prd) > 0)) {
+            $('#year_period').val(saved_prd).trigger('change');
+        } else {
+            $('#year_period').val(month_part).trigger('change');
+        }
+        $('#year_period').select2();
+    }
+
+    function ResetYearPeriodOptLst() {
+        $('#year_period').empty().append('<option value="0">kosong</option>');
+        FillYearPeriodOptLst();
+        $("#year_period option[value='0']").remove();
+    }
+
+    $('#id_bank').on('select2:close', function (e)
+    {
+        $('#id_name').focus();
+    });
+    $('#id_transaction_type').on('select2:close', function (e)
+    {
+        $('#doc_date_view').focus();
+    });
+    $('#id_supplier').on('select2:close', function (e)
+    {
+        $('#id_payment_code').select2('open');
+        $('#id_payment_code').focus();
+    });
+    $('#id_account_set').on('select2:close', function (e)
+    {
+        $('#id_payment_code').select2('open');
+        $('#id_payment_code').focus();
+    });
+    $('#id_account_set').on('change', function (e)
+    {
+        $('#id_payment_code').select2('open');
+        $('#id_payment_code').focus();
+    });
+    $('#id_payment_code').on('select2:close', function (e)
+    {   
+        setTimeout(() => {
+            if ($('#id_payment_code option:selected').text() == 'CHECK') {
+                $('#id_payment_check_number').focus();
+                $('#id_payment_check_number').select();
+            } else {
+                $('#id_document_number').focus();
+            }
+        }, 200);
+        
+    });
+    </script>
+    <script type="text/javascript" src="{% static 'js/standard.js' %}"></script>
+    <script type="application/javascript" src="{% static 'js/accounting/AP_Payment_Entry.js' %}"></script>
+{% endblock %}

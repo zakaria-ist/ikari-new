@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+{% endblock %}
+
+{% block title %}
+    {% if measure.id %}
+        Edit UOM
+    {% else %}
+        Add UOM
+    {% endif %}
+{% endblock %}
+{% block item_measure_active %}active{% endblock %}
+{% block inv_setting_a_active %}active{% endblock %}
+{% block inv_setting_i_active %}active{% endblock %}
+{% block ics_a_active %}active{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                {% if measure.id %}
+                    Edit Measure
+                {% else %}
+                    Add Measure
+                {% endif %}
+            </header>
+            <div class="panel-body">
+                <form class="form-horizontal"
+                        {% if measure.id %}
+                      action="{% url 'measure_edit' measure.id %}"
+                        {% else %}
+                      action="{% url 'measure_add' %}"
+                        {% endif %}
+                      role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+{#                    <div class="form-group">#}
+{#                        <label for="code" class="col-lg-2 col-sm-2 control-label">Code Type</label>#}
+{#                        <div class="col-lg-5">#}
+{#                           <select class="form-control" >#}
+{#                           <option>Measurement</option>#}
+{#                           </select>#}
+{#                        </div>#}
+{#                    </div>#}
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Code<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-3">
+                            <input type="text" class="form-control" id="code" name="code"
+                                    {% if measure.id %} value="{{ measure.code }}" {% endif %} required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Name</label>
+                        <div class="col-lg-3">
+                            <input type="text" class="form-control" id="name" name="name"
+                                    {% if measure.id %} value="{{ measure.name }}" {% endif %} >
+                        </div>
+                    </div>
+                    {% if measure.id %}
+                    <div class="form-group">
+                        <label class="col-lg-2 col-sm-2 control-label">Last Update</label>
+                        <div class="col-lg-3">
+                            <input type="text" disabled="true" value="{{ measure.update_date }}" class="form-control">
+                        </div>
+                    </div>
+                    {% endif %}
+                    <!-- <div class="form-group">
+                        <label for="inputPassword1" class="col-lg-2 col-sm-2 control-label"></label>
+                        <div class="col-lg-10">
+                            <div class="checkbox checkbox-primary">
+                                <input name="chkActive" id="chkActive" class="styled" type="checkbox"
+                                       {% if measure.is_active %}checked{% endif %}
+                                        {% if not measure.id %} checked{% endif %}/>
+                                <label for="chkActive">
+                                    Active
+                                </label>
+                            </div>
+                        </div>
+                    </div> -->
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" name="btnSave" class="btn btn-success">Save</button>
+                            {% if 'items.delete_itemmeasure' in user.get_all_permissions and measure.id %}
+                                <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger">Delete</a>
+                            {% endif %}
+                            <a class="btn btn-default" href="{% url 'measure_list' %}">Cancel</a>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            {% if measure.id %}
+                <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+                     class="modal fade">
+                    <div class="modal-dialog modal-sm">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                                <h4 class="modal-title">Delete Confirm Dialog</h4>
+                            </div>
+                            <div class="modal-body">
+                                <form role="form" action="{% url 'measure_delete' measure.id %}" method="post">
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-success">OK</button>
+                                    <a class="btn btn-default" href="{% url 'measure_edit' measure.id %}">Cancel</a>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </section>
+    </div>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="application/javascript" src="{% static 'js/ga.js' %}?{% now 'H' %}"></script>
+{% endblock %}

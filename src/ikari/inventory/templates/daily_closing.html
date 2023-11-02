@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Inventory Daily Closing{% endblock %}
+{% block inv_setting_a_active %}active{% endblock %}
+{% block inv_setting_i_active %}active{% endblock %}
+{% block ics_r_a_active %}active{% endblock %}
+{% block inv_daily_closing_active %}active{% endblock %}
+
+{% block content %}
+    <section class="panel">
+        <div class="panel-heading">
+            <h4>Inventory Daily Closing</h4>
+        </div>
+        <div class="panel-body">
+            <form id="frm_daily_closing" class="form-horizontal" action="{% url 'inv_daily_closing' %}" 
+                role="form" method="post"  onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <div class="col-lg-12 col-sm-12" style="margin-top: 10px; margin-bottom: 20px">
+                    </div>
+                    <div class="col-lg-10 col-sm-10" style="margin-bottom: 10px; margin-left: 20px">
+                        This program updates the relevant Master Files in the system based on the selection below. Once updated the transactions cannot be retrieved for adjustment.
+                    </div>
+                    <div class="col-lg-10 col-sm-10" style="margin-bottom: 10px; margin-left: 20px">
+                        You are advised to check the Transaction Entry Check List & backup the data files as the daily backup set before proceeding with this option.
+                    </div>
+                </div>
+                <hr />
+                <div class="form-group ">
+                    
+                    <label for="day_to_close" class="col-lg-2 col-sm-2 control-label">Closing Date As At</label>
+                    <div class="col-lg-2">
+                        <input id="day_to_close" name="day_to_close" type="text" value="{{ closing_date }}"
+                            class="form-control form-control-inline" />
+                        {% comment %} <input id="day_to_close-1" name="day_to_close-1" type="text" value="{{ closing_date }}"
+                            class="form-control form-control-inline" /> {% endcomment %}
+                    </div>
+                </div>
+                <div class="form-group ">
+                    <label for="trn_code_opt" class="col-lg-2 col-sm-2 control-label">Transaction Code</label>
+                    <div class="col-lg-2">
+                        <select class="form-control" id="trn_code_opt" name="trn_code_opt">
+                            <option value="0" selected="selected">Transaction Code</option>
+                            {% for trn in trn_code %}
+                                <option value="{{ trn.id }}">{{ trn.code }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="voucher_from" class="col-lg-2 col-sm-2 control-label">From Voucher Slip No.</label>
+                    <div class="col-lg-2" >
+                        <input id="voucher_from" name="voucher_from" type="text" class="form-control" value="" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="voucher_to" class="col-lg-2 col-sm-2 control-label">To Voucher Slip No.</label>
+                    <div class="col-lg-2" >
+                        <input id="voucher_to" name="voucher_to" type="text" class="form-control" value="" />
+                    </div>
+                </div>
+                
+                <div class="form-group bottom-group">
+                    <div class="col-lg-4 col-sm-12">
+                        <button id="btnProcess" type="submit" name="btnSave" class="btn btn-success pull-right">Go</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/advanced-form-datepicker.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/select2/select2.js' %}"></script>
+    <script type="text/javascript">
+        var closing_date = "{{closing_date}}";
+        $(document).ready(function () {
+            {% comment %} $('#day_to_close').datepicker({
+                format: "dd-mm-yyyy",
+                autoclose: true
+            }); {% endcomment %}
+            $("#trn_code_opt").select2({
+                placeholder: "Select Transaction",
+            });
+
+            $('#trn_code_opt').on('select2:close', function (e)
+            {
+                $('#voucher_from').focus();
+            });
+            {% comment %} if(closing_date) {
+                $("#day_to_close").datepicker('setDate', closing_date);
+            }  {% endcomment %}
+            $('#day_to_close').focus();
+        });
+
+        $(document).on('keyup', '.select2-selection.select2-selection--single', function (e) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if(keycode == '9'){
+                $(this).closest(".select2-container").siblings('select:enabled').select2('open');
+            }
+        });
+
+        $('#day_to_close').on('change', function() {
+            var date_from = get_date_from("#day_to_close");
+            var date_from_valid = moment(date_from, "DD-MM-YYYY", true).isValid();
+            if (date_from_valid){
+                $("#day_to_close").val(date_from);
+            }else{
+                $("#day_to_close").val(closing_date);
+            }
+        });
+
+        $('#day_to_close').keyup(function(event){
+            adjust_input_date(this);
+        });
+    </script>
+{% endblock %}

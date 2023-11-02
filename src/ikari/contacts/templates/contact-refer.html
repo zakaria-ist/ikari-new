@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+{% endblock %}
+
+{% block title %}
+    {% if contact.contact_type == 3 %} {# CONTACT_TYPES_DICT['Location'] #}
+        Edit Location Contact
+    {% elif contact.contact_type == 1 %} {# CONTACT_TYPES_DICT['Customer'] #}
+        Edit Customer Contact
+    {% elif contact.contact_type == 2 %} {# CONTACT_TYPES_DICT['Supplier'] #}
+        Edit Supplier Contact
+    {% elif contact.contact_type == 4 %} {# CONTACT_TYPES_DICT['Delivery'] #}
+        Edit Delivery Contact
+    {% elif contact.contact_type == 5 %} {# CONTACT_TYPES_DICT['Consignee'] #}
+        Edit Consignee Contact
+    {% elif contact_type == '1' %} {# CONTACT_TYPES_DICT['Customer'] #}
+        Add Customer Contact
+    {% elif contact_type == '2' %} {# CONTACT_TYPES_DICT['Supplier'] #}
+        Add Supplier Contact
+    {% elif contact_type == '3' %} {# CONTACT_TYPES_DICT['Location'] #}
+        Add Location Contact
+    {% elif contact_type == '4' %} {# CONTACT_TYPES_DICT['Delivery'] #}
+        Add Delivery Contact
+    {% elif contact_type == '5' %} {# CONTACT_TYPES_DICT['Consignee'] #}
+        Add Consignee Contact
+    {% endif %}
+{% endblock %}
+{% block contact_active %}active{% endblock %}
+{% block sp_setting_a_active %}active{% endblock %}
+{% block sp_setting_i_active %}active{% endblock %}
+{% block parent_order_a_active %}active{% endblock %}
+{% block parent_order_i_active %}active{% endblock %}
+
+{% block content %}
+    {% if messages_error %}<div class="text-center alert alert-danger"><strong>{{ messages_error }}</strong></div>{% endif %}
+    <form class="form-horizontal"
+          {% if contact == None %}
+            action="{% url 'contact_refer_add' contact_type refer_id %}"
+          {% elif contact %}
+            action="{% url 'contact_refer_edit' contact.id %}"
+          {% endif %} role="form" method="post" onsubmit="return checkForm(this);"
+          enctype="multipart/form-data">
+        {% csrf_token %}
+        {% if contact.contact_type != 5 %} {# CONTACT_TYPES_DICT['Consignee'] #}
+        <div class="col-lg-12">
+            <section class="panel">
+                <header class="panel-heading">
+                    <strong>Contact Info</strong>
+                </header>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label for="attention" class="col-lg-2 col-sm-2 control-label">Attention</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="attention" name="attention" {% if contact %}value="{{ contact.attention|default_if_none:"" }}{% endif %}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="designation" class="col-lg-2 col-sm-2 control-label">Designation</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="designation" name="designation" {% if contact %}value="{{ contact.designation|default_if_none:"" }}{% endif %}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone" class="col-lg-2 col-sm-2 control-label">Telephone</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="phone" name="phone" {% if contact %}value="{{ contact.phone|default_if_none:"" }}{% endif %}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                         <label for="fax" class="col-lg-2 col-sm-2 control-label">Fax</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="fax" name="fax" {% if contact %}value="{{ contact.fax|default_if_none:"" }}{% endif %}">
+                        </div>
+                    </div>
+                    {% if contact_type != '2' and contact.contact_type != 2%} {# CONTACT_TYPES_DICT['Supplier'] #}
+                    <div class="form-group">
+                        <label for="company_name" class="col-lg-2 col-sm-2 control-label">Consignee</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="company_name" name="company_name" {% if contact %}value="{{ contact.company_name|default_if_none:"" }}{% endif %}">
+                        </div>
+                    </div>
+                    <div style="display: none;" class="form-group">
+                        <label for="email" class="col-lg-2 col-sm-2 control-label">Email</label>
+                        <div class="col-lg-4">
+                            <input type="email" class="form-control" id="email" name="email" {% if contact %}value="{{ contact.email|default_if_none:"" }}{% endif %}">
+                        </div>
+                        <label for="web" class="col-lg-2 col-sm-2 control-label">Web</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="web" name="web" {% if contact %}value="{{ contact.web|default_if_none:"" }}{% endif %}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact_address" class="col-lg-2 col-sm-2 control-label">Consignee Add.</label>
+                        <div class="col-lg-10">
+                            <textarea class="form-control" rows="3" id="contact_address" name="contact_address">{% if contact %}{{ contact.address|default_if_none:"" }}{% endif %}</textarea>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="form-group" style="display: none;">
+                        <label for="remark" class="col-lg-2 col-sm-2 control-label">Remark</label>
+                        <div class="col-lg-10">
+                            <textarea class="form-control" rows="3" id="remark" name="remark">{% if contact %}{{ contact.note|default_if_none:"" }}{% endif %}</textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="label_check" class="col-lg-2 col-sm-4 control-label"></label>
+                        <div class="col-lg-10">
+                            <div class="checkbox checkbox-primary">
+                                <input name="checkbox" id="checkbox-03" class="styled" type="checkbox" checked/>
+                                <label for="checkbox-03">
+                                    Active
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" name="btnSave" class="btn btn-success">Save</button>
+                            {% if 'contacts.delete_contact' in user.get_all_permissions and contact.id %}
+                                <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger">Delete</a>
+                            {% endif %}
+                            {% if contact_type == '3' or contact.contact_type == 3 %} {# CONTACT_TYPES_DICT['Location'] #}
+                                <a class="btn btn-default" href="{% url 'location_edit' refer_id 1 %}">Cancel</a> {# LOCATION_TABS['Contact'] #}
+                            {% elif contact_type == '1' or contact.contact_type == 1 %} {# CONTACT_TYPES_DICT['Customer'] #}
+                                <a class="btn btn-default" href="{% url 'customer_edit' refer_id%}">Cancel</a>
+                            {% elif contact_type == '2' or contact.contact_type == 2 %} {# CONTACT_TYPES_DICT['Supplier'] #}
+                                <a class="btn btn-default" href="{% url 'supplier_edit' refer_id%}">Cancel</a>
+                            {% elif contact_type == '4' or contact.contact_type == 4 %} {# CONTACT_TYPES_DICT['Delivery'] #}
+                                <a class="btn btn-default" href="{% url 'delivery_edit' refer_id %}">Cancel</a>
+                            {% elif contact_type == '5' or contact.contact_type == 5 and request.session.consignee_type == 1 %} {# CONTACT_TYPES_DICT['Consignee'] and CONTACT_TYPES_DICT['Customer'] #}
+                                <a class="btn btn-default" href="{% url 'customer_edit' refer_id%}">Cancel</a>
+                            {% elif contact_type == '5' or contact.contact_type == 5 and request.session.consignee_type == 2 %} {# CONTACT_TYPES_DICT['Consignee'] and CONTACT_TYPES_DICT['Supplier'] #}
+                                <a class="btn btn-default" href="{% url 'supplier_edit' refer_id%}">Cancel</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        {% else %}
+        <div class="col-lg-12">
+            <section class="panel">
+                <header class="panel-heading">
+                    <strong>Consignee Info</strong>
+                </header>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label for="contact_name" class="col-lg-2 col-sm-2 control-label">Contact Person</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="contact_name" name="contact_name" required {% if contact %}value="{{ contact.name|default_if_none:"" }}{% endif %}">
+                        </div>
+                        <label style="display: none;" for="attention" class="col-lg-2 col-sm-2 control-label">Attention</label>
+                        <div style="display: none;" class="col-lg-4">
+                            <input type="text" class="form-control" id="attention" name="attention" {% if contact %}value="{{ contact.attention|default_if_none:"" }}{% endif %}">
+                        </div>
+                    </div>
+                    <div style="display: none;" class="form-group">
+                        <label for="designation" class="col-lg-2 col-sm-2 control-label">Designation</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="designation" name="designation" {% if contact %}value="{{ contact.designation|default_if_none:"" }}{% endif %}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone" class="col-lg-2 col-sm-2 control-label">Consignee Tel</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="phone" name="phone" {% if contact %}value="{{ contact.phone|default_if_none:"" }}{% endif %}">
+                        </div>
+                    </div>
+                    <div style="display: none;" class="form-group">
+                         <label for="fax" class="col-lg-2 col-sm-2 control-label">Fax</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="fax" name="fax" {% if contact %}value="{{ contact.fax|default_if_none:"" }}{% endif %}">
+                        </div>
+                    </div>
+                    <div style="display: none;" class="form-group">
+                        <label for="company_name" class="col-lg-2 col-sm-2 control-label">Consignee</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="company_name" name="company_name" {% if contact %}value="{{ contact.company_name|default_if_none:"" }}{% endif %}">
+                        </div>
+                    </div>
+                    <div style="display: none;" class="form-group">
+                        <label for="email" class="col-lg-2 col-sm-2 control-label">Email</label>
+                        <div class="col-lg-4">
+                            <input type="email" class="form-control" id="email" name="email" {% if contact %}value="{{ contact.email|default_if_none:"" }}{% endif %}">
+                        </div>
+                        <label for="web" class="col-lg-2 col-sm-2 control-label">Web</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="web" name="web" {% if contact %}value="{{ contact.web|default_if_none:"" }}{% endif %}">
+                        </div>
+                    </div>
+                    <div style="display: none;" class="form-group">
+                        <label for="contact_address" class="col-lg-2 col-sm-2 control-label">Consignee Add.</label>
+                        <div class="col-lg-10">
+                            <textarea class="form-control" rows="3" id="contact_address" name="contact_address">{% if contact %}{{ contact.address|default_if_none:"" }}{% endif %}</textarea>
+                        </div>
+                    </div>
+                    <div class="form-group" style="display: none;">
+                        <label for="remark" class="col-lg-2 col-sm-2 control-label">Remark</label>
+                        <div class="col-lg-10">
+                            <textarea class="form-control" rows="3" id="remark" name="remark">{% if contact %}{{ contact.note|default_if_none:"" }}{% endif %}</textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="label_check" class="col-lg-2 col-sm-4 control-label"></label>
+                        <div class="col-lg-10">
+                            <div class="checkbox checkbox-primary">
+                                <input name="checkbox" id="checkbox-03" class="styled" type="checkbox" checked/>
+                                <label for="checkbox-03">
+                                    Active
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" class="btn btn-success">Save</button>
+                            {% if 'contacts.delete_contact' in user.get_all_permissions and contact.id %}
+                                <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger">Delete</a>
+                            {% endif %}
+                            {% if contact_type == '3' or contact.contact_type == 3 %} {# CONTACT_TYPES_DICT['Location'] #}
+                                <a class="btn btn-default" href="{% url 'location_edit' refer_id 1 %}">Cancel</a> {# LOCATION_TABS['Contact'] #}
+                            {% elif contact_type == '1' or contact.contact_type == 1 %} {# CONTACT_TYPES_DICT['Customer'] #}
+                                <a class="btn btn-default" href="{% url 'customer_edit' refer_id%}">Cancel</a>
+                            {% elif contact_type == '2' or contact.contact_type == 2 %} {# CONTACT_TYPES_DICT['Supplier'] #}
+                                <a class="btn btn-default" href="{% url 'supplier_edit' refer_id%}">Cancel</a>
+                            {% elif contact_type == '4' or contact.contact_type == 4 %} {# CONTACT_TYPES_DICT['Delivery'] #}
+                                <a class="btn btn-default" href="{% url 'delivery_edit' refer_id %}">Cancel</a>
+                            {% elif contact_type == '5' or contact.contact_type == 5 and request.session.consignee_type == 1 %} {# CONTACT_TYPES_DICT['Consignee'] and CONTACT_TYPES_DICT['Customer'] #}
+                                <a class="btn btn-default" href="{% url 'customer_edit' refer_id%}">Cancel</a>
+                            {% elif contact_type == '5' or contact.contact_type == 5 and request.session.consignee_type == 2 %} {# CONTACT_TYPES_DICT['Consignee'] and CONTACT_TYPES_DICT['Supplier'] #}
+                                <a class="btn btn-default" href="{% url 'supplier_edit' refer_id%}">Cancel</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        {% endif %}
+    </form>
+    <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+         class="modal fade">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                    <h4 class="modal-title">Delete Confirm Dialog</h4>
+                </div>
+                <div class="modal-body">
+                    <form role="form" action="{% url 'contact_refer_delete' contact.id %}" method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                        </div>
+                        <button type="submit" class="btn btn-success">OK</button>
+                        <a class="btn btn-default" href="{% url 'contact_refer_edit' refer_id %}">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="application/javascript" src="{% static 'js/ga.js' %}?{% now 'H' %}"></script>
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}"></script>
+{% endblock %}

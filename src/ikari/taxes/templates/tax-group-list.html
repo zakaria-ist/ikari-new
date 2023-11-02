@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+{% endblock %}
+
+{% block title %}Tax Group{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block com_tax_services_a_active %}active{% endblock %}
+{% block com_tax_services_i_active %}active{% endblock %}
+{% block com_tax_group_active %}active{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    Tax Group
+                    <span class="tools pull-right">
+                        {% if request.session.staff_admin %}
+                            <a class="btn btn-success start" href="{% url 'tax_group_add' %}">
+                                <i class="glyphicon glyphicon-plus"></i>
+                                <span>Add new</span>
+                            </a>
+                        {% endif %}
+                    </span>
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table">
+                        <table class="display table table-bordered table-striped"
+                               id="dynamic-table" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Last Maintained</th>
+                                <th>Tax Group</th>
+                                <th>Description</th>
+                                <th>Transaction Type</th>
+                                <th>Tax Reporting currency</th>
+                                <th>Tax Authority</th>
+                                {% if request.session.staff_admin %}
+                                    <th class="text-center">Edit</th>
+                                {% endif %}
+                            </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <!--dynamic table initialization -->
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var hdIdJson = $('#hdIdJson').val();
+            $('#dynamic-table').dataTable({
+                "order": [[1, "asc"]],
+                "scrollX": true,
+                stateSave: true,
+                'columnDefs': [
+                    { targets: [1,2,3,4,5], orderable: false}
+                ],
+                "serverSide": true,
+                "ajax": {
+                    "url": "{% url 'TaxGroupList__asJson' %}"
+                },
+                "columns": [
+                    {"data": "update_date"},
+                    {"data": "code"},
+                    {"data": "name"},
+                    {"data": "transaction_type"},
+                    {"data": "currency"},
+                    {"data": "tax_authority"},
+                    {% if request.session.staff_admin %}
+                        {
+                            "className": "text-center",
+                            "orderable": false,
+                            "data": null,
+                            "render": function (data, type, full, meta) {
+                                var button_edit = '<a href="/taxes/tax_group_edit/' + full.id + '/" class="fa fa-pencil fa-lg btn btn-primary btn-sm"></a> ';
+                                return button_edit;
+                            }
+                        }
+                    {% endif %}
+                ]
+            });
+        });
+
+    </script>
+{% endblock %}
+
+

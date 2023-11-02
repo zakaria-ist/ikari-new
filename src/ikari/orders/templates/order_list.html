@@ -1,0 +1,597 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+{% endblock %}
+
+{% block title %}Order List{% endblock %}
+
+{% block parent_order_a_active %}
+    active
+{% endblock %}
+
+{% block parent_order_i_active %}
+    active
+{% endblock %}
+
+{% block document_entry_a_active %}
+    active
+{% endblock %}
+
+{% block document_entry_i_active %}
+active
+{% endblock %}
+
+{% block order_sale_active %}
+{% if order_type == '1' %} {# ORDER_TYPE['SALES ORDER'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block order_purchase_active %}
+{% if order_type == '2' %} {# ORDER_TYPE['PURCHASE ORDER'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block order_sale_note_active %}
+{% if order_type == '10' %} {# ORDER_TYPE['SALES CR DB NOTE'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block order_good_receive_active %}
+{% if order_type == '5' %} {# ORDER_TYPE['PURCHASE INVOICE'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block order_delivery_invoice_active %}
+{% if order_type == '6' %} {# ORDER_TYPE['SALES INVOICE'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block order_purchase_note_active %}
+{% if order_type == '9' %} {# ORDER_TYPE['PURCHASE CR DB NOTE'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block content %}
+    <br/>
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel" style="display: none">
+                <br/>
+                <input type="text" id="my_order_type" name="my_order_type" value="{{ order_type }}"
+                       style="display: none">
+                <form class="form-horizontal" action="{% url 'order_list' order_type %}" role="form" method="post"
+                      enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="panel-body">
+                                <div class="form-group">
+                                    <div class="col-lg-12 col-sm-12  text-center">
+                                        <div class="col-lg-3 col-sm-3"
+                                             style="text-align: center!important;">
+                                            <div class="input-group m-bot15">
+                                                {% if order_type == '1' or order_type == '6' or order_type == '10' %} {# ORDER_TYPE['SALES ORDER'] #}
+                                                    <span class="input-group-addon">Customer</span>
+                                                {% endif %}
+                                                {% if order_type == '2' or order_type == '5'  or order_type == '9' %} {# ORDER_TYPE['PURCHASE ORDER'] #}
+                                                    <span class="input-group-addon">Supplier</span>
+                                                {% endif %}
+                                                {{ form.customer }}
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-3 col-sm-3">
+                                            <div class="input-group m-bot15">
+                                                <span class="input-group-addon">Status</span>
+                                                {{ form.status }}
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-4 col-sm-4">
+                                            <div class="input-group input-large" data-date-format="yyyy/mm/dd">
+                                                <span class="input-group-addon">From</span>
+                                                {{ form.date_from }}
+                                                <span class="input-group-addon">To</span>
+                                                {{ form.date_to }}
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-2 col-sm-2">
+                                            <button type="submit" class="btn btn-success">Search</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </section>
+            <div class="container">
+                <div class="row">
+                    <div id="results"></div>
+                </div>
+            </div>
+
+            <!-- {% if messages %}
+                <div id="message" class="col-lg-12 alert alert-info">
+                    {% for message in messages %}
+                        <strong id="me2">+ {{ message }}</strong><br>
+                    {% endfor %}
+                    <strong name="nomessage" id="nomessage"
+                            value=""></strong>
+                </div>
+            {% endif %} -->
+
+            <section class="panel">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="panel-body">
+                            <header class="panel-heading" style="font-size: 20px">
+                                {% if order_type == '1' %} {# ORDER_TYPE['SALES ORDER'] #}
+                                    Sales Order List
+                                {% endif %}
+                                {% if order_type == '2' %} {# ORDER_TYPE['PURCHASE ORDER'] #}
+                                    Purchases Order List
+                                {% endif %}
+                                {% if order_type == '10' %} {# ORDER_TYPE['SALES CR DB NOTE'] #}
+                                    Sales Debit/Credit Note List
+                                {% endif %}
+                                {% if order_type == '5' %} {# ORDER_TYPE['PURCHASE INVOICE'] #}
+                                    Goods Receive List
+                                {% endif %}
+                                {% if order_type == '6' %} {# ORDER_TYPE['SALES INVOICE'] #}
+                                    Delivery Order/Invoice
+                                {% endif %}
+                                {% if order_type == '9' %} {# ORDER_TYPE['PURCHASE CR DB NOTE'] #}
+                                    Purchase Debit/Credit Note
+                                {% endif %}
+                                <span class="tools pull-right">
+                                    {% if 'orders.add_order' in user.get_all_permissions %}
+
+                                        {% if order_type == '1' %} {# ORDER_TYPE['SALES ORDER'] #}
+                                            <a class="btn btn-info" href="{% url 'download_snp_template' order_type %}" style="color: white;" download="so_template.csv">
+                                              <i class="fa fa-download"></i>
+                                              <span>Download CSV Template</span>
+                                            </a>
+                                            <a class="btn bg-primary" href="{% url 'create_so_from_csv' %}" style="color: white;" >
+                                              <i class="fa fa-upload"></i>
+                                              <span>Import from CSV</span>
+                                            </a>
+                                        {% elif order_type == '2' %} {# ORDER_TYPE['PURCHASE ORDER'] #}
+                                            <a class="btn btn-info" href="{% url 'download_snp_template' order_type %}" style="color: white;" download="po_template.csv">
+                                              <i class="fa fa-download"></i>
+                                              <span>Download CSV Template</span>
+                                            </a>
+                                            <a class="btn bg-primary" href="{% url 'create_po_from_csv' %}" style="color: white;">
+                                              <i class="fa fa-upload"></i>
+                                              <span> Import from CSV</span>
+                                            </a>
+                                        {% elif order_type == '5' %} {# ORDER_TYPE['GR ORDER'] #}
+                                            <a class="btn btn-info" href="{% url 'download_snp_template' order_type %}" style="color: white;" download="gr_template.csv">
+                                              <i class="fa fa-download"></i>
+                                              <span>Download CSV Template</span>
+                                            </a>
+                                            <a class="btn bg-primary" href="{% url 'create_gr_from_csv' %}"  style="color: white;"> 
+                                                <i class="fa fa-upload"></i>
+                                                <span> Import from CSV</span>
+                                            </a>
+                                        {% elif order_type == '6' %} {# ORDER_TYPE['GR ORDER'] #}
+                                            <a class="btn btn-info" href="{% url 'download_snp_template' order_type %}" style="color: white;" download="do_template.csv">
+                                              <i class="fa fa-download"></i>
+                                              <span>Download CSV Template</span>
+                                            </a>
+                                            <a class="btn bg-primary" href="{% url 'create_do_from_csv' %}"  style="color: white;"> 
+                                                <i class="fa fa-upload"></i>
+                                                <span> Import from CSV</span>
+                                            </a>
+                                        {% endif %}
+                                        {% if order_type == '1' %} {# ORDER_TYPE['SALES ORDER'] #}
+                                            <a class="btn btn-warning" href="{% url 'order_new' order_type 'old' %}" style="color: white;">
+                                              <i class="glyphicon glyphicon-plus"></i>
+                                              <span>Add New(FoxPro)</span>
+                                            </a>
+                                        {% elif order_type == '2' %} {# ORDER_TYPE['PURCHASE ORDER'] #}
+                                            <a class="btn btn-warning" href="{% url 'order_new' order_type 'old' %}" style="color: white;">
+                                              <i class="glyphicon glyphicon-plus"></i>
+                                              <span>Add New(FoxPro)</span>
+                                            </a>
+                                        {% elif order_type == '5' %} {# ORDER_TYPE['GR ORDER'] #}
+                                            <a class="btn btn-warning" href="{% url 'good_receive_new' 'old' %}"  style="color: white;"> 
+                                                <i class="glyphicon glyphicon-plus"></i>
+                                                <span>Add New(FoxPro)</span>
+                                            </a>
+                                        {% elif order_type == '6' %} {# ORDER_TYPE['DO ORDER'] #}
+                                            <a class="btn btn-warning" href="{% url 'order_DO_add' order_type 'old' %}"  style="color: white;"> 
+                                                <i class="glyphicon glyphicon-plus"></i>
+                                                <span>Add New(FoxPro)</span>
+                                            </a>
+                                        {% endif %}
+                                        {% if order_type == '1' %} {# ORDER_TYPE['SALES ORDER'] #}
+                                            <a class="btn btn-success start" href="{% url 'order_new' order_type 'N' %}">
+                                        {% endif %}
+                                        {% if order_type == '2' %} {# ORDER_TYPE['PURCHASE ORDER'] #}
+                                            <a class="btn btn-success start" href="{% url 'order_new' order_type 'N' %}">
+                                        {% endif %}
+                                        {% if order_type == '10' %} {# ORDER_TYPE['SALES CR DB NOTE'] #}
+                                            <a class="btn btn-success start" href="{% url 'sale_debit_credit_note' order_type 0 %}"> {# ORDER_STATUS['Draft'] #}
+                                        {% endif %}
+                                        {% if order_type == '5' %} {# ORDER_TYPE['PURCHASE INVOICE'] #}
+                                            <a class="btn btn-success start" href="{% url 'good_receive_new' 'N' %}">
+                                        {% endif %}
+                                        {% if order_type == '6' %} {# ORDER_TYPE['SALES INVOICE'] #}
+                                            <a class="btn btn-success start" href="{% url 'order_DO_add' order_type 'N' %}">
+                                        {% endif %}
+                                        {% if order_type == '9' %} {# ORDER_TYPE['PURCHASE CR DB NOTE'] #}
+                                            <a class="btn btn-success start" href="{% url 'purchase_crdb_note_add' 0 %}"> {# ORDER_STATUS['Draft'] #}
+                                        {% endif %}
+                                                <i class="glyphicon glyphicon-plus"></i>
+                                                <span>Add New</span>
+                                            </a>
+                                        {% if order_type == '1' %} {# ORDER_TYPE['SALES ORDER'] #}
+                                            <a class="btn bg-primary" href="{% url 'generate_purchase_series' 0 %}" style="color: white"> {# sales_order_id #}
+                                              <i  class="fa fa-copy"></i>
+                                              <span> Generate Purchase Orders</span>
+                                            </a>
+                                        {% endif %}
+                                        {% if order_type == '2' %} {# ORDER_TYPE['PURCHASE ORDER'] #}
+                                            <a class="btn bg-primary" href="{% url 'download_purchase_load' %}" style="color: white">
+                                              <i class="fa fa-download"></i>
+                                              <span> Download Purchase Orders</span>
+                                            </a>
+                                        {% endif %}
+                                    {% endif %}
+                                 </span>
+                            </header>
+                            <div class="adv-table table-responsive">
+                                <table class="display table table-bordered table-striped table-condensed"
+                                       id="dynamic-table" style="width:100%">
+                                    <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Update Date</th>
+                                        <th>ID</th>
+                                        <th>Document Date</th>
+                                        <th>Document Number</th>
+                                        {% if order_type == '1' or order_type == '6' or order_type == '10' %} {# ORDER_TYPE['SALES ORDER'] #}
+                                            <th>Customer</th>
+                                        {% elif order_type == '2' or order_type == '5' or order_type == '9' %} {# ORDER_TYPE['PURCHASE ORDER'] #}
+                                            <th>Supplier</th>
+                                        {% endif %}
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                        <th class="text-center" style="min-width:90px!important;">Options</th>
+                                    </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                            <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1"
+                                 id="delete-order-dialog"
+                                 class="modal fade">
+                                <div class="modal-dialog modal-sm">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button aria-hidden="true" data-dismiss="modal" class="close" type="button">
+                                                ×
+                                            </button>
+                                            <h4 class="modal-title">Delete Confirm Dialog</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form role="form"
+                                                  method="post"
+                                                  id="delete-order-form">
+                                                {% csrf_token %}
+                                                <div class="form-group">
+                                                    <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                                                </div>
+                                                <button type="submit" class="btn btn-success" id="btnDeleteOrder">OK
+                                                </button>
+                                                <button data-dismiss="modal" class="btn btn-default" type="button">
+                                                    Cancel
+                                                </button>
+                                            </form>
+                                            <input type="hidden" name="order_id" id="order_id" value=""/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript">
+    (function () {
+        var my_order_type = $("#my_order_type").val();
+        $(document).ready(function () {
+            var campreto = $('#dynamic-table').DataTable({
+                "order": [[1, "desc"]],
+                "serverSide": true,
+                "scrollX": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'OrderList__asJson' order_type %}"
+                },
+                "columns": [
+                    {
+                        "className": 'details-control text-center',
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, row, meta) {
+                            var btn = '<a class="btn btn-white fa fa-plus-circle"></a';
+                            return btn;
+                        }
+                    },
+                    {"data": "update_date"},
+
+                    {
+                        "data": "id",
+                        "visible": false,
+                    },
+                    {"data": "document_date"},
+                    {"data": "document_number"},
+                    {"data": "cust_supp_name"},
+                    {"data": "total" , "sClass": "text-right"},
+                    {
+                        "sClass": "text-center",
+                        "data": null,
+                        "render": function (data, type, row, meta) {
+                            if (row.status == '1') { /* ORDER_STATUS['Draft'] */
+                                return '<span class="badge badge-sm label-inverse">Draft</span>'
+                            }
+                            else if (row.status == '2') { /* ORDER_STATUS['Sent'] */
+                                return '<span class="badge badge-sm label-success">Send</span>'
+                            }
+                            else if (row.status == '3') { /* ORDER_STATUS['Received'] */
+                                return '<span class="badge badge-sm label-primary">Received</span>'
+                            }
+                            else if (row.status == '4') { /* ORDER_STATUS['Delivered'] */
+                                return '<span class="badge badge-sm label-warning">Delivered</span>'
+                            }
+                            else if (row.status == '6') { /* ORDER_STATUS['Partial'] */
+                                return '<span class="badge badge-sm label-label">Partial</span>'
+                            }
+                        }
+                    },
+                    {
+                        "sClass": "text-center",
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, row, meta) {
+                            var btn =
+                                    '<div class="btn-group dropdown">' +
+                                    '<button type="button"' +
+                                    'class="btn btn-primary btn-sm dropdown-toggle"' +
+                                    'data-toggle="dropdown" aria-haspopup="true"' +
+                                    'aria-expanded="false"' +
+                                    'style="min-width: 40px!important;">Action' +
+                                    '<span class="caret" style="margin-left:15px;"></span>' +
+                                    '<span class="sr-only">Toggle Dropdown</span>' +
+                                    '</button>' +
+                                    '<ul class="dropdown-menu dropdown-menu-right">' +
+                                    '<li>';
+
+                            if (my_order_type == '1' || my_order_type == '2' ) {
+                                btn = btn + '<a href="../../order_edit/' + row.id + '/' + my_order_type + '/1/0/N/">Copy</a></li>'; /* EDIT_TYPE['Copy'] */
+                            }
+                            if (row.status == '2' /* ORDER_STATUS['Sent'] */
+                                && my_order_type == '1' /* ORDER_STATUS['Draft'] */
+                                || row.status == '6' /* ORDER_STATUS['Partial'] */
+                                && my_order_type == '1') { /* ORDER_STATUS['Draft'] */
+                                btn += '<li><a href="../../generate_purchase_load/' + row.id + '/">Generate P/O Order</a>'
+                            }
+
+                            if (my_order_type == '7' || my_order_type == '8') {
+                                btn = btn + '<a href="/orders/purchase_crdb_note_edit/' + row.id + '/' + row.status + '/">Edit</a>'
+                            }
+
+                            btn = btn + '<li>';
+                            if (my_order_type == '1' || my_order_type == '2') {
+                                btn = btn + '<a class="editEntry" href="../../order_edit/' + row.id + '/' + my_order_type + '/0/0/N/">Edit</a>'; /* EDIT_TYPE['Edit'] */
+                            }
+                            if (my_order_type == '1' || my_order_type == '2') {
+                                btn = btn + '<a class="editEntry" href="../../order_edit/' + row.id + '/' + my_order_type + '/0/0/old/">Edit(FoxPro)</a>'; /* EDIT_TYPE['Edit'] */
+                            }
+                            if (my_order_type == '6') {
+                                btn = btn + '<a class="editEntry" href="../../order_DO_edit/' + row.id + '/' + my_order_type + '/0/N/">Edit</a>'
+                            }
+                            if (my_order_type == '6') {
+                                btn = btn + '<a class="editEntry" href="../../order_DO_edit/' + row.id + '/' + my_order_type + '/0/old/">Edit(FoxPro)</a>'
+                            }
+                            if (my_order_type == '5') {
+                                btn = btn + '<a class="editEntry" href="../../good_receive_edit/' + row.id + '/N/">Edit</a>'
+                            }
+                            if (my_order_type == '5') {
+                                btn = btn + '<a class="editEntry" href="../../good_receive_edit/' + row.id + '/old/">Edit(FoxPro)</a>'
+                            }
+                            if (my_order_type == '3' || my_order_type == '4') {
+                                btn = btn + '<a class="editEntry" href="../../sale_debit_credit_note_edit/' + row.id + '/' + +my_order_type + '/0/0/">Edit</a>'; /* EDIT_TYPE['Edit'] is_send */
+                            }
+                            if (my_order_type == '2') {
+                                btn = btn + '<a href="/reports/view_report/' + my_order_type + '/' + row.id + '/0/">Print Preview</a>'; /* PRINT_TYPES['Print Preview'] */
+                                btn = btn + '<a href="/reports/print_po_order_pdf/' + row.id + '/1/">Dowload PDF</a></li>';
+                            }
+                            else if (my_order_type == '6') {
+                                btn = btn + '<a href="/reports/view_report/' + my_order_type + '/' + row.id + '/1/">Print Delivery Order</a>'; /* PRINT_TYPES['Print Delivery Order'] */
+                                btn = btn + '<a href="/reports/view_report/' + my_order_type + '/' + row.id + '/4/">Print Invoice</a>'; /* PRINT_TYPES['Print Invoice'] */
+                                btn = btn + '<a href="/reports/view_report/' + my_order_type + '/' + row.id + '/5/">Print Shipping Invoice(1)</a>'; /* PRINT_TYPES['Print Shipping Invoice'] */
+                                btn = btn + '<a href="/reports/view_report/' + my_order_type + '/' + row.id + '/6/">Print Shipping Invoice(2)</a>'; /* PRINT_TYPES['Print Shipping Invoice'] */
+                                btn = btn + '<a href="/reports/view_report/' + my_order_type + '/' + row.id + '/2/">Print Tax Invoice</a>'; /* PRINT_TYPES['Print Tax Invoice'] */
+                                btn = btn + '<a href="/reports/view_report/' + my_order_type + '/' + row.id + '/3/">Print Packing List</a>'; /* PRINT_TYPES['Print Packing List'] */
+                                btn = btn + '<a href="../../download_delivery_order/' + row.id + '/">Dowload PDF</a></li>';
+                            }
+                            else if (my_order_type == '2') {
+                                btn = btn + '<a href="../../print_order/' + row.id + '/">Print Preview</a></li>';
+                            }
+                            btn = btn + '</ul></div>';
+                            return btn;
+                        }
+                    }
+                ]
+            });
+            $('#dynamic-table tbody').on('click', 'td.details-control a', function () {
+                var tr = $(this).closest('tr');
+                var row = campreto.row( tr );
+                if (row.data()){
+                    if ( row.child.isShown() ) {
+                        row.child.hide();
+                        tr.removeClass('shown');
+                        $(this).addClass('fa-plus-circle');
+                        $(this).removeClass('fa-minus-circle');
+                    }
+                    else {
+                        addrow(row.child, row.data());
+                        tr.addClass('shown');
+                        $(this).removeClass('fa-plus-circle');
+                        $(this).addClass('fa-minus-circle');
+                    }
+                }
+            });
+        });
+
+        $(document).on("click", ".editEntry", function () {
+            $('#loading').show();
+        });
+
+        $(document).on("click", ".delete-order", function () {
+            currentRow = $(this).parents('tr');
+            var order_id = $(this).data('id');
+            $(".modal-body #order_id").val(order_id);
+            $('#delete-order-dialog').modal('show');
+        });
+        $('#btnDeleteOrder').on('click', function () {
+            $.ajax({
+                method: "POST",
+                url: '/orders/order_delete/',
+                dataType: 'JSON',
+                data: {
+                    'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val(),
+                    'order_id': $('#order_id').val()
+                },
+                success: function (json) {
+                    $('#delete-order-dialog').modal('hide');
+                    if (json.type == 'success') {
+                        $('#results').html("<div class='alert alert-success'>" +
+                                "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>×</button > " +
+                                "<span class='glyphicon glyphicon-ok'></span> <strong>Success Message</strong>" +
+                                "<hr class='message-inner-separator'>" +
+                                "<p>" + json.msg + "</p>");
+                    } else if (json.type == 'failed') {
+                        $('#results').html("<div class='alert alert-warning'>" +
+                                "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>×</button > " +
+                                "<span class='glyphicon glyphicon-ok'></span> <strong>Warning Message</strong>" +
+                                "<hr class='message-inner-separator'>" +
+                                "<p>" + json.msg + "</p>");
+                    }
+                    location.reload();
+                },
+                error: function (xhr, errmsg, err) {
+                    $('#delete-order-dialog').modal('hide');
+                    $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+                            " <a href='#' class='close'>&times;</a></div>");
+                }
+            });
+        });
+        $(document).ready(function () {
+            var mess = [];
+            $(".message-text error").each(function () {
+                mess.push($(this).text());
+            });
+            if (mess.length > 0) {
+                pop_info_dialog("Information", "Please add " + mess + " first!", "info");
+            }
+
+        })
+        function addrow(callback,jrnl) {
+            var is_inventory = "{{company.is_inventory}}";
+            $.ajax({
+                url: '/orders/detail_order/'+ jrnl.id+'/'+ my_order_type +'/',
+                dataType: "json",
+                complete: function (response) {
+                    var data = JSON.parse(response.responseText);
+                    if (data.length > 0){
+                        var thead = '',  tbody = '';
+                        thead += '<thead><tr>';
+                        thead += '<th>Line</th>';
+                        if (my_order_type == '2'){
+                            thead += '<th>Ref. Number</th>';
+                            thead += '<th>R.Ln</th>';
+                        } else if ((my_order_type == '5') || (my_order_type == '6')) {
+                            if (is_inventory == 'True'){
+                                thead += '<th>Location</th>';
+                                thead += '<th>Ref. Number</th>';
+                                thead += '<th>R.Ln</th>';
+                            } else {
+                                thead += '<th>Ref. Number</th>';
+                            }
+                        }
+                        thead += '<th>Customer PO</th>';
+                        thead += '<th>Part Number</th>';
+                        if (my_order_type == '1'){
+                            thead += '<th>Supplier Code</th>';
+                        }
+                        thead += '<th>Order Qty</th>';
+                        thead += '<th>Unit Price</th>';
+                        thead += '<th>Amount</th>';
+                        if ((my_order_type == '2') || (my_order_type == '5')) {
+                            thead += '<th>Supplier</th>';
+                        } else if ((my_order_type == '1') || (my_order_type == '6')) {
+                            thead += '<th>Customer</th>';
+                        }
+                        thead += '</tr></thead>';
+                        tbody += '<tbody>';
+                        for (var i = 0; i < data.length; i++) {
+                            tbody += '<tr>';
+                            tbody += '<td>' + data[i].line_number + '</td>';
+                            if (my_order_type == '2'){
+                                tbody += '<td style="width:120px">' + data[i].ref_number + '</td>';
+                                tbody += '<td>' + data[i].refer_line + '</td>';
+                            } else if ((my_order_type == '5') || (my_order_type == '6')) {
+                                if (is_inventory == 'True'){
+                                    tbody += '<td>' + data[i].location_code + '</td>';
+                                    tbody += '<td style="width:120px">' + data[i].ref_number + '</td>';
+                                    tbody += '<td>' + data[i].refer_line + '</td>';
+                                } else {
+                                    tbody += '<td style="width:120px">' + data[i].ref_number + '</td>';
+                                }
+                            }
+                            tbody += '<td style="width:120px">' + data[i].customer_po_no + '</td>';
+                            tbody += '<td style="width:150px">' + data[i].item_code + '</td>';
+                            if (my_order_type == '1'){
+                                tbody += '<td>' + data[i].supplier_code + '</td>';
+                            }
+                            tbody += '<td>' + data[i].quantity + '</td>';
+                            tbody += '<td>' + data[i].sales_price + '</td>';
+                            tbody += '<td>' + data[i].amount + '</td>';
+                            if ((my_order_type == '2') || (my_order_type == '5')) {
+                                tbody += '<td>' + data[i].supplier_code + '</td>';
+                            } else if ((my_order_type == '1') || (my_order_type == '6')) {
+                                tbody += '<td>' + data[i].customer_code + '</td>';
+                            }
+                            tbody += '</tr>';
+                        }
+                        tbody += '</tbody>';
+
+                        callback($('<table class="display table table-bordered table-striped table-condensed">' + thead + tbody + '</table>')).show();
+                    } else {
+                        pop_info_dialog("Error", "Some errors happended. Please refresh and try again or contact administrator for support.", "error");
+                    }
+                }
+            })
+        }
+    }());
+
+    $(document).click(function (event) {
+        //hide al‘l our dropdowns
+        $('.dropdown-menu[data-parent]').hide();
+    });
+    </script>
+{% endblock %}

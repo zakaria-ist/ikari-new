@@ -1,0 +1,1673 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    {% load humanize %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "assets/jquery-ui/jquery-ui-1.10.1.custom.css" %}" rel="stylesheet">
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <link href="{% static "css/standard_header.css" %}" rel="stylesheet">
+    <style>
+      .hide_column, .ui-helper-hidden-accessible {
+        display: none;
+      }
+
+      .delete {
+        background-color: #b0b5b9 !important;
+      }
+
+      .hide_column {
+        display: none;
+      }
+
+      .delete {
+        background-color: #b0b5b9 !important;
+      }
+
+      select::-ms-expand {
+        display: none;
+      }
+
+      .no-select {
+        /*for firefox*/
+        -moz-appearance: none;
+        /*for chrome*/
+        -webkit-appearance: none;
+      }
+
+      .disabled {
+        pointer-events: none;
+        cursor: not-allowed;
+        background-color: #eee;
+      }
+
+      .adv-table ::-webkit-scrollbar {
+        -webkit-appearance: none;
+      }
+      .adv-table ::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.3);
+        border-radius: 5px;
+      }
+
+      .modal-backdrop {
+        position: fixed !important
+      }
+
+      @media (min-width: 1200px) {
+            .modal-xlg {
+                width: 75%; 
+            }
+        }
+    </style>
+
+{% endblock %}
+
+{% block title %}
+    {% if rec_entry.id %}
+        Edit AP Recurring Entry
+    {% elif is_rec_entry %}
+        Add AP Recurring Entry
+    {% elif journal.id %}
+        Edit AP Entry
+    {% else %}
+        Add AP Entry
+    {% endif %}
+{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block parent_AP_a_active %}active{% endblock %}
+{% block parent_AP_i_active %}active{% endblock %}
+{% block ap_invoice_active %}active{% endblock %}
+
+{% block content %}
+    <section class="panel">
+        <header class="panel-heading">
+            {% if rec_entry.id %}
+                <strong>Edit AP Recurring Entry</strong>
+            {% elif is_rec_entry %}
+                <strong>Add AP Recurring Entry</strong>
+            {% elif journal.id %}
+                <strong>Edit AP Entry</strong>
+            {% else %}
+                <strong>Add AP Entry</strong>
+            {% endif %}
+        </header>
+        <div class="panel-body">
+            <form class="form-horizontal"
+                    {% if rec_entry.id %}
+                  action="{% url 'edit_ap_recurring_entry' rec_entry.id %}"
+                    {% elif is_rec_entry %}
+                  action="{% url 'add_ap_recurring_entry' batch_id %}"
+                    {% elif journal.id %}
+                  action="{% url 'journal_AP_edit' journal.id %}"
+                    {% else %}
+                  action="{% url 'journal_AP_add' batch_id %}"
+                    {% endif %}
+                  role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% if is_rec_entry %}
+                    {% include 'RE_entry_common.html' %}
+                {% endif %}
+
+                <!-- first column -->
+                <div class="form-group">
+                    <div class="col-xs-6" style="margin: 10px 0 10px 0; display: block;">
+                      <label for="code" class="control-label col-lg-12 check">Batch Number</label>
+                      <div class="col-lg-12 full_width" style="display: flex;">
+                            {% comment %} {% if not is_rec_entry %} {% endcomment %}
+                            <div class="">
+                                {% if prev_batch != 0 %}
+                                    <button type="button" class="btn btn-white" tabindex="-1" onclick="checkInput({{prev_batch}})"><i class="fa fa-chevron-left"></i></button>
+                                {% else %}
+                                    <button type="button" class="btn btn-white" tabindex="-1" disabled><i class="fa fa-chevron-left"></i></button>
+                                {% endif %}
+                            </div>
+                          {% comment %} {% endif %} {% endcomment %}
+                          <div class="" style="margin: 0 10px 0 10px">
+                              <div class="center date_length test">
+                                {{ batch_form.batch_no }}
+                              </div>
+                          </div>
+                          {% comment %} {% if not is_rec_entry %} {% endcomment %}
+                            <div class="" style="padding-left: 0px;">
+                                {% if next_batch != 0 %}
+                                    <button type="button" class="btn btn-white" tabindex="-1" onclick="checkInput({{next_batch}})"><i class="fa fa-chevron-right"></i></button>
+                                {% else %}
+                                    <button type="button" class="btn btn-white" tabindex="-1" disabled><i class="fa fa-chevron-right"></i></button>
+                                {% endif %}
+                            </div>
+                            {% if not is_rec_entry %}
+                                <div class="" style="margin: 0 10px 0 10px">
+                                    <a class="btn btn-success start" href="/accounting/add/AP/0/">
+                                        <i class="glyphicon glyphicon-plus"></i>
+                                    </a>
+                                </div>
+                            {% endif %}
+                          {% comment %} {% endif %} {% endcomment %}
+                      </div>
+                    </div>
+                    <div class="col-xs-6" style="margin: 10px 0 10px 0">
+                      <label for="description" class="control-label col-lg-12">Description</label>
+                      <div class="col-lg-12 full_width">
+                        {% if batch_form %}
+                            <div class="dscrp_length">
+                                {{ batch_form.description }}
+                            </div>
+                        {% else %}
+                            <div class="dscrp_length">
+                                <input class="form-control" name="batch_description" type="text" value="">
+                            </div>
+                        {% endif %}
+                      </div>
+                    </div>
+                </div>
+
+                <!-- second column -->
+                <div class="form-group" style="display: flex">
+                    <div class="col-xs-3" style="display: block">
+                      <label for="journal_type" class="control-label col-lg-12">Batch Date</label>
+                      <div class="col-lg-12 full_width">
+                          <div class="center date_length">
+                            {{ batch_form.batch_date }}
+                            <input type="text" name="batch_view_date" id="batch_view_date" class="sended form-control form-control-inline input-medium default-date-picker">
+                          </div>
+                      </div>
+                    </div>
+                    <div class="col-xs-3 float-right">
+                      <label for="no_entries" class="col-lg-12 control-label">No. of Entries</label>
+                      <div class="col-lg-12 full_width">
+                        <div class="center" style="width: 60px">
+                          {{ batch_form.no_entries }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-xs-6">
+                      <label for="amount" class="col-lg-12 control-label">Total Amount</label>
+                      <div class="col-lg-12 center full_width">
+                          <div class="amount_length">
+                            {{ batch_form.batch_amount }}
+                          </div>
+                      </div>
+                    </div>
+                </div>
+                <hr>
+
+                <!-- third column -->
+                <div class="form-group" style="display: flex">
+                    <div class="col-xs-6" style="display: block">
+                      <label for="code" class="control-label col-lg-12">Entry Number</label>
+                      <div class="col-lg-12 full_width" style="display: flex">
+                          {% comment %} {% if not is_rec_entry %} {% endcomment %}
+                          <div class="">
+                              {% if first_journal != 0 %}
+                                  <button type="button" class="btn btn-white" tabindex="-1" onclick="checkInput({{first_journal}})"><i class="fa fa-step-backward"></i></button>
+                              {% else %}
+                                  <button type="button" class="btn btn-white" tabindex="-1" disabled><i class="fa fa-step-backward"></i></button>
+                              {% endif %}
+                          </div>
+                          <div class="" style="margin: 0 10px 0 10px;">
+                              {% if prev_journal != 0 %}
+                                  <button type="button" class="btn btn-white" tabindex="-1" onclick="checkInput({{prev_journal}})"><i class="fa fa-chevron-left"></i></button>
+                              {% else %}
+                                  <button type="button" class="btn btn-white" tabindex="-1" disabled><i class="fa fa-chevron-left"></i></button>
+                              {% endif %}
+                          </div>
+                          {% comment %} {% endif %} {% endcomment %}
+                          <div class="">
+                              <div id="entry_no_code" class="center" style="max-width: 50px; min-width: 50px">
+                                {{ form.code }}
+                              </div>
+                          </div>
+                          {% comment %} {% if not is_rec_entry %} {% endcomment %}
+                          <div class="" style="margin: 0 10px 0 10px;">
+                              {% if next_journal != 0 %}
+                                  <button type="button" class="btn btn-white" tabindex="-1" onclick="checkInput({{next_journal}})"><i class="fa fa-chevron-right"></i></button>
+                              {% else %}
+                                  <button type="button" class="btn btn-white" tabindex="-1" disabled><i class="fa fa-chevron-right"></i></button>
+                              {% endif %}
+                          </div>
+                          <div>
+                              {% if last_journal != 0 %}
+                                  <button type="button" class="btn btn-white" tabindex="-1" onclick="checkInput({{last_journal}})"><i class="fa fa-step-forward"></i></button>
+                              {% else %}
+                                  <button type="button" class="btn btn-white" tabindex="-1" disabled><i class="fa fa-step-forward"></i></button>
+                              {% endif %}
+                          </div>
+                          <button id="btnSearchEntry" type="button" class="btn btn-info" style="margin: 0 10px 0 10px" tabindex="-1"
+                                  data-toggle="modal" href="#searchEntryModal"><i class="fa fa-search"></i></button>
+                          {% comment %} {% endif %} {% endcomment %}
+                          {% if batch_id and batch_id != '0' and not is_rec_entry %}
+                            <a class="btn btn-success start sended" href="/accounting/add/AP/{{ batch_id }}/">
+                                <i class="glyphicon glyphicon-plus"></i>
+                            </a>
+                          {% endif %}
+                      </div>
+                    </div>
+                    <div class="col-xs-6" style="display: block">
+                      <label for="description" class="control-label col-lg-12">Description</label>
+                      {% if form %}
+                          <div class="col-lg-12 full_width">
+                              <div class="dscrp_length">
+                                {{ form.name }}
+                              </div>
+                          </div>
+                      {% else %}
+                          <div class="col-lg-12 full_width">
+                              <div class="dscrp_length">
+                                <input class="form-control" name="journal_name" type="text" value="">
+                              </div>
+                          </div>
+                      {% endif %}
+                    </div>
+                </div>
+
+                <!-- fourth column -->
+                <div class="form-group" style="display: flex">
+                  <div class="col-xs-2">
+                    <label for="journal_type" class="col-lg-12 control-label">Document Type</label>
+                    <div class="col-lg-12 document_type full_width">
+                        <div style="width: 130px">
+                          {{ form.document_type }}
+                        </div>
+                    </div>
+                  </div>
+                  <!-- <div class="col-lg-1 col-sm-1"></div> -->
+                  <div class="col-xs-2">
+                    <label for="document_date" class="col-lg-12 control-label">Document Date</label>
+                    <div class="col-lg-12 full_width">
+                        <div class="center date_length">
+                          {{ form.document_date }}
+                          <input type="text" name="doc_date_view" id="doc_date_view" class="sended form-control form-control-inline input-medium default-date-picker">
+                        </div>
+                    </div>
+                  </div>
+                  {% if not is_rec_entry %}
+                  <div class="col-xs-2">
+                    <label for="due_date" class="col-lg-12 control-label">Due Date</label>
+                    <div class="col-lg-12 full_width">
+                        <div class="center date_length">
+                          <input type="text" name="due_date" id="id_due_date" class="sended form-control form-control-inline input-medium default-date-picker">
+                        </div>
+                    </div>
+                  </div>
+                  {% endif %}
+                <!-- </div>
+                <div class="form-group"> -->
+                  <div class="col-xs-2" style="display: block">
+                    <label for="posting_date" class="control-label col-lg-12">Posting Date</label>
+                    <div class="col-lg-12 full_width">
+                        <div class="center date_length">
+                          {{ form.posting_date }}
+                          <input type="text" name="post_date_view" id="post_date_view" class="sended form-control form-control-inline input-medium default-date-picker">
+                        </div>
+                    </div>
+                  </div>
+
+                  <!-- <label for="year_period" class="col-lg-2 col-md-2 control-label">Year/Period</label> -->
+                  <div class="col-xs-2" style="display: block">
+                    <label for="document_date" class="control-label col-lg-12">Period-Year</label>
+                    <div class="col-lg-12 full_width">
+                        <div class="center" style="width: 80px">
+                          {% if rec_entry %}
+                          <input type="text" class="hide" tabindex="-1" id="perd_year" name="perd_year" value="{{rec_entry.perd_year}}">
+                          <input type="text" class="hide" tabindex="-1" id="perd_month" name="perd_month" value="{{rec_entry.perd_month}}">
+                          <input id="year_period" class="form-control" tabindex="-1" name="year_period" value="{{rec_entry.perd_month}}-{{rec_entry.perd_year}}" required="required" disabled>
+                          {% else %}
+                          <input type="text" class="hide" id="perd_year" tabindex="-1" name="perd_year" value="{{journal.perd_year}}">
+                          <input type="text" class="hide" id="perd_month" tabindex="-1" name="perd_month" value="{{journal.perd_month}}">
+                          <input id="year_period" class="form-control" tabindex="-1" name="year_period" value="{{journal.perd_month}}-{{journal.perd_year}}" required="required" disabled>
+                          {% endif %}
+                          <!-- <select id="year_period" class="form-control trs-field fieldset" name="year_period" required="required"> -->
+                          <!-- </select> -->
+                        </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- fifth column -->
+                <div class="form-group" style="display: flex">
+                  <div class="col-xs-6" style="display: block">
+                    <label for="supplier_code" class="col-lg-12 control-label">Vendor Code<span
+                            class="span-required">(*)</span></label>
+                    <div class="col-lg-12 full_width search_dscrp_length" style="display: flex;">
+                      <div class="col-xs-9" style="padding-left: 0;">
+                          {{ form.supplier }}
+                      </div>
+                      <div class="col-xs-3" style="padding-left: 0;">
+                          <button id="btnSearchSupplier" tabindex="-1" type="button" class="btn btn-info sended" data-toggle="modal"
+                                  href="#SupplierListModal"><i class="fa fa-search"></i></button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-xs-6" style="display: block">
+                    <label for="supplier_name" class="col-lg-12 control-label">Vendor Name</label>
+                    {% if form %}
+                        <div class="col-lg-12 full_width">
+                          <div class="dscrp_length">
+                            {{ form.supplier_name|default:"" }}
+                          </div>
+                        </div>
+                    {% else %}
+                        <div class="col-lg-12 full_width">
+                            <input class="form-control" tabindex="-1" name="supplier_name" type="text" value="Supplier full name">
+                        </div>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <!-- Sixth row -->
+                <div class="form-group" style="display: flex">
+                  <div class="col-xs-6" style="display: block">
+                    <label for="account_set" class="control-label col-lg-12">Account Set<span
+                            class="span-required">(*)</span></label>
+                    <div class="col-lg-12 full_width search_dscrp_length" style="display: flex;">
+                      <div class="col-xs-9" style="padding-left: 0;">
+                          {{ form.account_set }}
+                      </div>
+                      <div class="col-xs-3" style="padding-left: 0;">
+                          <button id="btnSearchAccount" tabindex="-1" type="button" class="btn btn-info sended" data-toggle="modal"
+                                  href="#AccountListModal"><i class="fa fa-search"></i></button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-xs-6" style="display: block">
+                    <label for="document_date" class="col-lg-12 control-label">Currency</label>
+                    <div class="col-lg-12 full_width">
+                        <div class="currency currency_to_middle" style="width: 80px;">
+                          {{ form.currency|default:"" }}
+                        </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Seventh column -->
+                <div class="form-group" style="display: flex">
+                    <div class="col-xs-6 display_block">
+                      <input type="hidden" id="exchange_id" name="exchange_id">
+                      <label for="exchange_rate" class="col-lg-12 control-label">Exchange Rate</label>
+                      <div class="col-lg-12 full_width search_dscrp_length" style="display: flex;">
+                        <div class="col-xs-9" style="padding-left: 0;">
+                            {{ form.exchange_rate|default:"0" }}
+                        </div>
+                        <div class="col-xs-3" style="padding-left: 0;">
+                            <button id="btnSearchExchangeRate" type="button" class="btn btn-info sended" data-toggle="modal"
+                                    href="#ExchangeRateListModal" tabindex="-1"><i class="fa fa-search"></i></button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-xs-6 display_block">
+                      <label for="tax_exchange_rate" class="col-lg-12 control-label">Tax Reporting Exchange Rate</label>
+                      <div class="col-lg-12 display_flex search_dscrp_length full_width">
+                        <div class="col-xs-9" style="padding-left: 0">
+                            {{ form.tax_exchange_rate|default:"0" }}
+                        </div>
+                        <div class="col-xs-3" style="padding-left: 0">
+                            <button id="btnSearchTaxExchangeRate" tabindex="-1" type="button" class="btn btn-info sended" data-toggle="modal"
+                                    href="#TaxExchangeRateListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                      </div>
+                     <div id="div_orig_rate">
+                        <label for="orig_rate" class="col-lg-12 control-label">Orig. Doc. Exch. Rate</label>
+                        <div class="col-lg-12 full_width search_dscrp_length">
+                            <input id="orig_rate" type="text" tabindex="-1" class="form-control text-right" name="orig_rate" value="{{ journal.orig_exch_rate }}" readonly="true" style="max-width: 200px">
+                            <input id="orig_rate_pk" type="text" class="hide" name="orig_rate_pk" value="{{ journal.orig_exch_rate_fk_id }}">
+                        </div>
+                     </div>
+                     {{form.exchange_rate_fk}}
+                    </div>
+                </div>
+
+                <!-- Eigth column -->
+                <div class="form-group" style="display: flex">
+                    <div class="col-xs-6" style="display: block">
+                      <label for="document_number" class="control-label col-lg-12">Document Number<span
+                              class="span-required">(*)</span></label>
+                      <div class="col-lg-12 full_width search_dscrp_length" style="display: flex;">
+                        <div class="col-xs-9" style="padding-left: 0;">
+                            {{ form.document_number|default_if_none:"" }}
+                            {{ form.order_id|default_if_none:"" }}
+                        </div>
+                        <div class="col-xs-3" style="padding-left: 0;">
+                            <button id="btnSearchDocument" tabindex="-1" type="button" class="btn btn-info" data-toggle="modal" href="#modalSearchDocument"><i class="fa fa-search"></i></button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-xs-6">
+                      <div id='customise_aplly'>
+                          <label for="apply_to" class="col-lg-12 control-label">Apply-To Document</label>
+                          <div class="col-lg-12 full_width search_dscrp_length" style="padding-left: 0;">
+                            <div class="col-xs-9">
+                                <input type="text" class="form-control text-right" tabindex="-1" id="related_invoice" name="related_invoice" value="{{inv_name}}" readonly="true">
+                                <input type="text" class="hide" tabindex="-1" id="id_related_invoice" name="id_related_invoice" >
+                            </div>
+                            <div class="col-xs-3" style="padding-left: 0;">
+                                <button id="id_inv" type="button" tabindex="-1" class="btn btn-info sended" data-toggle="modal"><i class="fa fa-search"></i></button>
+                            </div>
+                          </div>
+                      </div>
+                    </div>
+                </div>
+
+                <!-- Nineth column -->
+                <div class="form-group" style="display: flex">
+                    <div class="col-xs-6" style="display: flex">
+                      <!-- <label for="tax" class="col-lg-3 control-label red"></label> -->
+                      <div class="col-lg-12 checkbox checkbox-primary"
+                           style="padding-top: 0px; margin-left: 15px;">
+                          {{ form.is_manual_doc }}
+                          <label for="id_is_manual_doc">
+                              Add Document Manually
+                          </label>
+                      </div>
+                    </div>
+                </div>
+
+                <!-- Tenth column -->
+                <div class="form-group" style="display: flex">
+                    <div class="col-xs-6" style="display: block;">
+                      <label for="document_amount" class="col-lg-12 control-label">Document Amount</label>
+                      <div class="col-lg-12">
+                          <div class="amount_length">
+                            {{ form.document_amount|default:"0" }}
+                          </div>
+                      </div>
+                    </div>
+                </div>
+
+                <hr width="100%"/>
+
+                <div class="form-group display_flex">
+                  <div class="col-xs-4 full_width">
+                    <!-- Decoi -->
+                  </div>
+                    <div class="col-xs-4" style="display: block">
+                      <label for="amount" class="col-lg-12 control-label">Subtotal</label>
+                      <div class="col-lg-12 full_width">
+                          <div class="amount_length">
+                            {{ form.amount }}
+                          </div>
+                      </div>
+                    </div>
+                    <div class="col-xs-4" style="display: block">
+                      <label for="total_amount" class="col-lg-12 control-label">Total</label>
+                      <div class="col-lg-12 full_width">
+                          <div class="amount_length">
+                            {{ form.total_amount }}
+                          </div>
+                      </div>
+                    </div>
+                </div>
+                <div class="form-group display_flex">
+                  <div class="col-xs-4 full_width">
+                    <!-- Decoi -->
+                  </div>
+                  <div class="col-xs-4 expand" style="display: block">
+                    <label for="tax_amount" class="col-lg-12 control-label">Tax
+                        Amount</label>
+                    <div class="col-lg-12 full_width">
+                        <input type="text" class="hidden" id="tax_value">
+                        <input type="text" class="hidden" id="dis_code_id">
+                        <div class="amount_length">
+                          {{ form.tax_amount }}
+                        </div>
+                    </div>
+                  </div>
+                  <div class="col-xs-4 expand" style="display: block">
+                    <label class="col-lg-12 control-label">Tax
+                        Reporting Amount</label>
+                    <div class="col-lg-12 full_width">
+                        <div class="amount_length">
+                          <input class="form-control text-right" id="id_tax_report_amount" name="id_tax_report_amount" readonly="readonly" tabindex="-1" type="text">
+                        </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-lg-12">
+                        <input type="hidden" id="transaction_list_data" name="transaction_list_data">
+                        <input type="hidden" id="transaction_list_data_update" name="transaction_list_data_update">
+                        <div class="adv-table table-responsive"
+                             style="overflow-x: scroll; overflow-y: auto;">
+                            <table class="display table table-bordered table-striped header-fixed"
+                                   id="transaction-table"
+                                   style="width: 100%">
+                                <thead>
+                                <tr>
+                                    <th id="trs-line">Line</th>
+                                    <th id="trs-distribution_code" style="width: 15%">Distribution Code</th>
+                                    <th id="trs-description" style="width: 25%">Description</th>
+                                    <th id="trs-account_code">Account Code</th>
+                                    <th id="trs-account_name">Account Name</th>
+                                    <th id="trs-amount">Amount</th>
+                                    <th id="trs-tax_amount">Tax Amount</th>
+                                    <th id="trs-total_amount">Total Amount</th>
+                                    <th id="trs-action" style="min-width: 80px;">Action</th>
+                                    <th id="trs-id" style="display: none;">ID</th>
+                                    <th id="trs-distribution_id" style="display: none;">Distribution Id</th>
+                                    <th id="trs-account_id" style="display: none;">Account Id</th>
+                                    <th id="trs-tax_id" style="display: none;">Tax Id</th>
+                                    <th id="trs-tax_include" style="display: none;">Tax Include</th>
+                                    <th id="trs-tax_transaction" style="display: none;">Tax Transaction</th>
+                                    <th id="trs-manual_tax_input" style="display: none;">Manual Tax</th>
+                                    <th id="trs-base_tax_amount" style="display: none;">Base Tax Amount</th>
+                                    <th id="trs-delete" style="display: none;">Delete</th>
+                                    <th id="trs-row_number" style="display: none;">Row Number</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for transaction in transaction_list %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ transaction.distribution_code.code|default:"" }}</td>
+                                        <td>{{ transaction.description|default:"" }}</td>
+                                        <td>{{ transaction.account.code|default:"" }}</td>
+                                        <td>{{ transaction.account.name|default:"" }}</td>
+                                        {% if transaction.currency.is_decimal %}
+                                            <td style="text-align: right;">{{ transaction.amount|floatformat:2|intcomma }}</td>
+                                            <td style="text-align: right;">{{ transaction.tax_amount|floatformat:2|intcomma }}</td>
+                                            <td style="text-align: right;">{{ transaction.total_amount|floatformat:2|intcomma }}</td>
+                                        {% else %}
+                                            <td style="text-align: right;">{{ transaction.amount|floatformat:0|intcomma }}</td>
+                                            <td style="text-align: right;">{{ transaction.tax_amount|floatformat:0|intcomma }}</td>
+                                            <td style="text-align: right;">{{ transaction.total_amount|floatformat:0|intcomma }}</td>
+                                        {% endif %}
+                                        <td class="text-center">
+                                            <div class="btn-group drdown">
+                                                <button type="button"
+                                                                class="btn btn-primary btn-sm dropdown-toggle set_line"
+                                                                data-toggle="dropdown"
+                                                                aria-haspopup="true"
+                                                                aria-expanded="false"
+                                                                style="min-width: 40px!important;">Action<span
+                                                        class="caret" style="margin-left:15px;"></span><span
+                                                        class="sr-only">Toggle Dropdown</span></button>
+                                                <ul class="dropdown-menu dropdown-menu-right">
+                                                    <li id="active-{{ forloop.counter }}">
+                                                        {% if is_rec_entry %}
+                                                        <a onclick="editOldTransactionModal({{ transaction.id }}, {{ forloop.counter }}, true)">Edit</a>
+                                                        <a onclick="deleteOldTransactionModal({{ forloop.counter }})">Delete</a>
+                                                        {% elif journal.status == 1 %} {#STATUS_TYPE_DICT['Open']#}
+                                                        <a onclick="editOldTransactionModal({{ transaction.id }}, {{ forloop.counter }}, false)">Edit</a>
+                                                        <a onclick="deleteOldTransactionModal({{ forloop.counter }})">Delete</a>
+                                                        {% else %}
+                                                        <a onclick="editOldTransactionModal({{ transaction.id }}, {{ forloop.counter }}, false)">View</a>
+                                                        {% endif %}
+                                                    </li>
+                                                    <li id="deactive-{{ forloop.counter }}" style="display: none">
+                                                        <a onclick="restoreOldTransaction({{ forloop.counter }})">Restore</a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                        <td>{{ transaction.id }}</td>
+                                        <td>{{ transaction.distribution_code.id }}</td>
+                                        <td>{{ transaction.account.id }}</td>
+                                        <td>{{ transaction.tax_id|default:"" }}</td>
+                                        <td>{{ transaction.is_tax_include|yesno:'1,0' }}</td>
+                                        <td>{{ transaction.is_tax_transaction|yesno:'1,0' }}</td>
+                                        <td>{{ transaction.is_manual_tax_input|yesno:'1,0' }}</td>
+                                        <td>{{ transaction.base_tax_amount|floatformat:2|intcomma }}</td>
+                                        <td style="display: none;"></td>
+                                        <td style="display: none;">{{ forloop.counter }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                <tr>
+                                    <th colspan="9" style="text-align: left;">  {#STATUS_TYPE_DICT['Posted']#}
+                                        <a {% if journal.status == 2 %}
+                                                disabled
+                                           {% endif %}
+                                           id="btnAddTransDialog"
+                                           href="javascript:void(0);"
+                                           onclick="showTransactionModal()"
+                                           class="btn btn-white fa fa-plus"></a>
+                                    </th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <!-- last column -->
+                        <div class="form-group" style="padding-top: 0">
+                          <div class="display_flex">
+                            <div class="col-xs-4 full_width">
+                              <!-- Decoi -->
+                            </div>
+                            <div class="col-xs-4">
+                              <!-- Decoi -->
+                            </div>
+                            <div class="col-xs-4" style="display: block">
+                              <label for="undistributed_amount" class="control-label col-lg-12"><b>Undistributed Amount</b></label>
+                              <div class="col-lg-12">
+                                  <div class="amount_length">
+                                    <input class="form-control text-right" readonly id="undistributed_amount"
+                                           name="undistributed_amount" type="text" tabindex="-1">
+                                  </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-xs-12" style="margin: 10px 0 0 0">
+                              <div class="col-lg-12 text-center">
+                                <button {% if journal.status == 2 %}
+                                            disabled
+                                        {% endif %}
+                                        type="submit" class="btn btn-info sended" name="is_posted"
+                                        onclick="getTransactionTableData()"
+                                        style="display: none">Send {#STATUS_TYPE_DICT['Posted']#}
+                                </button>
+
+                                {% if journal.status != 2 %}
+                                    <button
+                                        type="submit" class="btn btn-success sended" id="btnSaveAPEntry" name="btnSave"
+                                        onclick="getTransactionTableData()">Save {#STATUS_TYPE_DICT['Posted']#}
+                                    </button>
+                                {% endif %}
+
+                                {% if rec_entry %}
+                                    <a class="btn btn-default" href="{% url 'recurring_batch_list' 2 %}">Cancel</a> {#['AP RECURRING'] #}
+                                {% elif is_rec_entry %}
+                                    <a class="btn btn-default" href="{% url 'recurring_batch_list' 2 %}">Cancel</a> {#['AP RECURRING'] #}
+                                {% elif batch_id == '0' %}
+                                    <a class="btn btn-default" href="{% url 'batch_list' 2 %}">Cancel</a> {# TRANSACTION_TYPES['AP Invoice'] #}
+                                {% else %}
+                                    <a class="btn btn-default" href="{% url 'journal_list' 2 batch_id %}">Cancel</a> {# TRANSACTION_TYPES['AP Invoice'] #}
+                                {% endif %}
+
+                                {% if journal.id and journal.status != 2 and not rec_entry %}
+                                    <a class="btn btn-danger sended" onclick="deleteAP('{{journal.id}}')">Delete</a>
+                                {% endif %}
+                              </div>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+
+                </div>
+            </form>
+            <div class="form-group form-horizontal">
+                <div class="col-lg-12">
+                    {% include 'AP_invoice_trans_modal.html' %}
+                </div>
+            </div>
+    </section>
+
+    {% if journal.id %}
+        <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+             class="modal fade">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                        <h4 class="modal-title">Delete Confirm Dialog</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form role="form" action="{% url 'journal_AP_delete' journal.id %}" method="post">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                            </div>
+                            <button type="submit" class="btn btn-success">OK</button>
+                            <a class="btn btn-default" data-dismiss="modal">Cancel</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    <div class="modal fade" id="modalSearchDocument" tabindex="-1" role="dialog"
+         aria-labelledby="modalSearchDocument" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Document</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section>
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="document-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th id="doc-number">Document Number</th>
+                                                    <th id="doc-date">Document Date</th>
+                                                    <th id="doc-reference">Reference Number</th>
+                                                    <th id="doc-total_amount">Total Amount</th>
+                                                    <th id="doc-supplier_name">Supplier Name</th>
+                                                    <th></th>
+                                                    <th id="doc-id" style="display: none;">ID</th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" onclick="changeDocument()">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="SupplierListModal" tabindex="-1" role="dialog"
+         aria-labelledby="myCustomerListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Vendor</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div id="supplier_error" class="messages"
+                             style="font-size: 12.5px !important;"></div>
+                    </div>
+                    <div class="form-group">
+                      <div class="adv-table" style="overflow: hidden">
+                          <table id="supplier-table"
+                                 class="display table table-bordered table-striped table-condensed">
+                              <thead>
+                              <tr>
+                                  <th id="sup-code">Vendor Code</th>
+                                  <th id="sup-name">Vendor Name</th>
+                                  <th id="sup-payment_term">Payment Term</th>
+                                  <th id="sup-payment_mode">Payment Mode</th>
+                                  <th id="sup-credit_limit">Credit Limit</th>
+                                  <th id="sup-id" style="display: none;">ID</th>
+                                  <th id="sup-tax" style="display: none;">Tax ID</th>
+                                  <th id="sup-currency" style="display: none;">Currency ID</th>
+                                  <th id="sup-currency_code" style="display: none;">Currency Code</th>
+                                  <th></th>
+                              </tr>
+                              </thead>
+                          </table>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" onclick="changeSupllier()">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="AccountListModal" tabindex="-1" role="dialog"
+         aria-labelledby="AccountListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Account Set</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div id="account_error" class="messages"
+                             style="font-size: 12.5px !important;"></div>
+                    </div>
+                    <div class="form-group">
+                      <div class="adv-table">
+                          <table id="account-table" style="width: 100% !important;" class="display table table-bordered table-striped">
+                              <thead>
+                              <tr>
+                                  <th id="acc-code">Account Set Code</th>
+                                  <th id="acc-name">Description</th>
+                                  <th id="acc-type">Control Account</th>
+                                  <th id="acc-balance_type">Currency Code</th>
+                                  <th id="acc-group">Revaluation Account</th>
+                                  <th id="acc-id">Id</th>
+                                  <th></th>
+                              </tr>
+                              </thead>
+                          </table>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" onclick="changeAccount()">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="ExchangeRateListModal" tabindex="-1" role="dialog"
+         aria-labelledby="ExchListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Exchange Rate</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div id="account_error" class="messages"
+                             style="font-size: 12.5px !important;"></div>
+                    </div>
+                    <div class="form-group">
+                      <div class="adv-table">
+                          <table id="exchange-table" style="width: 100% !important;"
+                                 class="display table table-bordered table-striped">
+                              <thead>
+                              <tr>
+                                  <th id="exc-from">From Currency</th>
+                                  <th id="exc-to">To Currency</th>
+                                  <th id="exc-date">Rate Date</th>
+                                  <th id="exc-rate">Rate</th>
+                                  <th id="exc-id">Id</th>
+                                  <th></th>
+
+                              </tr>
+                              </thead>
+                          </table>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" onclick="changeExchangeRate()">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="TaxExchangeRateListModal" tabindex="-1" role="dialog"
+         aria-labelledby="ExchListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Exchange Rate</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div id="account_error" class="messages"
+                             style="font-size: 12.5px !important;"></div>
+                    </div>
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="tax-exchange-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th id="exc-from">From Currency</th>
+                                                    <th id="exc-to">To Currency</th>
+                                                    <th id="exc-date">Rate Date</th>
+                                                    <th id="exc-rate">Rate</th>
+                                                    <th id="exc-id">Id</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" onclick="changeTaxExchangeRate()">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="list_inv_journal" tabindex="-1" role="dialog"
+         aria-labelledby="AccountListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-xlg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Documents</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div id="account_error" class="messages"
+                             style="font-size: 12.5px !important;"></div>
+                    </div>
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table table-responsive">
+                                            <table id="inv_id-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th id="inv-numb">Document <br />Number</th>
+                                                    <th id="inv-date">Document <br />Date</th>
+                                                    <th id="inv-type">Doc. <br />Type</th>
+                                                    <th id="inv-desc">Doc. <br />Description</th>
+                                                    <th id="inv-term">Terms </th>
+                                                    <th id="inv-amtdue">Vend. Currency <br />Amount Due</th>
+                                                    <th id="inv-paid">Fully <br />Paid</th>
+                                                    <th id="inv-paid">Fully Paid<br />Date</th>
+                                                    <th></th>
+                                                    <th id="inv-id"></th>
+                                                    <th id="exch_rate">rate</th>
+                                                    <th id="exch_rate_pk">rate_id</th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" onclick="id_inv_applied()">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="searchEntryModal" tabindex="-1" role="dialog"
+         aria-labelledby="searchEntryModal" aria-hidden="true">
+        <div class="modal-dialog modal-xlg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Entry</h4>
+                </div>
+                <div class="modal-body">
+                  <div class="adv-table table-responsive">
+                      <table class="display table table-bordered table-striped table-hover"
+                             id="search_entry_table" style="width: 100%">
+                          <thead>
+                          <tr>
+                              <th>ID</th>
+                              <th>Entry Number</th>
+                              <th>Vendor Number</th>
+                              <th>Document Number</th>
+                              <th>Document Date</th>
+                              <th>Invoice Description</th>
+                              <th>Total Incl. Tax</th>
+                              <th>Document Type</th>
+                              <th class="text-center" style="min-width:90px!important;">Options</th>
+                          </tr>
+                          </thead>
+                      </table>
+                  </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {#Comfirm Delete journal#}
+    <div class="modal fade" id="comfirmDeleteJournalModal" tabindex="-1" role="dialog"
+         aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title"><strong>Delete Confirm Dialog</strong></h4>
+                </div>
+                <div class="modal-body" style="padding-bottom: 0px!important; padding: 0 3%;">
+                    <form action="">
+                        <div class="form-group">
+                            <label>Are you sure want to delete?</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer" style="text-align: center">
+                    <button class="btn btn-default" type="button" data-dismiss="modal">No
+                    </button>
+                    <a id="comfirm-yes" class="comfirm-yes" href="">
+                        <button class="btn btn-success" type="button">Yes</button>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {#End Comfirm delete journal#}
+
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="text/javascript">
+        var company_currency = {{company_currency}};
+        var is_rec_entry = "{{is_rec_entry}}";
+        {% if journal.status == 2 %}
+        var jrn_status = '2';
+        {% else %}
+        var jrn_status = '';
+        {% endif %}
+        var journal_id = '{{journal.id}}';
+        var post_date_click = '';
+        var post_date_enter = '';
+        var transaction_new = [];
+        var transaction_update = [];
+        var tax_reporting_rate = 1;
+        var payment_terms = '{{payment_terms}}';
+        var has_old_rate = '{{has_old_rate}}';
+
+    </script>
+    <script type="text/javascript" src="{% static 'js/standard.js' %}"></script>
+    <script type="application/javascript" src="{% static 'js/accounting/journal_AP.js' %}?{% now 'H' %}"></script>
+    <script type="application/javascript" src="{% static 'js/accounting/journal_AP_transaction.js' %}?{% now 'H' %}"></script>
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}"></script>
+    <!-- Jquery UI -->
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script>
+        var current_line = 0;
+        var due_date = "{{due_date}}";
+        var batchId = "{{batch_id}}";
+        {% if rec_entry.id  %}
+            $('#id_description').attr('disabled', 'desabled');
+        {% endif %}
+        function deleteAP(id) {
+            var url = '/accounting/delete/AP/' + id + '/';
+            $("#comfirmDeleteJournalModal").modal("show");
+            $(".comfirm-yes").attr("href", url);
+        }
+        function checkInput(j_id){
+            var id = '{{journal.id}}';
+            if('True' == is_rec_entry){
+                id = '{{rec_entry.id}}';
+            }
+            if (id == '') {
+                pop_ok_cancel_dialog(
+                    "Data loss warning!",
+                    "Unsaved data will be lost. Do you want to proceed?",
+                    function () { 
+                        if('True' == is_rec_entry){
+                            window.location.href = '/accounting/edit/AP-RE/' + j_id + '/'; 
+                        } else {
+                            window.location.href = '/accounting/edit/AP/' + j_id + '/'; 
+                        }
+                    },
+                    function () {
+                        if('True' == is_rec_entry){
+                            window.location.href = '/accounting/add/AP-RE/' + batchId + '/'; 
+                        } else {
+                            window.location.href = '/accounting/add/AP/' + batchId + '/'; 
+                        }
+                    }
+                );
+            } else {
+                if('True' == is_rec_entry){
+                    window.location.href = '/accounting/edit/AP-RE/' + j_id + '/'; 
+                } else {
+                    window.location.href = '/accounting/edit/AP/' + j_id + '/'; 
+                }
+            }
+
+        }
+        if('True' == is_rec_entry){
+            var d = document,
+                h = d.getElementsByTagName('head')[0],
+                s = d.createElement('script');
+            s.type = 'text/javascript';
+            s.async = true;
+            s.src = "/static/js/accounting/RE_entry_common.js";
+            h.appendChild(s);
+
+            schedule_list = [
+                {% for schedule in schedule_list %}
+                    {% if not forloop.first %}, {% endif %}
+                    {
+                        id: "{{ schedule.id }}",
+                        code: "{{ schedule.code }}",
+                        desc: "{{ schedule.description }}",
+                    }
+                {% endfor %}
+            ]
+
+            var rec_schedule_id = "{{rec_entry.schedule_id}}";
+            if(!rec_schedule_id){
+                rec_schedule_id = '{{schedule_id}}';
+            }
+            if (rec_schedule_id) {
+                schedule_list.forEach(element => {
+                    if (element.id == rec_schedule_id) {
+                        $('#id_schedule_code').val(element.code);
+                        $('#id_schedule_desc').val(element.desc);
+                        $('#schedule_id').val(element.id);
+                    }
+                });
+            }
+
+            var is_expire = "{{rec_entry.is_expire}}";
+            if (is_expire == 'True') {
+                $('#is_expire').attr('checked', 'checked');
+            }
+            var is_active = "{{rec_entry.is_active}}";
+            if (is_active == 'True') {
+                $('#is_active').attr('checked', 'checked');
+            }
+
+            $('#batch_view_date').attr('disabled', true);
+            $('#doc_date_view').attr('disabled', true);
+            $('#post_date_view').attr('disabled', true);
+            $('#id_exchange_rate').attr('disabled', true);
+            $('#btnSearchExchangeRate').attr('disabled', true);
+            $('#btnSearchTaxExchangeRate').attr('disabled', true);
+
+            $("#start_date").on('change', function() {
+                $('#batch_view_date').val($(this).val());
+                $('#doc_date_view').val($(this).val()).trigger('change');
+                $('#post_date_view').val($(this).val());
+            });
+
+            $('#schedule-code-table').on( 'draw.dt', function () {
+                selectTableRow('#schedule-code-table', 5);
+                $("input[type='radio']").each(function () {
+                    $(this).closest('tr').css('background-color', '#f9f9f9');
+                });
+            });
+        } else {
+            if (has_old_rate == "1") {
+                pop_ok_dialog("Warning",
+                "This journal uses an old exchange rate.",
+                function () {})
+            }
+        }
+        var jrn_prd = "{{journal.perd_month}}";
+        var rec_prd = "{{rec_entry.perd_month}}";
+        {% comment %} if(!jrn_prd && !rec_prd) {
+            $('#perd_year').val($('#id_document_date').val().split("-")[0]);
+            $('#perd_month').val($('#id_document_date').val().split("-")[1]);
+            $('#year_period').val($('#id_document_date').val().split("-")[1] + "-" + $('#id_document_date').val().split("-")[0]);
+        } {% endcomment %}
+
+        $('input[name=related_invoice]').on('change', function() {
+            var aplly = $('#related_invoice').val();
+            if (aplly.length < 2) {
+                $('#id_related_invoice').val(null);
+            }
+        });
+        
+        var is_decimal = '{{journal.currency.is_decimal}}';
+        $(document).ready(function () {
+            {% if journal.id %}
+                $('#id_due_date').datepicker('setDate', due_date);
+            {% endif %}
+            if ('True' == is_rec_entry) {
+                $('#id_document_number').removeAttr('required');
+            }
+          if("{{ journal_type }}" != '') {
+            var dttbl = $('#search_entry_table').DataTable({
+                "order": [[3, "asc"]],
+                "serverSide": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'JournalList__asJson' journal_type batch_id %}"
+                },
+                "columns": [
+                    {
+                        "data": "id",
+                        "visible": false,
+                    },
+                    {"data": "code", "orderable": false, "width": "10px"},
+                    {"data": "cust_supp_code", "orderable": false, "width": "50px"},
+                    {"data": "document_number", "orderable": false, "width": "180px"},
+                    {"data": "document_date", "orderable": false, "width": "50px"},
+                    {"data": "name", "orderable": false, "width": "180px"},
+                    {"data": "amount", "orderable": false, "sClass": "text-right"},
+                    {"data": "document_type", "orderable": false},
+                    {
+                        "sClass": "text-center",
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, row, meta) {
+                            var btn =
+                                    '<div class="btn-group dropdown">' +
+                                    '<button type="button"' +
+                                    'class="btn btn-primary btn-sm dropdown-toggle"' +
+                                    'style="min-width: 30px!important;">';
+                            var btn_blank =
+                                    '<div class="btn-group dropdown">' +
+                                    '<button type="button"' +
+                                    'class="btn btn-default btn-sm dropdown-toggle not-use"' +
+                                    'data-toggle="dropdown" aria-haspopup="true"' +
+                                    'aria-expanded="false"' +
+                                    'style="min-width: 40px!important;">Action' +
+                                    '<span class="caret" style="margin-left:15px"></span>' +
+                                    '<span class="sr-only">Toggle Dropdown</span>' +
+                                    '</button>' +
+                                    '<ul class="dropdown-menu dropdown-menu-right">' +
+                                    '<li>';
+                            if ((row.status == '1') /* STATUS_TYPE_DICT['Open'] */
+                                || (row.status == '2') /* STATUS_TYPE_DICT['Posted'] */
+                                || (row.status == '7') /* STATUS_TYPE_DICT['Prov. Posted'] */
+                                || (row.status == '8')) { /* STATUS_TYPE_DICT['Draft'] */
+                                if (row.batch_type == 2) { /* TRANSACTION_TYPES['AR Invoice'] */
+                                    btn += '<a href="/accounting/edit/AP/' + row.id + '/" style="text-decoration: none; color: white">View</a></button>';
+                                }
+                            } else {
+                                btn = btn_blank;
+                            }
+
+                            btn += '</li></ul/div>';
+                            return btn;
+                        }
+                    }
+                ]
+            });
+          } else if ('True' == is_rec_entry && batchId != 'None' && batchId != '' && batchId != '0' ) {
+            var dttbl = $('#search_entry_table').DataTable({
+                "order": [[3, "asc"]],
+                "serverSide": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'rec_entries_as_Json' batch.batch_type batch_id %}"
+                },
+                "columns": [
+                    {
+                        "data": "id",
+                        "visible": false,
+                    },
+                    {"data": "code", "orderable": false, "width": "10px"},
+                    {"data": "cust_supp_code", "orderable": false, "width": "50px"},
+                    {"data": "document_number", "orderable": false, "width": "180px"},
+                    {"data": "document_date", "orderable": false, "width": "50px"},
+                    {"data": "name", "orderable": false, "width": "180px"},
+                    {"data": "amount", "orderable": false, "sClass": "text-right"},
+                    {"data": "document_type", "orderable": false},
+                    {
+                        "sClass": "text-center",
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, row, meta) {
+                            var btn =
+                                    '<div class="btn-group dropdown">' +
+                                    '<button type="button"' +
+                                    'class="btn btn-primary btn-sm dropdown-toggle"' +
+                                    'style="min-width: 30px!important;">';
+                            if (row.batch_type == 2) { /* TRANSACTION_TYPES['AR Invoice'] */
+                                btn += '<a href="/accounting/edit/AP-RE/' + row.id + '/" style="text-decoration: none; color: white">View</a></button>';
+                            }
+                            btn += '</li></ul/div>';
+                            return btn;
+                        }
+                    }
+                ]
+            });
+          } else {
+            $('#btnSearchEntry').attr('disabled', 'disabled')
+          }
+
+          //validateDate('#doc_date_view', '#post_date_view');
+
+          $('#search_entry_table').parents().eq(0).attr('style', 'overflow: scroll; max-height: 500px')
+
+            if (is_decimal == 'True' || is_decimal == '1') {
+                is_decimal = true;
+            } else {
+                is_decimal = false;
+            }
+            $('#id_currency').data("is_decimal", is_decimal);
+
+            $('#id_batch_date').addClass('hide');
+            $('#id_document_date').addClass('hide');
+            $('#id_posting_date').addClass('hide');
+
+            $("#post_date_view").addClass("default-date-picker");
+            var date_view = dateView($("#id_posting_date").val());
+            $("#post_date_view").datepicker('setDate', date_view);
+
+            $("#doc_date_view").addClass("default-date-picker");
+            var date_view = dateView($("#id_document_date").val());
+            $("#doc_date_view").datepicker('setDate', date_view);
+
+            $("#batch_view_date").addClass("default-date-picker");
+            var theday = dateView($("#id_batch_date").val())
+            $("#batch_view_date").datepicker('setDate', theday);
+
+            {% comment %} if($('#id_batch_no').val()) {
+                $("#batch_view_date").prop('disabled', true);
+            } {% endcomment %}
+
+            if($('#id_batch_amount').val()) {
+                $("#id_batch_amount").val(comma_format($('#id_batch_amount').val()));
+            }
+
+            // FillYearPeriodOptLst();
+
+            // $('#doc_date_view').change(function () {
+            //     ResetYearPeriodOptLst();
+            // });
+
+            var aplly = $('#related_invoice').val();
+            if (aplly.length > 2) {
+                var id_journal_apply = '{{ id_inv }}';
+                var id_apply =0
+                if (id_journal_apply > 0){
+                    id_apply = id_journal_apply
+                }
+                $('#id_related_invoice').val(id_apply);
+            }
+            if ($('#id_document_type').val() == 2 || ($('#id_document_type').val()) == 3){
+                $('#customise_aplly').removeClass('hide');
+                $('#div_orig_rate').removeClass('hide');
+            }else{
+                $('#customise_aplly').addClass('hide');
+                $('#div_orig_rate').addClass('hide');
+            }
+
+            if(is_decimal) {
+                $('#id_document_amount').val(comma_format($('#id_document_amount').val()));
+                $('#id_amount').val(comma_format($('#id_amount').val()));
+                $('#id_tax_amount').val(comma_format($('#id_tax_amount').val()));
+                $('#id_total_amount').val(comma_format($('#id_total_amount').val()));
+            } else {
+                $('#id_document_amount').val(comma_format($('#id_document_amount').val(), 0));
+                $('#id_amount').val(comma_format($('#id_amount').val(), 0));
+                $('#id_tax_amount').val(comma_format($('#id_tax_amount').val(), 0));
+                $('#id_total_amount').val(comma_format($('#id_total_amount').val(), 0));
+            }
+
+            $('#transaction-table').DataTable({
+                "paging":  false,
+                'ordering': false,
+                'bFilter': false,
+                'bLengthChange': false,
+                'columnDefs': [
+                    {
+                        className: "hide_column",
+                        targets: [9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+                    },
+                    {
+                        className: "text-right",
+                        targets: [5, 6, 7],
+                    }
+                ],
+            });
+            // ----------Add select 2 ------- //
+            $('#id_supplier').select2({
+                placeholder: "Select Vendor",
+            });
+            $('#id_account_set').select2({
+                placeholder: "Select Account Set",
+            });
+            $('#id_distribution_code').select2({
+                placeholder: "Select Distribution Code",
+                width: '100%',
+                allowClear: true,
+            });
+            $('#id_account_code').select2({
+                placeholder: "Select Account Code",
+                width: '100%',
+            })
+            $('#id_tax').select2({
+                placeholder: "Select Tax",
+                width: '100%',
+                allowClear: true,
+            })
+
+            $("#id_document_type").select2({});
+
+            {% if journal.status == 1 and journal.order_id %} /* Invoice from S&P */
+                $('#amount').attr('disabled', 'disabled');
+                $('#id_due_date').attr('disabled', 'disabled');
+                $('#doc_date_view').attr('disabled', 'disabled');
+                $('#post_date_view').attr('disabled', 'disabled');
+                $('#id_document_type').attr('disabled', 'disabled');
+                $('#id_account_set').attr('disabled', 'disabled');
+                $('#id_is_manual_doc').attr('disabled', 'disabled');
+                $('#btnAddTransDialog').attr('disabled', 'disabled');
+            {% endif %}
+
+            // ----------- End Select 2 -------//
+            //$('#id_posting_date').val('')
+            //$('#id_posting_date').attr('disabled', 'disabled');
+            {% if journal.status == 2 %} /* STATUS_TYPE_DICT['Posted'] */
+                $('input').attr('readonly', 'readonly');
+                $('#id_document_date').attr('disabled', 'disabled');
+                $('#id_posting_date').attr('disabled', 'disabled');
+                $('select').attr('disabled', 'disabled');
+            {% endif %}
+            $('#search_entry_table_filter label input').removeAttr('readonly');
+            $('#search_entry_table_length label select').removeAttr('disabled');
+            if ($("#id_amount").val() === undefined || $("#id_amount").val().length === 0) {
+                $("#id_amount").val(0);
+            }
+            if ($("#id_tax_amount").val() === undefined || $("#id_tax_amount").val().length === 0) {
+                $("#id_tax_amount").val(0);
+            }
+            if ($("#id_total_amount").val() === undefined || $("#id_total_amount").val().length === 0) {
+                $("#id_total_amount").val(0);
+            }
+
+            if (!$('#id_supplier').val()) {
+                $('#id_account_set').prop('disabled', true);
+                //$('#id_document_number').prop('readonly', true);
+                $('#btnAddTransDialog').attr('disabled', 'disabled');
+                $('#btnSearchExchangeRate').prop('disabled', true);
+                $('#btnSearchTaxExchangeRate').prop('disabled', true);
+                $('#btnSearchAccount').prop('disabled', true);
+                // $('#btnSearchDocument').prop('disabled', true);
+                // $('#id_is_manual_doc').prop('disabled', true);
+                $('#id_inv').prop('disabled', true);
+                $('button[type="submit"]').prop('disabled', true);
+            }
+
+            $('.readonly').on('keydown paste', function (e) {
+                e.preventDefault();
+            });
+
+            isManualDoc = $('#id_is_manual_doc:checkbox:checked').length;
+            if(isManualDoc > 0) {
+                //$('#id_document_number').prop('readonly', false);
+                $('#id_document_amount').prop('readonly', false);
+                $('.readonly').off('keydown paste');
+                $('#id_document_number').removeClass('disabled readonly');
+
+                $('#btnSearchDocument').addClass('hidden');
+                recalculateUndistributedAmount();
+            }
+
+            {% if journal.status == 2 or journal.status == 4 %} /* STATUS_TYPE_DICT['Posted'] or STATUS_TYPE_DICT['Reversed']*/
+                $(".sended").attr("disabled", "disabled");
+                $('#id_account_set').prop('disabled', true);
+                $('#id_supplier').prop('disabled', true);
+            {% elif journal.order_id %}
+                $("#id_supplier").select2('destroy');
+                $("#id_supplier").addClass('disabled');
+                $("#id_document_type").addClass("disabled");
+                $("#btnSearchSupplier").attr("disabled", "disabled");
+                {% comment %} if(company_currency == $("#id_currency").val()){
+                    $('#btnSearchExchangeRate').prop('disabled', true);
+                    $('#btnSearchTaxExchangeRate').prop('disabled', true);
+                } {% endcomment %}
+            {% else %}
+                $("#id_document_date").addClass("default-date-picker");
+            {% endif %}
+
+            $("#id_exchange_rate").click(function () {
+                $("#id_exchange_rate").select();
+            });
+
+            $("#id_document_amount").click(function () {
+                $("#id_document_amount").select();
+            });
+
+            $('#id_document_amount').on('focusout', function(e) {
+                $('#btnAddTransDialog').focus();
+            })
+
+            //$('#id_supplier').focus();
+            $('#id_description').focus();
+
+            {% if journal.id %}
+                {% if journal.tax_exchange_rate == 0 %}
+                    get_tax_reporting_rate('{{journal.currency_id}}', '{{journal.document_date|date:"Y-m-d"}}');
+                {% else %}
+                    tax_reporting_rate = parseFloat("{{journal.tax_exchange_rate}}");
+                    var tax_report_amount = float_format($('#id_tax_amount').val()) * tax_reporting_rate;
+                    $('#id_tax_report_amount').val(comma_format(tax_report_amount));
+                {% endif %}
+            {% endif %}
+
+            // count line
+            {% if journal.id %}
+                $('#transaction-table tbody tr').each(function (indx) {
+                    current_line = current_line + 1;
+                });
+            {% endif %}
+
+            check_if_empty('#btnSaveAPEntry')
+        });
+
+    $('#start_date').on('change', function(){
+        if (batchId && batchId != '0' && batchId != 'None') {
+            $('#doc_date_view').val($('#start_date').val()).trigger('change');
+        } else {
+            $('#batch_view_date').val($('#start_date').val()).trigger('change');
+        }
+    })
+
+    function dateView(date){
+        var pecahin = date.split('-');
+        var today = pecahin[2]+'-'+pecahin[1]+'-'+pecahin[0];
+        return today
+    }
+    function takeday(date) {
+        var pecahin = date.split('-');
+        var today = pecahin[2]+'-'+pecahin[1]+'-'+pecahin[0];
+        return today
+    }
+    $('#doc_date_view').on('change', function () {
+        var term_days = $('#id_supplier').attr('term_days');
+        if ( term_days && parseInt(term_days) > 0) {
+            var due_date = moment($('#doc_date_view').val(), "DD-MM-YYYY").add(parseInt(term_days), 'days').format("DD-MM-YYYY");
+            $('#id_due_date').datepicker('setDate', due_date);
+        } else {
+            if (parseInt(payment_terms)) {
+                var due_date = moment($('#doc_date_view').val(), "DD-MM-YYYY").add(parseInt(payment_terms), 'days').format("DD-MM-YYYY");
+                $('#id_due_date').datepicker('setDate', due_date);
+            }
+        }
+        
+        {% if journal.id == 0 or journal.id == None %}
+            var id_currency = $('#id_currency').val();
+            var id_curr = 0
+            if (id_currency){
+                id_curr = id_currency
+                var id_document_date = $('#id_document_date').val();
+                $.ajax({
+                type: "GET",
+                url: "/accounting/exchange_rate_day/"+id_curr+'/'+id_document_date+'/',
+                success: function(data){
+                    if(data.id) {
+                        $('#id_exchange_rate_fk').val(data.id);
+                    }
+                    if(data.rate) {
+                        $('#id_exchange_rate').val(data.rate);
+                    }
+                }
+                });
+            }
+            set_tax_reporting_rate();
+        {% endif %}
+    });
+
+    function FillYearPeriodOptLst() {
+        var year_part = 0;
+        var month_part = 0;
+
+        var yr_prd = $('#perd_year').val();
+        if ((yr_prd) && (parseInt(yr_prd) > 0)) {
+            year_part = yr_prd;
+        } else {
+            yr_prd = new Date($('#doc_date_view').val().split("-").reverse().join("-"));
+            year_part = yr_prd.getFullYear();
+            month_part = yr_prd.getMonth() + 1;
+        }
+        var list_period = [];
+        for (i = 1; i <= 15; i++) {
+            var prd = {};
+            prd.year = year_part;
+            prd.period = i;
+            list_period.push(prd);
+        }
+        $.each(list_period, function (key, value) {
+            var period_part = value.period > 9 ? value.period : '0' + value.period;
+            period_part = value.period == 14 ? 'ADJ' : period_part;
+            period_part = value.period == 15 ? 'CLS' : period_part;
+            var year_period_text = value.year + '-' + period_part;
+            if (value.period != 13) {
+                $('#year_period')
+                    .append($("<option></option>")
+                        .attr("value", value.period)
+                        .text(year_period_text));
+            }
+        });
+        if ((saved_prd) && (parseInt(saved_prd) > 0)) {
+            $('#year_period').val(saved_prd).trigger('change');
+        } else {
+            $('#year_period').val(month_part).trigger('change');
+        }
+        $('#year_period').select2();
+    }
+
+    function ResetYearPeriodOptLst() {
+        $('#year_period').empty().append('<option value="0">kosong</option>');
+        FillYearPeriodOptLst();
+        $("#year_period option[value='0']").remove();
+    }
+
+    $('#id_document_type').on('select2:close', function (e)
+    {
+        $('#doc_date_view').focus();
+    });
+    $('#id_supplier').on('select2:close', function (e)
+    {
+        $('#id_account_set').focus();
+    });
+    $('#id_account_set').on('select2:close', function (e)
+    {
+        $('#id_exchange_rate').focus();
+    });
+    $('#id_account_set').on('change', function (e)
+    {
+        $('#id_exchange_rate').focus();
+    });
+
+    </script>
+    <script type="text/javascript">
+        var url_load_supplier = "{% url 'load_supplier_select' %}";
+        var url_load_currency = "{% url 'AccLoad_currency' %}";
+    </script>
+{% endblock %}

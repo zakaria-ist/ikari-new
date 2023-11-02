@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Edit Account Group{% endblock %}
+{% block account_type_active %}active{% endblock %}
+{% block account_setting_a_active %}active{% endblock %}
+{% block account_setting_i_active %}active{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                Edit Account Group
+            </header>
+            <div class="panel-body">
+                <form class="form-horizontal" action="{% url 'account_type_edit' account_type.id %}" role="form"
+                      method="post"
+                      enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="code" class="col-lg-2 col-sm-2 control-label">Code<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-8">
+                            <input tabindex="-1" type="text" class="form-control" id="code" name="code"
+                                   value="{{ account_type.code }}"
+                                   required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Name</label>
+                        <div class="col-lg-8">
+                            <input type="text" tabindex="1" class="form-control" id="name" name="name"
+                                   value="{{ account_type.name }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="company" class="col-lg-2 col-sm-2 control-label">Company</label>
+                        <div class="col-sm-8">
+                            <select tabindex="1" class="form-control" id="company" name="company">
+                                <option value="0" {% if not account.company_id %}selected{% endif %}>For all company
+                                </option>
+                                {% for company in company_list %}
+                                    <option value="{{ company.id }}"
+                                            {% if company.id == account_type.company_id %}selected{% endif %}>
+                                        {{ company.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="category" class="col-lg-2 col-sm-2 control-label">Category</label>
+                        <div class="col-sm-8">
+                            <select tabindex="1" class="form-control" id="category" name="category">
+                                {% for item in category %}
+                                    <option value="{{ item.0 }}" {% if item.0 == account_type.category %} selected {% endif %}>
+                                        {{ item.1 }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Last Update</label>
+                        <div class="col-lg-8">
+                            <input tabindex="-1" disabled="true" class="form-control"
+                                   value="{{ account_type.update_date }}">
+                        </div>
+                    </div>
+                    <div class="form-group bottom-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" id="saveAccount" class="btn btn-success">Save</button>
+                            {% if 'accounts.delete_account' in user.get_all_permissions %}
+                                {% if user.is_superuser or request.session.staff_admin %}
+                                    <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger">Delete</a>
+                                {% elif request.session.login_company_id == account_type.company_id %}
+                                    <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger">Delete</a>
+                                {% endif %}
+                            {% endif %}
+                            <a type="submit" class="btn btn-default" href="{% url 'account_type_list' %}">Cancel</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+                 class="modal fade">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content" style="top:33%; margin-left: auto; margin-right: auto;">
+                        <div class="modal-header">
+                            <button aria-hidden="true" data-dismiss="modal" class="close" tabindex="-1" type="button">×</button>
+                            <h4 class="modal-title">Delete Confirm Dialog</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form role="form" action="{% url 'account_type_delete' account_type.id %}" method="post">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                                </div>
+                                <button type="submit" class="btn btn-success">OK</button>
+                                <a type="submit" class="btn btn-default"
+                                   href="{% url 'account_type_edit' account_type.id %}">Cancel</a>
+                            </form>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#company').select2({});
+            $('#category').select2({});
+            $('#name').focus();
+
+
+            $('#company').on('select2:close', function (e)
+            {
+               $('#category').focus();
+            });
+
+            $('#category').on('select2:close', function (e)
+            {
+               $('#saveAccount').focus();
+            });
+
+        });
+
+         $(document).on('focus', '.select2-selection.select2-selection--single', function (e) {
+            $(this).closest(".select2-container").siblings('select:enabled').select2('open');
+        });
+    </script>
+{% endblock %}

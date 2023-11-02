@@ -1,0 +1,414 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    {% load humanize %}
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <style>
+        .hide_column {
+            display : none;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}
+    {% if bank.id %}
+        Edit Bank
+    {% else %}
+        Add Bank
+    {% endif %}
+{% endblock %}
+{% block bank_active %}active{% endblock %}
+{% block account_setting_a_active %}active{% endblock %}
+{% block account_setting_i_active %}active{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                {% if bank.id %}
+                    Edit Bank
+                {% else %}
+                    Add Bank
+                {% endif %}
+            </header>
+            <div class="panel-body">
+                <form class="form-horizontal"
+                        {% if bank.id %}
+                      action="{% url 'bank_edit' bank.id %}"
+                        {% else %}
+                      action="{% url 'bank_add' %}"
+                        {% endif %}
+                      role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Bank<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-10">
+                            {{ form.code }}
+                            <span class="messages">{{ form.errors.code }}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Description<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-10">
+                            {{ form.name }}
+                            <span class="messages">{{ form.errors.name }}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="number" class="col-lg-2 col-sm-2 control-label">Currency</label>
+                        <div class="col-lg-3">
+                            {{ form.currency }}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-lg-2 col-sm-2 control-label">Bank Account<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-3 col-sm-3">
+                            {{ form.account }}
+                        </div>
+                        <div class="col-lg-1 col-sm-1">
+                            <button id="btnSearchAccount" type="button" class="btn btn-info" data-toggle="modal"
+                                    href="#AccountListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                        <div class="col-lg-6 col-md-3">
+                            {{ form.account_name }}
+                        </div>
+                    </div>
+                    <div id="exch_account_group">
+                        <div class="form-group">
+                            <label class="col-lg-2 col-sm-2 control-label">Gain Account</label>
+                            <div class="col-lg-3 col-sm-3">
+                                {{ form.gain_account }}
+                            </div>
+                            <div class="col-lg-1 col-sm-1">
+                                <button id="btnSearchAccount_gain" type="button" class="btn btn-info" data-toggle="modal"
+                                        href="#AccountListModal"><i class="fa fa-search"></i></button>
+                            </div>
+                            <div class="col-lg-6 col-md-3">
+                                {{ form.gain_account_name }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-2 col-sm-2 control-label">Loss Account</label>
+                            <div class="col-lg-3 col-sm-3">
+                                {{ form.loss_account }}
+                            </div>
+                            <div class="col-lg-1 col-sm-1">
+                                <button id="btnSearchAccount_loss" type="button" class="btn btn-info" data-toggle="modal"
+                                        href="#AccountListModal"><i class="fa fa-search"></i></button>
+                            </div>
+                            <div class="col-lg-6 col-md-3">
+                                {{ form.loss_account_name }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-2 col-sm-2 control-label">Round Account</label>
+                            <div class="col-lg-3 col-sm-3">
+                                {{ form.round_account }}
+                            </div>
+                            <div class="col-lg-1 col-sm-1">
+                                <button id="btnSearchAccount_round" type="button" class="btn btn-info" data-toggle="modal"
+                                        href="#AccountListModal"><i class="fa fa-search"></i></button>
+                            </div>
+                            <div class="col-lg-6 col-md-3">
+                                {{ form.round_account_name }}
+                            </div>
+                        </div>
+                    </div>
+                    {% if bank.id %}
+                        <div class="form-group">
+                            <label for="note1" class="col-lg-2 col-sm-2 control-label">Last Update</label>
+                            <div class="col-lg-10">
+                                {{ form.update_date }}
+                            </div>
+                        </div>
+                    {% endif %}
+                    <div class="form-group">
+                        <label for="label_check" class="col-lg-2 col-sm-2 control-label"></label>
+                        <div class="col-lg-10">
+                            <div class="checkbox checkbox-primary">
+                                {{ form.is_active }}
+                                <label for="id_is_active">
+                                    Active
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" name="btnSave" class="btn btn-success">Save</button>
+                            {% if 'banks.delete_bank' in user.get_all_permissions and bank.id %}
+                                <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger">Delete</a>
+                            {% endif %}
+                            <a class="btn btn-default" href="{% url 'bank_list' %}">Cancel</a>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            {% if bank.id %}
+                <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+                     class="modal fade">
+                    <div class="modal-dialog modal-sm">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                                <h4 class="modal-title">Delete Confirm Dialog</h4>
+                            </div>
+                            <div class="modal-body">
+                                <form role="form" action="{% url 'bank_delete' bank.id %}" method="post">
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-success">OK</button>
+                                    <a class="btn btn-default" href="{% url 'bank_edit' bank.id %}">Cancel</a>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </section>
+    </div>
+
+    {# -----Account List Modal--------#}
+    <div class="modal fade" id="AccountListModal" tabindex="-1" role="dialog"
+         aria-labelledby="AccountListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Account</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="account-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Account</th>
+                                                    <th>Description</th>
+                                                    <th>Account Type</th>
+                                                    <th>Normal Balance</th>
+                                                    <th>Account Group</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" id="btnAccountSelect">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {# ------End Account List Modal-----#}
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="application/javascript" src="{% static 'js/ga.js' %}"></script>
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script>
+        $(document).ready(function () {
+            var company_currency_id = '{{company_currency_id}}';
+            var acc_type = 'main';
+            $('#account-table').DataTable({
+                iDisplayLength: 5,
+                bFilter: true,
+                bLengthChange: false
+            });
+
+            $('#id_currency').on('change', function(){
+                var val = $(this).val();
+                if (val != '' && val != undefined && company_currency_id != '') {
+                    if (val != company_currency_id) {
+                        $('#exch_account_group').css('display', 'block');
+                    } else {
+                        $('#exch_account_group').css('display', 'none');
+                    }
+                } else {
+                    $('#exch_account_group').css('display', 'none');
+                }
+            });
+
+            $('#account-table').on( 'draw.dt', function () {
+                selectTableRow('#account-table', 5);
+                $("input[type='radio']").each(function () {
+                    $(this).closest('tr').css('background-color', '#f9f9f9');
+                });
+            });
+
+            function load_account_table() {
+                $('#account-table').DataTable().destroy();
+                $('#account-table').dataTable({
+                    "iDisplayLength": 10,
+                    //"bLengthChange": false,
+                    scrollY: '50vh',
+                    scrollCollapse: true,
+                    "order": [[0, "asc"]],
+                    "serverSide": true,
+                    "caseInsensitive": true,
+                    "ajax": {
+                        "url": "/banks/account_list/"
+                    },
+                    "columns": [
+                        {"data": "code", "sClass": "text-left"},
+                        {"data": "name", "sClass": "text-left"},
+                        {"data": "account_type", "sClass": "text-left"},
+                        {"data": "balance_type", "sClass": "text-left"},
+                        {"data": "account_group", "sClass": "text-left hide_column"},
+                        {
+                            "orderable": false,
+                            "data": null,
+                            "sClass": "hide_column",
+                            "render": function (data, type, full, meta) {
+                                return '<input type="radio" name="account-choices" id="' +
+                                        full.id + '" class="call-checkbox" value="' + meta.row + '">';
+                            }
+                        }
+                    ]
+                });
+                setTimeout(() => {
+                    $('#account-table').DataTable().columns.adjust();
+                }, 300);
+            }
+
+            /* Search Account button*/
+            $('#btnSearchAccount').on('click', function () {
+                acc_type = 'main';
+                load_account_table();
+            });
+            $('#btnSearchAccount_gain').on('click', function () {
+                acc_type = 'gain';
+                load_account_table();
+            });
+            $('#btnSearchAccount_loss').on('click', function () {
+                acc_type = 'loss';
+                load_account_table();
+            });
+            $('#btnSearchAccount_round').on('click', function () {
+                acc_type = 'round';
+                load_account_table();
+            });
+
+            function get_account_name(type) {
+                var acc_str = '';
+                if (type == 'main') {
+                    acc_str = '#id_account';
+                }
+                else if (type == 'gain') {
+                    acc_str = '#id_gain_account';
+                }
+                else if (type == 'loss') {
+                    acc_str = '#id_loss_account';
+                }
+                else if (type == 'round') {
+                    acc_str = '#id_round_account';
+                }
+                var account_id = parseInt($(acc_str).val());
+                $.ajax({
+                    method: "POST",
+                    url: '/banks/load_account/',
+                    dataType: 'JSON',
+                    data: {
+                        'account_id': account_id,
+                    },
+                    success: function (json) {
+                        $(acc_str+'_name').val('');
+                        $(acc_str+'_name').val(json.name);
+                    }
+                });
+            }
+            $('#id_account').on('change', function () {
+                get_account_name('main');
+            });
+            $('#id_gain_account').on('change', function () {
+                get_account_name('gain');
+            });
+            $('#id_loss_account').on('change', function () {
+                get_account_name('loss');
+            });
+            $('#id_round_account').on('change', function () {
+                get_account_name('round');
+            });
+
+            //Init of select
+            $('#id_account').select2({
+                placeholder: "Select Account",
+            });
+            $('#id_gain_account').select2({
+                placeholder: "Select Account",
+                allowClear: true
+            });
+            $('#id_loss_account').select2({
+                placeholder: "Select Account",
+                allowClear: true
+            });
+            $('#id_round_account').select2({
+                placeholder: "Select Account",
+                allowClear: true
+            });
+            $('#id_currency').select2({
+                placeholder: "Select Currency",
+            });
+            $('#id_currency').trigger('change');
+
+            $('#btnAccountSelect').on('click', function () {
+                var acc_str = '';
+                if (acc_type == 'main') {
+                    acc_str = '#id_account';
+                }
+                else if (acc_type == 'gain') {
+                    acc_str = '#id_gain_account';
+                }
+                else if (acc_type == 'loss') {
+                    acc_str = '#id_loss_account';
+                }
+                else if (acc_type == 'round') {
+                    acc_str = '#id_round_account';
+                }
+
+                var item_select_id = $("input[name='account-choices']:checked").attr('id');
+                var nRow = $("input[name='account-choices']:checked").parents('tr')[0];
+                var jqInputs = $('td', nRow);
+
+
+                $(acc_str).find('option:selected').removeAttr('selected');
+                $(acc_str).val(item_select_id).trigger('change');
+
+                $(acc_str+'_name').val('');
+                $(acc_str+'_name').val(jqInputs[1].innerText);
+
+                $(this).attr('data-dismiss', 'modal');
+            });
+
+
+        })
+    </script>
+{% endblock %}

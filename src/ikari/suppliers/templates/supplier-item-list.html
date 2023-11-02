@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static 'assets/advanced-datatable/media/css/demo_page.css' %}" rel="stylesheet" type="text/css"/>
+    <link href="{% static 'assets/advanced-datatable/media/css/demo_table.css' %}" rel="stylesheet" type="text/css"/>
+    <link rel="stylesheet" href="{% static 'assets/data-tables/DT_bootstrap.css' %}" type="text/css"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+{% endblock %}
+
+{% block title %}Supplier Item List{% endblock %}
+{% block supplier_item_active %}active{% endblock %}
+{% block sp_setting_a_active %}active{% endblock %}
+{% block sp_setting_i_active %}active{% endblock %}
+{% block parent_order_a_active %}active{% endblock %}
+{% block parent_order_i_active %}active{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-3">
+            <section class="panel">
+                <header class="panel-heading">
+                    Supplier List
+                </header>
+                <div class="panel-body">
+                    {% if supplier_list %}
+                        <ul class="nav prod-cat">
+                            {% for h in supplier_list %}
+                                <li>
+                                    <a href="{% url 'item_by_supplier' h.id %}"
+                                       {% if supplier_id == h.id %}style="color: #ff7261"{% endif %}><i
+                                            class=" fa fa-angle-right"></i>{{ h.name }}</a>
+                                    <label style="display: none">{{ supplier_id }}</label>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+        <div class="col-md-9">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    Item List
+                    <span class="tools pull-right">
+                         {% if 'suppliers.add_supplieritem' in user.get_all_permissions %}
+                             <a class="btn btn-success start" href="{% url 'supplier_item_add' supplier_id %}">
+                                 <i class="glyphicon glyphicon-plus"></i>
+                                 <span>Add new</span>
+                             </a>
+                         {% endif %}
+                    </span>
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table">
+                        <form class="form-horizontal" role="form" action="{% url 'item_by_supplier' h.id %}"
+                              method="post"
+                              enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="form-group last">
+                                <div class="col-md-12">
+                                    <div class="adv-table">
+                                        <table class="display table table-bordered table-striped"
+                                               id="dynamic-table" style="width:100%">
+                                            <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Price</th>
+                                                <th>Sale Price</th>
+                                                <th>Purchase Price</th>
+                                                <th>Quantity</th>
+                                                <th class="text-center">Active</th>
+                                                {% if 'suppliers.change_supplier' in user.get_all_permissions %}
+                                                    <th class="text-center">Edit</th>
+                                                {% endif %}
+                                            </tr>
+                                            </thead>
+                                            {% if item_list %}
+                                                <tbody>
+                                                {% for i in item_list %}
+                                                    <tr class="gradeX">
+                                                        <td>{{ i.item.name }}</td>
+                                                        <td>{{ i.price }}</td>
+                                                        <td>{{ i.item.sale_price }}</td>
+                                                        <td>{{ i.item.purchase_price }}</td>
+                                                        <td>{{ i.quantity }}</td>
+                                                        <td class="text-center"> {% if i.is_active %}
+                                                            <span class="label label-success label-mini">{{ i.is_active }}</span>
+                                                        {% else %}
+                                                            <span class="label label-danger label-mini">{{ i.is_active }}</span>
+                                                        {% endif %}
+                                                        </td>
+                                                        {% if 'suppliers.change_supplieritem' in user.get_all_permissions %}
+                                                            <td class="text-center"><a
+                                                                    href="{% url 'supplier_item_edit'  supplier_id i.id %}"
+                                                                    class="fa fa-pencil btn btn-primary btn-xs"></a>
+                                                            </td>
+                                                        {% endif %}
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            {% endif %}
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+    </div>
+{% endblock %}
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="text/javascript" language="javascript"
+            src="{% static 'assets/advanced-datatable/media/js/jquery.dataTables.js' %}"></script>
+    <script type="text/javascript" src="{% static 'assets/data-tables/DT_bootstrap.js' %}"></script>
+    <!--dynamic table initialization -->
+    <script src="{% static 'js/common/dynamic_table_init.js' %}"></script>
+{% endblock %}
+
+

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+<link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Unit Of Measure{% endblock %}
+{% block item_measure_active %}active{% endblock %}
+{% block inv_setting_a_active %}active{% endblock %}
+{% block inv_setting_i_active %}active{% endblock %}
+{% block ics_a_active %}active{% endblock %}
+
+{#{% block title %}Item List{% endblock %}#}
+{#{% block ics_a_active %}active  {% endblock %}#}
+{#{% block item_active %}active{% endblock %}#}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    Unit Of Measure
+                    <span class="tools pull-right">
+                        {% if 'items.add_itemcategory' in user.get_all_permissions %}
+                            <a class="btn btn-success start" href="{% url 'measure_add' %}">
+                                <i class="glyphicon glyphicon-plus"></i>
+                                <span>Add new</span>
+                            </a>
+                        {% endif %}
+                    </span>
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table">
+                        <table class="display table table-bordered table-striped"
+                               id="measure-table" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Update Date</th>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <!-- <th class="text-center">Active</th> -->
+                                {% if 'items.change_itemmeasure' in user.get_all_permissions %}
+                                    <th class="text-center">Edit</th>
+                                {% endif %}
+                            </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#measure-table').dataTable({
+                "order": [[ 1, "asc" ]],
+                "serverSide": true,
+                "scrollX": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'MeasureList__asJson' %}"
+                },
+                "columns": [
+                    {"data": "update_date"},
+                    {"data": "code"},
+                    {"data": "name"},
+                    {% if 'items.change_itemmeasure' in user.get_all_permissions %}
+                        {
+                            "className": "text-center",
+                            "orderable": false,
+                            "data": null,
+                            "render": function (data, type, full, meta) {
+                                var button_edit = '<a href=../measure/edit/' + full.id + ' class="fa fa-pencil fa-lg btn btn-primary btn-sm"></a>'
+                                return button_edit;
+                            }
+                        }
+                    {% endif %}
+                ]
+            });
+        });
+    </script>
+{% endblock %}
+
+

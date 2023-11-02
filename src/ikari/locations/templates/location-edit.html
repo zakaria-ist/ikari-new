@@ -1,0 +1,639 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static 'assets/selectable/css/dj.selectable.css' %} " type="text/css" media="all" rel="stylesheet"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Edit Location{% endblock %}
+{% block ics_a_active %}active{% endblock %}
+{% block location_active %}active{% endblock %}
+{% block inv_setting_a_active %}active{% endblock %}
+{% block inv_setting_i_active %}active{% endblock %}
+
+{% block content %}
+    <div id="content">
+        <ul id="tabs" class="nav nav-tabs" data-tabs="tabs"
+            style="padding-left: 20px; margin-left: 18px; margin-right: 24px;">
+            {% if active_tab_index == '0' %} {# LOCATION_TABS['Location'] #}
+                <li class="active">
+            {% else %}
+                <li class="">
+            {% endif %}
+                <a href="#location_tab" data-toggle="tab">Location</a>
+            </li>
+            {% if active_tab_index == '2' %} {# LOCATION_TABS['Item'] #}
+                <li class="active">
+            {% else %}
+                <li class="">
+            {% endif %}
+                <a href="#item_tab" data-toggle="tab">Location Items</a></li>
+        </ul>
+        <div id="my-tab-content" class="tab-content">
+            <div {% if active_tab_index == '0' %}
+                class="tab-pane active"
+            {% else %}
+                class="tab-pane"
+            {% endif %} id="location_tab">
+                <div class="col-lg-12">
+                    <section class="panel">
+                        <header class="panel-heading">
+                            Edit Location
+                        </header>
+                        <div class="panel-body">
+                            {% if messages_error %}
+                                <div class="text-center alert alert-danger"><strong>{{ messages_error }}</strong>
+                                </div>{% endif %}
+                            <form class="form-horizontal" action="{% url 'location_edit' location.id 0 %}" role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data"> {# LOCATION_TABS['Location'] #}
+                                {% csrf_token %}
+
+                                <div class="form-group">
+                                    <label for="code" class="col-lg-2 col-sm-2 control-label">Location Code<span
+                                            class="span-required">(*)</span></label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" id="code" name="code"
+                                               value="{{ location.code|default_if_none:"" }}">
+                                    </div>
+                                    <label for="pricing_type" class="col-lg-2 col-sm-2 control-label">Pricing
+                                        Type</label>
+                                    <div class="col-lg-2">
+                                        <input type="number" class="form-control" id="pricing_type" name="pricing_type"
+                                               value="{{ location.pricing_type|default_if_none:"" }}">
+                                    </div>
+
+
+                                </div>
+                                <div class="form-group">
+                                    <label for="name" class="col-lg-2 col-sm-2 control-label">Location Name<span
+                                            class="span-required">(*)</span></label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" id="name" name="name"
+                                               value="{{ location.name|default_if_none:"" }}"
+                                               required>
+                                    </div>
+                                    <label for="stock_class" class="col-lg-2 col-sm-2 control-label">Stock Class</label>
+                                    <div class="col-lg-2">
+{#                                        <div class="input-group">#}
+{#                                            <span class="input-group-addon">#}
+{#                                            <input name="stock_class" value="1" type="radio"#}
+{#                                                   {% if location.stock_class == 1|slugify %}checked{% endif %}>Internal Stock#}
+{#                                            </span>#}
+{#                                            <span class="input-group-addon">#}
+{#                                            <input name="stock_class" value="2" type="radio"#}
+{#                                                   {% if location.stock_class == 2|slugify %}checked{% endif %}>External Stock#}
+{#                                            </span>#}
+{#                                        </div>#}
+                                        <select name="stock_class" class="form-control" id="stock_class">
+                                            <option value="1">Internal Stock</option>
+                                            <option value="2">External Stock</option>
+                                        </select>
+                                    </div>
+
+                                </div>
+                                <div class="form-group">
+                                    <label for="address" class="col-lg-2 col-sm-2 control-label">Address</label>
+                                    <div class="col-lg-4">
+                                        <textarea class="form-control" rows="3" id="address"
+                                                  name="address">{{ location.address|default_if_none:"" }}</textarea>
+                                    </div>
+                                    <div>
+                                        <label for="stock_limit" class="col-lg-2 col-sm-2 control-label">Stock
+                                            Limit</label>
+                                        <div class="col-lg-4"
+                                             style="margin-bottom: 12px; padding-left: 0px; padding-right: 0px;">
+                                            <div class="col-lg-6">
+                                                <input type="number" step="0.01" class="form-control" id="stock_limit"
+                                                       name="stock_limit"
+                                                       value="{{ location.stock_limit|default_if_none:"" }}">
+                                            </div>
+                                            <div class="col-lg-2" style="vertical-align: middle; line-height: 32px;">
+                                                <label><b>({{ currency.code|default_if_none:"" }})</b></label>
+                                            </div>
+                                        </div>
+
+                                        <label for="stock_take_flag"
+                                               class="col-lg-2 col-sm-2 control-label">Stock Take Flag</label>
+                                        <div class="col-lg-2">
+                                            <input type="text" class="form-control" id="stock_take_flag"
+                                                   name="stock_take_flag"
+                                                   value="{{ location.stock_take_flag|default_if_none:"" }}">
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="attention" class="col-lg-2 col-sm-2 control-label">Attention To</label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" id="attention" name="attention"
+                                               value="{{ location.attention|default_if_none:"" }}">
+                                    </div>
+                                    <label for="stock_take_date" class="col-lg-2 col-sm-2 control-label">Last Stock
+                                        Take</label>
+                                    <div class="col-lg-2">
+{#                                        <input class="form-control form-control-inline input-medium default-date-picker"#}
+{#                                               size="16"#}
+{#                                               type="text" name="stock_take_date" id="stock_take_date"#}
+{#                                               value="{{ location.stock_take_date|default_if_none:""|date:"d-m-Y" }}"/>#}
+                                         <input class="form-control form-control-inline input-medium"
+                                               size="16"
+                                               type="text" name="stock_take_date" id="stock_take_date"
+                                               value="{{ location.stock_take_date|default_if_none:""|date:"d-m-Y" }}"/>
+
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="phone" class="col-lg-2 col-sm-2 control-label">Telephone No.</label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" id="phone" name="phone"
+                                               value="{{ location.phone|default_if_none:"" }}">
+                                    </div>
+                                    <label class="col-lg-2 col-sm-2 control-label">Last Update</label>
+                                    <div class="col-lg-2">
+                                        <input type="text" class="form-control" disabled="true"
+                                               value="{{ location.update_date }}">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="fax" class="col-lg-2 col-sm-2 control-label">Fax No.</label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" id="fax" name="fax"
+                                               value="{{ location.fax|default_if_none:"" }}">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-lg-offset-2 col-lg-10">
+                                        <button type="submit" name="btnSave" class="btn btn-success" onclick="updateForm()">Save</button>
+                                        {% if 'locations.delete_location' in user.get_all_permissions %}
+                                            <a href="#delete-dialog" data-toggle="modal"
+                                               class="btn btn-danger">Delete</a>
+                                        {% endif %}
+                                        <a class="btn btn-default" href="{% url 'location_list' %}">Cancel</a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1"
+                             id="delete-dialog"
+                             class="modal fade modal-dialog-center">
+                            <div class="modal-dialog modal-sm">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×
+                                        </button>
+                                        <h4 class="modal-title">Delete Confirm Dialog</h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form role="form" onsubmit="return checkForm(this);"  action="{% url 'location_delete' location.id %}"
+                                              method="post">
+                                            {% csrf_token %}
+                                            <div class="form-group">
+                                                <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                                            </div>
+                                            <button type="submit" name="btnSave" class="btn btn-success">OK</button>
+                                            <a class="btn btn-default"
+                                               href="{% url 'location_edit' location.id 0 %}">Cancel</a> {# LOCATION_TABS['Location'] #}
+                                        </form>
+
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+            <div {% if active_tab_index == '1' %}
+                class="tab-pane active"
+            {% else %}
+                class="tab-pane"
+            {% endif %} id="contact_tab">
+                <div class="col-sm-12">
+                    <section class="panel">
+                        <div class="panel-body">
+                            <div class="adv-table">
+                                <table class="display table table-bordered table-striped"
+                                       id="contacts-table">
+                                    <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Attention</th>
+                                        <th>Location</th>
+                                        <th>Phone</th>
+                                        <th>Active</th>
+                                        {% if 'contacts.change_contact' in user.get_all_permissions %}
+                                            <th>Edit</th>
+                                        {% endif %}
+                                    </tr>
+                                    </thead>
+                                    {% if contact_list %}
+                                        <tbody>
+                                        {% for c in contact_list %}
+                                            <tr class="gradeX">
+                                                <td>{{ c.name|default_if_none:"" }}</td>
+                                                <td>{{ c.attention|default_if_none:"" }}</td>
+                                                <td>{{ c.location.name|default_if_none:"" }}</td>
+                                                <td>{{ c.phone|default_if_none:"" }}</td>
+                                                <td class="center"> {% if c.is_active %}
+                                                    <span class="label label-success label-mini">{{ c.is_active }}</span>
+                                                {% else %}
+                                                    <span class="label label-danger label-mini">{{ c.is_active }}</span>
+                                                {% endif %}
+                                                </td>
+                                                {% if 'contacts.change_contact' in user.get_all_permissions %}
+                                                    <td class="center"><a href="{% url 'contact_refer_edit' c.id %}"
+                                                                          class="fa fa-pencil btn btn-primary btn-xs"></a>
+                                                    </td>
+                                                {% endif %}
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    {% endif %}
+                                    <tfoot>
+                                    <tr>
+                                        <td colspan="6" style="text-align: left;">
+                                            <a data-toggle="modal" href="{% url 'contact_refer_add' 3 location.id %}" class="btn btn-white fa fa-plus"></a> {# CONTACT_TYPES_DICT['Location'] #}
+                                        </td>
+                                    </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+            <div {% if active_tab_index == '2' %}
+                class="tab-pane active"
+            {% else %}
+                class="tab-pane"
+            {% endif %} id="item_tab">
+                <section class="panel">
+                    <div class="panel-body">
+                        <header class="panel-heading" style="font-size: 20px">
+                            {{ location.name|default_if_none:"" }}
+
+                            <span class="tools pull-right">
+                                <a data-toggle='modal' href='#myItemListModal' id='btnOpenItemDialog' class="btn btn-success start">
+                                    <i class="glyphicon glyphicon-plus"></i>
+                                    <span>Add Item</span>
+                                </a>
+
+                                <a data-toggle='modal' href='#modal_category' id='btnOpenItemDialog' class="btn btn-success start">
+                                    <i class="glyphicon glyphicon-plus"></i>
+                                    <span>Add Item Group</span>
+                                </a>
+                             </span>
+                        </header>
+                        <div class="adv-table">
+                            <table class="display table table-bordered table-striped table-condensed"
+                                   id="location-item-table" style="width: 100%">
+                                <thead>
+                                <tr>
+                                    <th>Update Date</th>
+                                    <th>Item Code</th>
+                                    <th>Description</th>
+                                    <th>Item Group</th>
+                                    <th>Available Qty</th>
+
+                                    <th>Delete</th>
+
+                                </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="myItemListModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Item</h4>
+                </div>
+                <div class="modal-body" style="padding-bottom: 10px!important;">
+                    <div class="form-group">
+                        <section class="panel" style="margin-top: 10px!important;">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="item-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Item Code</th>
+                                                    <th>Description</th>
+                                                    <th>Item Group</th>
+                                                    <th>Select</th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                    </div>
+                    <div class="modal-footer">
+                        <form role="form" action="{% url 'location_item_add' %}"
+                              method="post">
+                            {% csrf_token %}
+                            <input id="hdItemSelected" name="hdItemSelected" type="hidden">
+                            <input id="hdLocationID" name="hdLocationID" type="hidden" value="{{ location.id }}">
+                            <button data-dismiss="modal" class="btn btn-default" type="button">Cancel</button>
+                            <button class="btn btn-success" type="submit" id="btnItemSelect">Add</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="modal_category" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Item</h4>
+                </div>
+                <div class="modal-body" style="padding-bottom: 10px!important;">
+                    <div class="form-group">
+                        <section class="panel" style="margin-top: 10px!important;">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="category-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Item Code</th>
+                                                    <th>Description</th>
+                                                    <th>Item Group</th>
+                                                    <th>Select</th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                    </div>
+                    <div class="modal-footer">
+                        <form role="form" action="{% url 'location_category_add' %}"
+                              method="post">
+                            {% csrf_token %}
+                            <input id="hdCategory" name="hdCategory" type="hidden">
+                            <input id="hdLocationID" name="hdLocationID" type="hidden" value="{{ location.id }}">
+                            <button data-dismiss="modal" class="btn btn-default" type="button">Cancel</button>
+                            <button class="btn btn-success" type="submit" id="btnCategory">Add</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-location-item-dialog"
+         class="modal fade">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                    <h4 class="modal-title">Delete Confirm Dialog</h4>
+                </div>
+                <div class="modal-body">
+                    <form role="form" action="{% url 'location_item_delete' %}" method="post"
+                          id="delete-transaction-form">
+                        {% csrf_token %}
+                        <input id="hdDeleteItemSelected" name="hdDeleteItemSelected" type="hidden">
+                        <input id="hdDelteLocationID" name="hdDelteLocationID" type="hidden" value="{{ location.id }}">
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                        </div>
+                        <button type="submit" class="btn btn-success">OK</button>
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Cancel</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript" src="{% static 'assets/selectable/js/jquery.dj.selectable.js' %}"></script>
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+        var array_item = [];
+        var array_category = [];
+
+        function updateForm() {
+            $('#stock_take_date').val($('#stock_take_date').val().split('-').reverse().join('-'));
+        }
+        function the_function(obj) {
+            var nRow = $(obj).parents('td')[0];
+            var jqInputs = $('input', nRow);
+            $('#hdDeleteItemSelected').val(jqInputs[0].value);
+        }
+        $(document).on('keyup', '.select2-selection.select2-selection--single', function (e) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if(keycode == '9'){
+                $(this).closest(".select2-container").siblings('select:enabled').select2('open');
+            }
+        });
+
+        $(document).ready(function () {
+            $('#code').focus();
+            $('#stock_class').select2();
+            $('#stock_take_date').bind('keyup', function (event) {
+                adjust_input_date(this);
+            });
+            $('#stock_take_date').on('change', function (e) {
+                var date_from = get_date_from('#' + e.target.id);
+                date_from = date_from.split('/').join('-');
+                var date_from_valid = moment(date_from, "DD-MM-YYYY", true).isValid();
+
+                if (!date_from_valid) {
+                    pop_ok_dialog("Invalid Date",
+                        "Date (" + $('#' + e.target.id).val() + ") is invalid !",
+                        function () {
+                            $('#stock_take_date').val('');
+                            $('#stock_take_date').focus();
+                        });
+
+                }
+            });
+            $('#stock_class').on('select2:close', function (e)
+            {
+                $('#address').focus();
+            });
+        })
+
+        jQuery(document).ready(function ($) {
+            $('#category-table').dataTable({
+                "iDisplayLength": 5,
+                "bLengthChange": false,
+                "order": [[0, "desc"]],
+                "serverSide": true,
+                "ajax": {
+                    "url": "{% url 'CategoryList__asJson' 3 %}",
+                },
+                "columns": [
+                    {"data": "update_date", "sClass": "text-left"},
+                    {"data": "code", "sClass": "text-left"},
+                    {"data": "name", "sClass": "text-left"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            var button_edit = '<input '+'onclick=push_category("'+full.id+'")'+'  type="checkbox" name="choices_category" id="' + full.id + '"class="call-checkbox" value="' + full.id + '">'
+                            return button_edit;
+                        }
+                    }
+                ]
+            });
+            $(document).on("keypress", ":input:not(textarea):not([class=itemsearch])", function (event) {
+                return event.keyCode != 13;
+            });
+
+            $('#tabs').tab();
+            $('#contacts-table').dataTable({
+                "aaSorting": [[0, "desc"]]
+            });
+
+            $('#item-table').dataTable({
+                "iDisplayLength": 5,
+                "bLengthChange": false,
+                "order": [[0, "desc"]],
+                "serverSide": true,
+                "ajax": {
+                    "url": "{% url 'ItemSearch_asJson' %}",
+                    "data": {
+                        "csrfmiddlewaretoken": $('input[name="csrfmiddlewaretoken"]').val(),
+                        "location_id": {{ location.id }},
+                    }
+                },
+                "columns": [
+                    {"data": "item_code", "sClass": "text-left"},
+                    {"data": "item_name", "sClass": "text-left"},
+                    {"data": "category", "sClass": "text-left"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            var button_edit = '<input '+'onclick=push_item("'+full.item_id+'")'+' type="checkbox" name="choices" id="' + full.item_id + '"class="call-checkbox" value="' + full.item_id + '">'
+                            return button_edit;
+                        }
+                    }
+                ]
+            });
+            $('#location-item-table').dataTable({
+                "order": [[0, "desc"]],
+                "serverSide": true,
+                "ajax": {
+                    "url": "{% url 'LocationItemList__asJson' %}",
+                    "data": {
+                        "csrfmiddlewaretoken": $('input[name="csrfmiddlewaretoken"]').val(),
+                        "location_id": {{ location.id }},
+                    }
+                },
+                "columns": [
+                    {"data": "update_date"},
+                    {"data": "item_code"},
+                    {"data": "item_description"},
+                    {"data": "category"},
+                    {"data": "stock_qty"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "className": "text-center",
+                        "render": function (data, type, full, meta) {
+                            var button_edit = '<input type="hidden" value=' + full.item_id + '>'
+                            button_edit += '<a data-toggle="modal" href="#delete-location-item-dialog" class="delete fa fa-trash-o btn btn-danger" onclick="the_function(this);"></a>'
+                            return button_edit;
+                        }
+                    }
+                ]
+            });
+
+            {#$('#location-item-table').append("<tfoot>" +#}
+            {#        '<tr>' + "<td  colspan='6' style='text-align: left;'>" +#}
+            {#        "<a data-toggle='modal' href='#myItemListModal' id='btnOpenItemDialog' class='btn btn-white fa fa-plus'> Add Item</a>"#}
+            {##}
+            {#        +'<span>&nbsp;&nbsp;&nbsp;</span>' +#}
+            {#        "<a data-toggle='modal' href='#modal_category' id='btnOpenItemDialog' class='btn btn-white fa fa-plus'> Add Item Group</a>" +#}
+            {##}
+            {#        "</td>" + "</tr>" + "</tfoot>");#}
+            // choices_category
+            $('#location-item-table a.delete').on('click', function () {
+                var nRow = $(this).parents('td')[0];
+                var jqInputs = $('input', nRow);
+                $('#hdDeleteItemSelected').val(jqInputs[0].value);
+            });
+
+            function fnSearchLocationItem() {
+                var data = $('#search_input').val();
+                var hdLocationId = $('#hdLocationID').val();
+                if (data.length == 0)
+                    data = '0';
+                $.ajax({
+                    method: "POST",
+                    url: '/locations/location_item_search/' + hdLocationId + '/' + data + '/',
+                    dataType: 'JSON',
+                    data: {
+                        'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val(),
+                        'location_id': hdLocationId,
+                        'search_condition': data
+                    },
+                    responseTime: 200,
+                    success: function (data) {
+                        if (data.length > 0) {
+                            var dataTable = $('#item-table').dataTable();
+                            oSettings = dataTable.fnSettings();
+                            dataTable.fnClearTable(this);
+                            for (var i = 0; i < data.length; i++) {
+                                //dataTable.oApi._fnAddData(oSettings, data[i]);
+                                dataTable.fnAddData([data[i][0], data[i][1], data[i][2], '<input type="radio" name="choices" id="' + data[i][3] + '"class="call-checkbox" value="' + +data[i][3] + '">']);
+                            }
+
+                            oSettings.aiDisplay = oSettings.aiDisplayMaster.slice();
+                            dataTable.fnDraw();
+                            dataTable.$('tr').css('backgroundColor', 'white');
+                            dataTable.$('td').css('text-align', 'left');
+                            dataTable.$('td:last').css('text-align', 'center');
+                            dataTable.$('th:last').css('text-align', 'center');
+                            dataTable.$('td').removeClass('sorting_1');
+
+                        }
+                    }
+                });
+            };
+        });
+        function push_category(bul) {
+            array_category.push({'item':bul});
+            var my_group = JSON.stringify(array_category);
+            $('#hdCategory').val(my_group);
+        }
+        function push_item(item) {
+            array_item.push({'item':item});
+            var myJSON = JSON.stringify(array_item);
+            $('#hdItemSelected').val(myJSON);
+        }
+    </script>
+{% endblock %}

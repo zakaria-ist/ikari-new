@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <style>
+        .hide_column {
+            display: none;
+        }
+    </style>
+{% endblock %}
+{% block title %} Export Part Purchase Price{% endblock %}
+{% block parent_order_a_active %}active{% endblock %}
+{% block processing_a_active %}active{% endblock %}
+{% block processing_i_active %}active{% endblock %}
+
+{% block export_part_purchase_price %}active{% endblock %}
+
+
+{% block content %}               
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                    Export Part Purchase Price
+                <span class="tools pull-right">
+                    <a href="javascript:;" class="fa fa-chevron-down"></a>
+                </span>
+            </header>
+            
+            <div class="panel-body">
+                <div class="form-group">
+                    <div class="col-lg-offset-2 col-lg-6">
+                        <div class="form-group row">
+                            <label class="control-label col-lg-3 col-sm-4">Supplier From</label>
+                            <div class="col-md-8">
+                                <select id="supplier_from" class="form-control" name="supplier_from">
+                                    <option value="">Select Supplier</option>
+                                    {% for sup in supplier_list %}
+                                        <option value="{{ sup.0 }}">{{ sup.1 }}</option>
+                                    {% endfor %}
+                                </select> 
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="control-label col-lg-3 col-sm-4">Supplier To</label>
+                            <div class="col-md-8">
+                                <select id="supplier_to" class="form-control" name="supplier_to">
+                                    <option value="">Select Supplier</option>
+                                    {% for sup in supplier_list %}
+                                        <option value="{{ sup.0 }}">{{ sup.1}}</option>
+                                    {% endfor %}
+                                </select> 
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="control-label col-lg-3 col-sm-4">Part Group From</label>
+                            <div class="col-md-8">
+                                <select id="part_grp_from" class="form-control" name="part_grp_from">
+                                    <option value="">Select Part Group</option>
+                                    {% for sup in part_grp_list %}
+                                        <option value="{{ sup.0 }}">{{ sup.1 }}</option>
+                                    {% endfor %}
+                                </select> 
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="control-label col-lg-3 col-sm-4">Part Group To</label>
+                            <div class="col-md-8">
+                                <select id="part_grp_to" class="form-control" name="part_grp_to">
+                                    <option value="">Select Part Group</option>
+                                    {% for sup in part_grp_list %}
+                                        <option value="{{ sup.0 }}">{{ sup.1 }}</option>
+                                    {% endfor %}
+                                </select> 
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="control-label col-lg-3 col-sm-4">Part No. From</label>
+                            <div class="col-md-8">
+                                <select id="part_no_from" class="form-control" name="part_no_from">
+                                    <option value="">Select Part No.</option>
+                                    {% for sup in part_no_list %}
+                                        <option value="{{ sup.0 }}">{{ sup.1 }}</option>
+                                    {% endfor %}
+                                </select> 
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="control-label col-lg-3 col-sm-4">Part No. To</label>
+                            <div class="col-md-8">
+                                <select id="part_no_to" class="form-control" name="part_no_to">
+                                    <option value="">Select Part No.</option>
+                                    {% for sup in part_no_list %}
+                                        <option value="{{ sup.0}}">{{ sup.1 }}</option>
+                                    {% endfor %}
+                                </select> 
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-3"></div>
+                            <div class="col-md-8 text-center button-group">
+                                <a type="button" class="btn btn-success" id="export_excel" name="export_excel">Process</a>
+                                <a type="button" class="btn btn-default" href="{% url 'order_list' 1 %}">Cancel</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12">
+                <form id="reportForm" target="frViewPDF"
+                    method="post" action="" >
+                    {% csrf_token %}
+                    <input type="text" class="hide" id="param0" name="param0">
+                    <input type="text" class="hide" id="param1" name="param1">
+                    <input type="text" class="hide" id="param2" name="param2">
+                </form>
+                <div id="divViewPDF">
+                    <iframe id="frViewPDF" name="frViewPDF" width="0%" height="0%" style="max-width: 0px; max-height: 0px;"
+                            src=""></iframe>
+                </div>
+            </div> 
+        </section>
+    </div>
+    
+{% endblock %}
+
+{% block extrafoot %}
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script> 
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+        $(document).on('keyup', '.select2-selection.select2-selection--single', function (e) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if(keycode == '9'){
+                $(this).closest(".select2-container").siblings('select:enabled').select2('open');
+            }
+        });
+
+        var part_no_list = [];
+        var part_grp_list = [];
+        var supplier_list = [];
+
+        {% for item in part_no_list %}
+            part_no_list.push([{{ item.0 }}, "{{ item.1 }}"])
+        {% endfor %}
+        {% for item in part_grp_list %}
+            part_grp_list.push([{{ item.0 }}, "{{ item.1 }}"])
+        {% endfor %}
+        {% for item in supplier_list %}
+            supplier_list.push([{{ item.0 }}, "{{ item.1 }}"])
+        {% endfor %}
+
+        $(document).ready(function () {
+            $('#supplier_from').select2({
+                placeholder: "Select Supplier",
+                allowClear: true,
+            });
+            $('#supplier_to').select2({
+                placeholder: "Select Supplier",
+                allowClear: true,
+            });
+            $('#part_grp_from').select2({
+                placeholder: "Select Part Group",
+                allowClear: true,
+            });
+            $('#part_grp_to').select2({
+                placeholder: "Select Part Group",
+                allowClear: true,
+            });
+            $('#part_no_from').select2({
+                placeholder: "Select Part No.",
+                allowClear: true,
+            });
+            $('#part_no_to').select2({
+                placeholder: "Select Part No.",
+                allowClear: true,
+            });
+
+            $('#supplier_from').select2('open');
+        });
+
+        function param_list_string(select1, select2, data_list){
+            var array_list = [];
+            if (select1 != '0' && select2 != '0') {
+                insert = false;
+                $.each(data_list, function(i, v){
+                    if (select1 == v[0]) { insert = true; }
+                    if(insert) { array_list.push(v[0]); }
+                    if (select2 == v[0]) { insert = false; }
+                });
+            } else if (select1 != '0') {
+                insert = false;
+                $.each(data_list, function(i, v){
+                    if (select1 == v[0]) { insert = true; }
+                    if(insert) { array_list.push(v[0]); }
+                });
+            } else if (select2 != '0') {
+                insert = true;
+                $.each(data_list, function(i, v){
+                    if(insert) { array_list.push(v[0]); }
+                    if (select2 == v[0]) { insert = false; }
+                });
+            }
+
+            return JSON.stringify(array_list);
+        }
+
+        $('#export_excel').on('click', function () {
+            selectData = $('.panel-body').find("select");
+            if (selectData.length > 0) {
+                data1 = selectData[0].value ? selectData[0].value : '0';
+                data2 = selectData[1].value ? selectData[1].value : '0';
+                data3 = selectData[2].value ? selectData[2].value : '0';
+                data4 = selectData[3].value ? selectData[3].value : '0';
+                data5 = selectData[4].value ? selectData[4].value : '0';
+                data6 = selectData[5].value ? selectData[5].value : '0';
+            }
+            var sp_list = param_list_string(data1, data2, supplier_list);
+            var pg_list = param_list_string(data3, data4, part_grp_list);
+            var pt_list = param_list_string(data5, data6, part_no_list);
+
+            url = '/orders/export_part_purchase_price_file/';
+            $('#param0').val(sp_list);
+            $('#param1').val(pg_list);
+            $('#param2').val(pt_list);
+            $('#reportForm').attr('action', url);
+            $('#reportForm').submit();
+            
+            $('#export_excel').attr('disabled', true);
+
+            setTimeout(function () {
+                $('#export_excel').attr('disabled', false);
+            }, 30000);
+
+            pop_ok_dialog("Wait",
+                "Please wait for some time",
+                function () {}
+            );
+        })
+
+
+    </script>
+
+{% endblock %}

@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+{% endblock %}
+
+{% block title %}
+    {% if delivery.id %}
+        Edit Delivery Info
+    {% else %}
+        Add Delivery Info
+    {% endif %}
+{% endblock %}
+{% block delivery_active %}active{% endblock %}
+{% block sp_setting_a_active %}active{% endblock %}
+{% block sp_setting_i_active %}active{% endblock %}
+{% block parent_order_a_active %}active{% endblock %}
+{% block parent_order_i_active %}active{% endblock %}
+
+{% block content %}
+    <div id="content">
+        {% if delivery.id %}
+        {% comment %} 
+            <ul id="tabs" class="nav nav-tabs" data-tabs="tabs"
+                style="margin-left: 14px; margin-right: 24px;">
+                <li {% if active_tab_index == '0' %} class="active"
+                  {% else %}class=""
+                  {% endif %}><a href="#delivery_tab" data-toggle="tab">Delivery</a></li>
+                <li {% if active_tab_index == '1' %}class="active"
+                  {% else %}class=""
+                  {% endif %}><a href="#contact_tab" data-toggle="tab">Contacts</a></li>
+            </ul>
+            <div id="my-tab-content" class="tab-content">
+            <div {% if active_tab_index == '0' %}
+                class="tab-pane active"
+            {% else %}
+                class="tab-pane"
+            {% endif %} id="delivery_tab">
+        {% endcomment %}
+        {% endif %}
+        <div class="col-lg-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                {% if delivery.id %}
+                    Edit Delivery
+                {% else %}
+                    Add Delivery
+                {% endif %}
+                </header>
+                <div class="panel-body">
+                    <form class="form-horizontal"
+                          {% if delivery.id %}action="{% url 'delivery_edit' delivery.id %}"
+                          {% else %}action="{% url 'delivery_add' %}"{% endif %}
+                        role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="form-group">
+                            <label for="code" class="col-lg-2 col-sm-2 control-label">Code<span
+                                    class="span-required">(*)</span></label>
+                            <div class="col-lg-4">
+                                {{ form.code }}
+                                <span class="messages">{{ form.errors.code }}</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="name" class="col-lg-2 col-sm-2 control-label">Delivery To<span
+                                    class="span-required">(*)</span></label>
+                            <div class="col-lg-4">
+                                {{ form.name|default_if_none:"" }}
+                                <span class="messages">{{ form.errors.name }}</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="address" class="col-lg-2 col-sm-2 control-label">Address</label>
+                            <div class="col-lg-4">
+                                {{ form.address|default_if_none:"" }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="note1" class="col-lg-2 col-sm-2 control-label">Attention</label>
+                            <div class="col-lg-4">
+                                {{ form.attention|default_if_none:"" }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone" class="col-lg-2 col-sm-2 control-label">Tel no.</label>
+                            <div class="col-lg-4">
+                                {{ form.phone|default_if_none:"" }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="remark" class="col-lg-2 col-sm-2 control-label">Remark</label>
+                            <div class="col-lg-4">
+                                {{ form.note_1|default_if_none:"" }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="last_update" class="col-lg-2 col-sm-2 control-label">Last Update</label>
+                            <div class="col-lg-4">
+                                <input type="text" class="form-control" id="last_update" name="last_update"
+                                {% if delivery.update_date %}
+                                    value="{{ last_update }}"
+                                {% else %}
+                                    value=""
+                                {% endif %}
+                                disabled="true">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-lg-offset-2 col-lg-10">
+                                <button type="submit" name="btnSave" class="btn btn-success">Save</button>
+                                {% if 'customers.delete_delivery' in user.get_all_permissions and delivery.id %}
+                                    <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger">Delete</a>
+                                {% endif %}
+                                <a class="btn btn-default" href="{% url 'delivery_list' %}">Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </div>
+    <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+         class="modal fade">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                    <h4 class="modal-title">Delete Confirm Dialog</h4>
+                </div>
+                {% if delivery.id %}
+                    <div class="modal-body">
+                        <form role="form" action="{% url 'delivery_delete' delivery.id %}"
+                              method="post">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                            </div>
+                            <button type="submit" class="btn btn-success">OK</button>
+                            <a class="btn btn-default" href="{% url 'delivery_list' %}">Cancel</a>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="application/javascript" src="{% static 'js/ga.js' %}?{% now 'H' %}"></script>
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+
+    <script>
+        var deliver_id = '{{ delivery.id }}'
+        $(document).ready(function () {
+            if (deliver_id){
+              $('#id_code').attr('tabindex', "-1");
+              $('#id_name').focus();
+            } else {
+                $('#id_code').focus();
+            }
+        });
+    </script>
+{% endblock %}

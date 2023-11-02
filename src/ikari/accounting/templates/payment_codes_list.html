@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <style type="text/css">
+      td{
+        vertical-align: baseline !important;
+      }
+
+      @media only screen and (max-width: 991px) {
+        table {
+          width: 1000px !important;
+        }
+
+      }
+    </style>
+{% endblock %}
+
+{% block title %}Payment Code List{% endblock %}
+
+{% if 'all_sp' in request.session.permission_staff %}
+    {% block sp_setting_a_active %}active{% endblock %}
+    {% block sp_setting_i_active %}active{% endblock %}
+    {% block parent_order_a_active %}active{% endblock %}
+    {% block parent_order_i_active %}active{% endblock %}
+    {% block supplier_a_active %}{% if source_type == '2' %}active{% endif %}{% endblock %}
+    {% block supplier_i_active %}{% if source_type == '2' %}active{% endif %}{% endblock %}
+    {% block payment_code_spap_active %}{% if source_type == '2' %}active{% endif %}{% endblock %}
+
+    {% block customer_a_active %}{% if source_type == '1' %}active{% endif %}{% endblock %}
+    {% block customer_i_active %}{% if source_type == '1' %}active{% endif %}{% endblock %}
+    {% block payment_code_spar_active %}{% if source_type == '1' %}active{% endif %}{% endblock %}
+{% else %}
+    {% block parent_accounting_a_active %}active{% endblock %}
+    {% block parent_accounting_i_active %}active{% endblock %}
+    {% block parent_AP_a_active %}{% if source_type == '2' %}active{% endif %}{% endblock %}
+    {% block parent_AP_i_active %}{% if source_type == '2' %}active{% endif %}{% endblock %}
+    {% block payment_code_ap_active %}{% if source_type == '2' %}active{% endif %}{% endblock %}
+
+    {% block parent_AR_a_active %}{% if source_type == '1' %}active{% endif %}{% endblock %}
+    {% block parent_AR_i_active %}{% if source_type == '1' %}active{% endif %}{% endblock %}
+    {% block payment_code_ar_active %}{% if source_type == '1' %}active{% endif %}{% endblock %}
+{% endif %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    {% if source_type == '2' %}
+                        AP Payment Code List
+                    {% else %}
+                        AR Payment Code List
+                    {% endif %}
+                    <span class="tools pull-right">
+                         {% if request.session.staff_admin %}
+                             <a class="btn btn-success start"
+                                {% if source_type == '2' %}
+                                href="{% url 'payment_code_add' '2' %}"
+                                {% else %}
+                                href="{% url 'payment_code_add' '1' %}"
+                                {% endif %}
+                                ><i class="glyphicon glyphicon-plus"></i>
+                                 <span>Add new</span>
+                             </a>
+                         {% endif %}
+                    </span>
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table">
+                        <table class="display table table-bordered table-striped table-hover"
+                               id="dynamic-table" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Update Date</th>
+                                <th>Code</th>
+                                <th>Description</th>
+                                <th>Payment Type</th>
+                                <th class="text-center">Active</th>
+                                {% if request.session.staff_admin %}
+                                    <th class="text-center">Edit</th>
+                                {% endif %}
+                            </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script>
+        $(document).ready(function () {
+            var source_type = '{{source_type}}';
+            $('#dynamic-table').dataTable({
+                "order": [[1, "asc"]],
+                "serverSide": true,
+                "scrollX": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'PaymentCode__asJson' source_type %}"
+                },
+                "columns": [
+                    {"data": "update_date"},
+                    {"data": "code"},
+                    {"data": "name"},
+                    {"data": "payment_type"},
+                    {
+                        "className": "text-center",
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            if (full.is_active == 'True') {
+                                var mSpan = '<span class="label label-success label-mini">True</span>'
+                                return mSpan
+                            }
+                            else {
+                                var mSpan = '<span class="label label-danger label-mini">False</span>'
+                                return mSpan
+                            }
+                        }
+                    },
+                    {% if request.session.staff_admin %}
+                        {
+                            "className": "text-center",
+                            "orderable": false,
+                            "data": null,
+                            "render": function (data, type, full, meta) {
+                                var button_edit = '<a href=/accounting/payment_codes_edit/' + full.id + '/ class="fa fa-pencil fa-lg btn btn-primary btn-sm"></a>'
+                                return button_edit;
+                            }
+                        }
+                    {% endif %}
+                ]
+            });
+        });
+    </script>
+
+{% endblock %}

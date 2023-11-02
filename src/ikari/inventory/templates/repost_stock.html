@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Inventory Re-post Stock{% endblock %}
+{% block inv_setting_a_active %}active{% endblock %}
+{% block inv_setting_i_active %}active{% endblock %}
+{% block ics_r_a_active %}active{% endblock %}
+{% block repost_stock %}active{% endblock %}
+
+{% block content %}
+<!-- <div> -->
+    <div class="panel">
+        <div class="panel-heading">
+            <h4>Inventory Re-post Stock </h4>
+        </div>
+        <div class="panel-body">
+            <div class="form-group">
+                
+                <div id="loadpage">
+                    <div class="col-lg-10 col-sm-10">
+                        Re-posting stock! Please Wait ...
+                        <br/>
+                    </div>
+                        {% comment %} <p align="center" style="font-size: large;">
+                            <img src="/static/img/loading1.gif">
+                        </p> {% endcomment %}
+                </div >
+                <div class="col-lg-5 col-lg-10" >
+                    <form id="frm_daily_closing" class="form-horizontal" action="{% url 'repost_stock' %}" 
+                    role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <select name="res_code" id='res_code'>
+                        <option value="0" {% if response_data.res_code == '0' %} selected="selected"
+                        {% endif%} >0</option>
+                        <option value="1" {% if response_data.res_code == '1' %} selected="selected"
+                        {% endif%}>1</option>
+                    </select>
+                        <button type="submit" name="btnSave" id='repostStock' class="btn btn-success">Re-post Stock
+                        </button>
+                        
+                    </form>
+                </div>
+                <div class="col-lg-5 col-lg-10" id='msg' >
+                   <b><i> {{response_data.msg}} </i></b>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/advanced-form-datepicker.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/select2/select2.js' %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#loadpage").hide();
+            $("#res_code").hide();
+
+            $('#repostStock').click(function () {
+                $("#loadpage").show();
+                $("#repostStock").hide();
+                $("#res_code").hide();
+
+            });
+            $('#res_code').on('change', function() {
+                if ($('#res_code').val() == '0'){
+                    $("#loadpage").hide();
+                    $("#repostStock").show();
+                    $("#res_code").hide();
+
+                }
+
+            });
+        });
+
+        function dailyClosingGo(){
+            var p1 = $("#day_to_close").val();
+            var p2 = $("#trn_code_opt").val();
+            var p3 = $("#voucher_from").val();
+            var p4 = $("#voucher_to").val();
+            //alert('paramater = '+p1+','+p2+','+p3+','+p4);
+            //next: pass these 4 parameter to dayly_closing function in view, via ajax 
+        }
+    </script>
+{% endblock %}

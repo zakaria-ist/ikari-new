@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block extrahead %}
+    {% load staticfiles %}
+    <!-- Datatables -->
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <style type="text/css">
+        #custom-table tbody td:nth-child(5), #custom-table tbody td:nth-child(6) {
+            white-space: nowrap;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}Item List{% endblock %}
+{% block ics_a_active %}active  {% endblock %}
+{% block item_active %}active{% endblock %}
+{% block inv_setting_a_active %}active{% endblock %}
+{% block inv_setting_i_active %}active{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    Item List
+                    <span class="tools pull-right">
+                        {% if 'items.add_item' in user.get_all_permissions %}
+                            <a class="btn btn-success start" href="{% url 'item_add' %}">
+                                <i class="glyphicon glyphicon-plus"></i>
+                                <span>Add new</span>
+                            </a>
+                        {% endif %}
+                    </span>
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table">
+                        <table class="display table table-bordered table-striped table-condensed"
+                               id="custom-table" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Update Date</th>
+                                <th>Item Code</th>
+                                <th>Description</th>
+                                <th>Item Group</th>
+                                <th style="width: 12%;">Sale Price</th>
+                                <th style="width: 12%;">Purchase Price</th>
+                                <th>Available Qty</th>
+                                {% if 'items.change_item' in user.get_all_permissions %}
+                                    <th class="text-center">Edit</th>
+                                {% endif %}
+                            </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#custom-table').dataTable({
+                "order": [[ 1, "asc" ]],
+                "serverSide": true,
+                "scrollX": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'ItemList__asJson' %}"
+                },
+                "columns": [
+                    {"data": "update_date"},
+                    {"data": "item_code"},
+                    {"data": "item_name"},
+                    {"data": "category_name"},
+                    {"data": "sale_price"},
+                    {"data": "purchase_price"},
+                    {"data": "quantity"},
+                    {% if 'items.change_item' in user.get_all_permissions %}
+                        {
+                            "className": "text-center",
+                            "orderable": false,
+                            "data": null,
+                            "render": function (data, type, full, meta) {
+                                var button_edit = '<a href="../edit/' + full.id + '/0/" class="fa fa-pencil fa-lg btn btn-primary btn-sm"></a>'
+                                return button_edit;
+                            }
+                        }
+                    {% endif %}
+                ],
+                "aoColumnDefs" : [
+                    {className : "text-right", aTargets : [4,5,6]},
+                ],
+            });
+        });
+    </script>
+{% endblock %}
+
+

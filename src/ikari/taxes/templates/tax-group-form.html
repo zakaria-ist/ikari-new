@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <style>
+        .text-right { text-align: right; }
+    </style>
+{% endblock %}
+
+{% block title %}{% if tax_group.id == None %}
+    Add Tax Group{% else %} Edit Tax Group
+{% endif %}{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block com_tax_services_a_active %}active{% endblock %}
+{% block com_tax_services_i_active %}active{% endblock %}
+{% block com_tax_group_active %}active{% endblock %}
+
+{% block content %}
+<div class="col-lg-12">
+    <section class="panel">
+        <header class="panel-heading">
+            {% if tax_group.id == None %}
+                Add Tax Group{% else %} Edit Tax Group
+            {% endif %}
+        </header>
+        <div class="panel-body">
+            <form id="frmTaxGroup" class="form-horizontal"
+                    {% if tax_group.id == None %} action="{% url 'tax_group_add' %}"
+                    {% else %} action="{% url 'tax_group_edit' tax_group.id %}" {% endif %}
+                  role="form" method="POST" onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="code" class="col-lg-2 col-sm-2 control-label">Tax Group<span class="span-required"> (*)</span></label>
+                    <div class="col-lg-6">
+                        {{ form.code }}
+                        <span class="messages">{{ form.errors.code }}</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="name" class="col-lg-2 col-sm-2 control-label">Description</label>
+                    <div class="col-lg-6">
+                        {{ form.name }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="transaction_type" class="col-lg-2 col-sm-2 control-label">Transaction Type</label>
+                    <div class="col-lg-6">
+                        {{ form.transaction_type }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="currency" class="col-lg-2 col-sm-2 control-label">Tax Reporting Currency<span class="span-required"> (*)</span></label>
+                    <div class="col-lg-6">
+                        {{ form.currency }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="calculation_method" class="col-lg-2 col-sm-2 control-label">Tax Calculation Method</label>
+                    <div class="col-lg-6">
+                        {{ form.calculation_method }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="tax_authority" class="col-lg-2 col-sm-2 control-label">Tax Authority</label>
+                    <div class="col-lg-6">
+                        <select id="tax_authority" class="form-control" name="tax_authority">
+                            <option value=""></option>
+                            {% for tx_auth in tax_authority_list %}
+                                {% if tax_group.tax_authority_id == tx_auth.id %}
+                                    <option value="{{tx_auth.id}}" selected="selected">{{tx_auth.code}}</option>
+                                {% else %}
+                                    <option value="{{tx_auth.id}}">{{tx_auth.code}}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-lg-2 col-sm-2 control-label">Taxable</label>
+                    <div class="col-lg-6">
+                        <div class="checkbox checkbox-primary">
+                            <input name="is_taxable" id="is_taxable" class="styled" type="checkbox"
+                                   {% if tax_group.is_taxable %}checked{% endif %}/>
+                            <label for="is_taxable"></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-lg-2 col-sm-2 control-label">Surtax</label>
+                    <div class="col-lg-6">
+                        <div class="checkbox checkbox-primary">
+                            <input name="is_surtax" id="is_surtax" class="styled" type="checkbox"
+                                   {% if tax_group.is_surtax %}checked{% endif %}/>
+                            <label for="is_surtax"></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="surtax_on_authority" class="col-lg-2 col-sm-2 control-label">Surtax on Authority</label>
+                    <div class="col-lg-6">
+                        <select id="surtax_on_authority" class="form-control" name="surtax_on_authority">
+                            <option value=""></option>
+                            {% for tx_auth in tax_authority_list %}
+                                {% if tax_group.surtax_authority_id == tx_auth.id %}
+                                    <option value="{{tx_auth.id}}" selected="selected">{{tx_auth.code}}</option>
+                                {% else %}
+                                    <option value="{{tx_auth.id}}">{{tx_auth.code}}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group "></div>
+
+                <div class="form-group">
+                    <div class="col-lg-offset-2 col-lg-10">
+                        <button id="btnSave" type="submit" name="btnSave" class="btn btn-primary">Save</button>
+                        <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger" {% if tax_group.id == None %}style="display: none"{% endif %}>Delete</a>
+                        <a class="btn btn-default" href="{% url 'tax_group_list' %}">Cancel</a>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+        <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+             class="modal fade">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                        <h4 class="modal-title">Delete Confirm Dialog</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form role="form" action="{% url 'tax_group_delete' tax_group.id %}" method="post">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label>Are you sure want to delete?</label>
+                            </div>
+                            <button type="submit" class="btn btn-primary">OK</button>
+                            <button class="btn btn-default" type="button" 
+                                data-dismiss="modal" style="margin-left:5px">Cancel</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </section>
+</div>
+
+{#notification#}
+<div class="modal fade" id="notificationModal" tabindex="-1" role="dialog"
+     aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title"><strong><span id='notificationModal_title'>Notification Title</span></strong></h4>
+            </div>
+            <div class="modal-body" style="padding-bottom: 0px!important;">
+                <div class="form-group">
+                    <div id="notificationModal_text1" class="text-left">Notification #1</div>
+                    <div id="notificationModal_text2" class="text-left">Notification #2</div>
+                </div>
+            </div>
+            <div class="modal-footer" style="text-align: center">
+                <button id="notification_ok" class="btn btn-primary" type="button" data-dismiss="modal">Ok</button>
+            </div>
+        </div>
+    </div>
+</div>
+{#End notification#}
+
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="application/javascript" src="{% static 'js/ga.js' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+
+    <script>
+        $(document).ready(function () {
+            if($('#is_surtax').is(':checked')){
+                $('#surtax_on_authority').prop('disabled', false);
+                $('#surtax_account').prop('disabled', false);
+            } else {
+                $('#surtax_on_authority').prop('disabled', true);
+                $('#surtax_account').prop('disabled', true);
+            }
+
+            $('#id_currency').select2({
+                placeholder: "select currency ",
+            });
+            $('#id_transaction_type').select2();
+            $('#id_calculation_method').select2();
+            $('#tax_authority').select2({
+                placeholder: "select tax authority",
+            });
+            $('#surtax_on_authority').select2({
+                placeholder: "select surtax on authority",
+            });
+        });
+
+        $('#is_surtax').on('change',function(){
+            if($(this).is(':checked')){
+                $(this).attr('checked', 'checked');
+                $('#surtax_on_authority').prop('disabled', false);
+            } else {
+                $(this).removeAttr('checked');
+                $('#surtax_on_authority').val('').trigger('change');
+                $('#surtax_on_authority').prop('disabled', true);
+            }
+        });
+
+        $('#btnSave').on('click',function(){
+            var is_surtax = $('#is_surtax').is(':checked');
+            var code = $('#id_code').val()
+            var curr = $('#id_currency').val()
+            if ((!code)||(!curr)) {
+                $('#notificationModal_title').text('Invalid Input !');
+                $('#notificationModal_text1').text('Tax Group and Tax Reporting Currency cannot be empty. Field with (*) marks is required.');
+                $('#notificationModal_text2').text('');
+                $("#notificationModal").modal("show");
+                return false;
+            //} else if ((is_surtax)&&((!$('#surtax_on_authority').val())||(!$('#surtax_account').val()))){
+            } else if ((is_surtax)&&((!$('#surtax_on_authority').val()))){
+                $('#notificationModal_title').text('Invalid Input !');
+                $('#notificationModal_text1').text('Surtax on Authority and Surtax Authority cannot be empty.');
+                $('#notificationModal_text2').text('If you want to leave it empty, make sure to uncheck Surtax checkbox.');
+                $("#notificationModal").modal("show");
+                return false;
+            } else {
+                $('#frmTaxGroup').submit();
+            }
+        });
+    </script>
+{% endblock %}

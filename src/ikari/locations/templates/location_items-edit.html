@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block extrahead %}
+    {% load staticfiles %}
+    <!-- Datatables -->
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+
+{% endblock %}
+
+{% block title %}Item List{% endblock %}
+{% block ics_a_active %}active  {% endblock %}
+{% block stock_location_active %}active{% endblock %}
+{% block inv_setting_a_active %}active{% endblock %}
+{% block inv_setting_i_active %}active{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    Location stock 
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table">
+                        <div id="defaul_item">
+                            <div class="col-lg-12">
+                                <form class="form-horizontal" action="{% url 'location_item_edit' loc_item_values.location_id loc_item_values.item_id next %}" 
+                                 role="form"
+                                  method="post"
+                                  enctype="multipart/form-data">
+                                  {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="fax" class="col-lg-2 col-sm-2 control-label">Location Code</label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" name="location_code"
+                                               value="{{loc_item_values.location.code}}"
+                                               readonly="readonly" tabindex="-1">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="fax" class="col-lg-2 col-sm-2 control-label">Item code</label>
+                                    <div class="col-lg-4">
+                                        <input type="text" tabindex="-1" readonly="readonly" class="form-control" name="item_code" value="{{loc_item_values.item.code}}">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="fax" class="col-lg-2 col-sm-2 control-label">Minimum Qty</label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" id="min_qty" name="min_qty"
+                                               value="{{loc_item_values.min_qty|default_if_none:'0'}}">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="fax" class="col-lg-2 col-sm-2 control-label">Maximum Qty</label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" name="max_qty"
+                                               value="{{loc_item_values.max_qty|default_if_none:'0'}}">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="fax" class="col-lg-2 col-sm-2 control-label">Re-order Qty</label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" id="reorder_qty" name="reorder_qty"
+                                               value="{{loc_item_values.reorder_qty|default_if_none:'0'}}">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="fax" class="col-lg-2 col-sm-2 control-label">In Measurement</label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" id="inv_measure" name="inv_measure"
+                                               readonly="readonly" tabindex="-1"
+                                               value="{{loc_item_values.item.inv_measure.code}}">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="fax" class="col-lg-2 col-sm-2 control-label">Out Measurement</label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" id="out_measurement" name="out_measurement"
+                                               readonly="readonly" tabindex="-1"
+                                               value="{{loc_item_values.item.inv_measure.code}}">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="fax" class="col-lg-2 col-sm-2 control-label">Available Qty</label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" name="onhand_qty"
+                                               readonly="readonly" tabindex="-1"
+                                               value="{{loc_item_values.onhand_qty}}">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="fax" class="col-lg-2 col-sm-2 control-label">Inv. measurement</label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" name="inv_measurement"
+                                               readonly="readonly" tabindex="-1"
+                                               value="{{loc_item_values.item.inv_measure.code}}">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-lg-offset-2 col-lg-10">
+                                        <button type="submit" class="btn btn-success">Save</button>
+                                        <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger">Delete</a>
+                                        {% if next == '' %}
+                                            <a class="btn btn-default" href="{% url 'load_stock_list' loc_item_values.location_id %}">Cancel</a>
+                                        {% else %}
+                                            <a class="btn btn-default" href="{% url 'item_edit' loc_item_values.item.id '3' %}">Cancel</a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                </form>
+                            </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+         class="modal fade">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                    <h4 class="modal-title">Delete Confirm Dialog</h4>
+                </div>
+                <div class="modal-body">
+                    <form role="form" action="{% url 'delete_loc_item' loc_item_values.location_id loc_item_values.item_id next %}" method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                        </div>
+                        <button type="submit" class="btn btn-success">OK</button>
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Cancel</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+{% endblock %}
+{% block js %}
+    <!-- Datatables -->
+    <!-- <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script> -->
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+        $('#min_qty').focus();
+    </script>
+{% endblock %}
+
+

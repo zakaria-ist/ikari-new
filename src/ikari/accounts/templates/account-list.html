@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/table.css" %}" rel="stylesheet">
+    <style type="text/css">
+    </style>
+{% endblock %}
+
+{% block title %}Account List{% endblock %}
+{% block account_active %}active{% endblock %}
+{% block account_setting_a_active %}active{% endblock %}
+{% block account_setting_i_active %}active{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    Account List
+                    <span class="tools pull-right">
+                          {% if request.session.staff_admin %}
+                              <a class="btn btn-success start" href="{% url 'account_add' %}">
+                                  <i class="glyphicon glyphicon-plus"></i>
+                                  <span>Add new</span>
+                              </a>
+                          {% endif %}
+                    </span>
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table table-responsive">
+                        <table class="display table table-bordered table-striped table-hover"
+                               id="dynamic-table">
+                            <thead>
+                            <tr>
+                                <th>Update Date</th>
+                                <th>Account</th>
+                                <th>Description</th>
+                                <th>Type</th>
+                                <th>Normal Balance</th>
+                                <th>Account Group</th>
+                                <th>Functional Balance</th>
+                                <th class="text-center">Multicurrency</th>
+                                <th class="text-center">GL Revaluation</th>
+                                {% if request.session.staff_admin %}
+                                <th class="text-center">Action</th>
+                                {% endif %}
+                            </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <div class="modal fade" id="Multi-Currency" tabindex="-1" role="dialog"
+         aria-labelledby="myCustomerListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true" onclick="closediv(1)">&times;</button>
+                    <h4 class="modal-title">Account Currency</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="col-lg-12 col-sm-12" style="padding-bottom: 5px;">
+                        <!-- <div class="col-lg-12 col-sm-12">
+                                <div class="col-lg-1 col-sm-2">
+                                    <a id="entry_num_sub" onclick="account_code(1)" class="btn btn-white fa fa-chevron-left"></a>
+                                </div>
+                                <div class="col-lg-7 col-sm-2">
+                                    <input class="form-control  text-center" id="code_account" name="code"  type="text">
+                                </div>
+                                <div class="col-lg-1 col-sm-2">
+                                    <a id="entry_num_add" onclick="account_code(2)" class="btn btn-white fa fa-chevron-right"></a>
+                                </div>
+                        </div> -->
+                        <div class="col-lg-12 col-sm-12">
+                            <div class="col-md-2" >
+                                <div class='prev_period'>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="text"  id='date_period' class="form-control" value="{{ fsc_period }}">
+                            </div>
+                            <div class="col-md-2" >
+                                <div class='next_period'>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <br/>
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+
+                                            <div class="col-md-8"> </div>
+                                            <table id="curr-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+
+                                                <tr class="inner">
+                                                    <th id="code"> Code</th>
+                                                    <th id="cur-name">Source Currency </th>
+                                                    <th id="source_balance">Source Balance</th>
+                                                    <th id="equiv">Equiv. Balance</th>
+
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default"
+                         type="button" onclick="closediv(1)">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+
+    <script type="text/javascript"
+    src="{% static "assets/bootstrap-datepicker/js/bootstrap-datepicker.js" %}">
+
+    </script>
+    <script src="{% static "js/advanced-form-datepicker.js" %}"></script>
+    <script type="text/javascript">
+        $('#date_period').datepicker({
+            format: "mm-yyyy",
+            startView: 1,
+            minViewMode: 1,
+            scrollX: true,
+            autoclose: true
+        });
+        $(document).ready(function () {
+            var fsc_period = '{{fsc_period}}'.split('-').reverse().join('-');
+            var trx_period = fsc_period + '-01';
+            $('#dynamic-table').dataTable({
+                "order": [[1, "asc"]],
+                "serverSide": true,
+                "scrollX": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'Account__asJson' %}"
+                },
+                "columns": [
+                    {"data": "update_date", "width": "55px"},
+                    {"data": "code", "width": "30px"},
+                    {"data": "name", "width": "200px"},
+                    {"data": "account_type", "width": "100px"},
+                    {"data": "balance_type", "width": "55px"},
+                    {"data": "account_group", "width": "100px"},
+                    {"data": "amount", "orderable": false, "width": "10px"},
+                    {
+
+                        "orderable": false,
+                        "data": null,
+                        "width": "10px",
+                        "render": function (data, type, full, meta) {
+                            if (full.is_multicurrency == 1) {
+                                var mSpan = "<a id='btnSearchSupplier' type='button' class='label label-success label-mini'>YES</a>";
+
+                                return mSpan
+                            }
+                            else {
+                                return ''
+                            }
+                        }
+                    },
+                    {
+
+                        "orderable": false,
+                        "data": null,
+                        "width": "10px",
+                        "render": function (data, type, full, meta) {
+                            if (full.gl_revaluation == 1) {
+                                var mSpan = "<a id='' type='button' class='label label-success label-mini'>YES</a>";
+
+                                return mSpan
+                            }
+                            else {
+                                return ''
+                            }
+                        }
+                    },
+                    {% if request.session.staff_admin %}
+                    {
+                        "sClass": "text-center",
+                        "orderable": false,
+                        "data": null,
+                        "width": "10px",
+                        "render": function (data, type, full, meta) {
+                            var btn =
+                                    '<div class="btn-group dropdown">' +
+                                    '<button type="button"' +
+                                    'class="btn btn-primary btn-sm dropdown-toggle"' +
+                                    'data-toggle="dropdown" aria-haspopup="true"' +
+                                    'aria-expanded="false"' +
+                                    'style="min-width: 30px!important;">Action' +
+                                    '<span class="caret" style="margin-left:3px"></span>' +
+                                    '<span class="sr-only">Toggle Dropdown</span>' +
+                                    '</button>' +
+                                    '<ul class="dropdown-menu dropdown-menu-right">' +
+                                    '<li>';
+                            btn += '<a href=../edit/' + full.id + ' class="fa fa-pencil">Edit</a>'
+                            btn += '<a href=../transaction/' + full.id + '/'+ trx_period +'/' + ' class="fa fa-exchange">Transactions</a>'
+                            btn += '<a href=../history/' + full.id + ' class="fa fa-clock-o">History</a>'
+                            btn += "<a id='btnSearchSupplier' type='button' class='fa fa-search' onclick='curr_balance("+full.id+','+full.code+',\"'+fsc_period+"\")'>Currency</a>";
+                            btn += '</li></ul/div>';
+                            return btn;
+                        }
+                    }
+                    {% endif %}
+                ],
+                "columnDefs": [
+                    { className: "text-center",targets: [7, 8] },
+                    { className: "hide",targets: [6] },
+                ]
+            });
+            $('.dataTables_scrollHeadInner').attr('style', 'margin-left: auto !important; margin-right: auto !important');
+        });
+function account_code(id) {
+    var date_period = ($('#date_period').val()).split('-').reverse().join('-');
+    var code_acc = $('#code_account').val();
+    $("#code_account").val(code_acc);
+    $.ajax({
+            method: "GET",
+            url:  '/accounts/bycode_account/'+code_acc+'/'+date_period+'/'+id,
+            dataType: 'JSON',
+            success: function (json) {
+                var code = json.next_acc_code;
+                $("#code_account").val(code);
+            }
+        });
+};
+
+function closediv(id) {
+    $('.next_period').nextAll().remove();
+    $('.prev_period').nextAll().remove();
+    $('.inner').nextAll().remove();
+}
+
+function curr_balance_change(id, code, type) {
+    $('.inner').nextAll().remove();
+    var date_period = ($('#date_period').val()).split('-');
+    var period = parseInt(date_period[0]);
+    var year = parseInt(date_period[1]);
+    if(type == 'P') {
+        period = period - 1;
+        if(period == 0) {
+            period = 12;
+            year = year - 1;
+        }
+    } else {
+        period = period + 1;
+        if(period == 13) {
+            period = 1;
+            year = year + 1;
+        }
+    }
+
+    var chng_date_period = period + '-' + year;
+    $('#date_period').datepicker('setDate', chng_date_period);
+    date_period = chng_date_period.split('-').reverse().join('-');
+
+    curr_balance(id, code, date_period);
+
+}
+
+function curr_balance(id, code, date_period) {
+    $("#Multi-Currency").modal("show");
+    $("#code_account").val(code);
+    $.ajax({
+            method: "GET",
+            url:  '/accounts/detail_account/'+id+'/'+date_period+'/'+code,
+            dataType: 'JSON',
+            success: function (json) {
+                var json_ar = json.data;
+                var account_id = ''
+                var account_code = ''
+                for (var i = 0; i < json_ar.length; i++) {
+                    var code = json_ar[i].code;
+                    var name = json_ar[i].name;
+                    var source_end_balance = json_ar[i].source_end_balance;
+                    var functional_end_balance = json_ar[i].functional_end_balance;
+                    account_id = json_ar[i].account;
+                    code_account = json_ar[i].account_code;
+                    // $("#code_account").val(code);
+                    $(".inner").after("<tr><td>"+code+"</td><td>"+name+"</td><td>"+source_end_balance+"</td><td>"+functional_end_balance+"</td></tr>");
+                }
+            }
+        });
+
+    $(".prev_period").html(" <button id='finding_period' class='btn btn-success' onclick='curr_balance_change("+id+','+code+',\"P\"'+")'> << </button> ");
+    $(".next_period").html(" <button id='finding_period' class='btn btn-success' onclick='curr_balance_change("+id+','+code+',\"N\"'+")'> >> </button> ");
+
+}
+
+    var ul_array = [];
+    $(document).on('click', '.table-responsive [data-toggle="dropdown"]', function () {
+        // if the button is inside a modal
+        if ($('body').hasClass('modal-open')) {
+            throw new Error("This solution is not working inside a responsive table inside a modal, you need to find out a way to calculate the modal Z-index and add it to the element")
+            return true;
+        }
+
+        ul_array.forEach(element => {
+            element.css('display', 'none');
+        });
+        ul_array.length = 0;
+
+        $buttonGroup = $(this).parent();
+        if (!$buttonGroup.attr('data-attachedUl')) {
+            var ts = +new Date;
+            $ul = $(this).siblings('ul');
+            $ul.attr('data-parent', ts);
+            $buttonGroup.attr('data-attachedUl', ts);
+            $(window).resize(function () {
+                $ul.css('display', 'none').data('top');
+            });
+        } else {
+            $ul = $('[data-parent=' + $buttonGroup.attr('data-attachedUl') + ']');
+        }
+        if (!$buttonGroup.hasClass('open')) {
+            $ul.css('display', 'none');
+            return;
+        }
+        ul_array.push($ul);
+        dropDownFixPosition($(this).parent(), $ul);
+        function dropDownFixPosition(button, dropdown) {
+            var dropDownTop = button.offset().top + button.outerHeight();
+            dropdown.css('top', dropDownTop + "px");
+            dropdown.css('left', (button.offset().left - 100) + "px");
+            dropdown.css('position', "absolute");
+
+            dropdown.css('width', dropdown.width());
+            dropdown.css('heigt', dropdown.height());
+            dropdown.css('display', 'block');
+            dropdown.appendTo('body');
+        }
+    });
+    </script>
+{% endblock %}

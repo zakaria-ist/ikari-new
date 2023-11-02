@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+{% block home_active %} class="active" {% endblock %}
+
+{% block content %}
+    <div class="error-wrapper">
+        <i class="icon-404"></i>
+        <h1>500</h1>
+        {% if messages_error %}
+            <h2>Error processing the request.</h2>
+            <h2>{{ messages_error|linebreaksbr }}</h2>.
+        {% else %}
+            <h2>Error processing the request.</h2>
+        {% endif %}
+    </div>
+{% endblock %}
+
+
+

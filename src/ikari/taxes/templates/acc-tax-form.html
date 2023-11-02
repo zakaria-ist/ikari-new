@@ -1,0 +1,708 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <style>
+        .hide_column {
+            display : none;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}{% if tax.id == None %}
+    Add Tax {% else %} Edit Tax
+{% endif %}{% endblock %}
+{% block acc_tax_active %}active{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block com_tax_services_a_active %}active{% endblock %}
+{% block com_tax_services_i_active %}active{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                {% if tax.id == None %}
+                    Add Tax {% else %} Edit Tax
+                {% endif %}
+            </header>
+            <div class="panel-body">
+
+                <form class="form-horizontal"
+                    {% if tax.id == None %}
+                        action="{% url 'tax_add' 2 %}"
+                    {% else %}
+                        action="{% url 'tax_edit' tax.id 2 %}"
+                    {% endif %}
+                    role="form" method="POST" onsubmit="return checkForm(this);" enctype="multipart/form-data"> {# PAGE_TYPE['Accounting']#}
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label for="code" class="col-lg-2 col-sm-2 control-label">Tax Code</label>
+                        <div class="col-lg-8">
+                        <input type="hidden" name="distribution_code_id" id="distribution_code_id" value="{{ tax.distribution_code_id }}">
+                            {{ form.code }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="description" class="col-lg-2 col-sm-2 control-label">Description<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-8">
+                            {{ form.name }}
+                            <span class="messages">{{ form.errors.name }}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Tax Short-Name</label>
+                        <div class="col-lg-8">
+                            {{ form.shortname }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="rate" class="col-lg-2 col-sm-2 control-label">Tax Rate<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-3">
+                            {{ form.rate }}
+                            <span class="messages">{{ form.errors.rate }}</span>
+                        </div>
+                        <label for="number" class="col-lg-2 col-sm-2 control-label">Tax Group</label>
+                        <div class="col-lg-3">
+                            {{form.tax_group}}
+                            <span class="messages">{{ form.errors.tax_group }}</span>
+                        </div>
+                    </div>
+                    <!-- addtional fields from the old system -->
+                    <div class="form-group ">
+                        <label for="tax_account_code" class="col-lg-2 col-sm-2 control-label">Tax Account Code</label>
+                        <div class="col-lg-2">
+                            {{ form.tax_account_code }}
+                        </div>
+                        <div class="col-lg-1 col-sm-2">
+                            <button id="btnSearchAccount" type="button" class="btn btn-info" data-toggle="modal"
+                                    href="#AccountListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                        <div class="col-lg-5 col-sm-2">
+                            <input id="id_account_name" name="account_name" class="form-control"
+                                    {% if tax.id %} value="{{ tax.tax_account_code.name }}" {% endif %} disabled>
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="number" class="col-lg-2 col-sm-2 control-label">Tax Class</label>
+                        <div class="col-lg-2">
+                            {{ form.number }}
+                            <select id="id_number_select" class="form-control" name="id_number_select">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            </select>
+                            
+                        </div>
+                        <div class="col-lg-1"></div>
+                        <div class="col-lg-5 col-sm-2">
+                            <input id="number_name" name="number_name" class="form-control"
+                                value="" disabled>
+                        </div>
+                        <!-- id_number -->
+
+                        <!-- <label for="distribution" class="col-lg-2 col-sm-2 control-label">Tax Class</label>
+                        <div class="col-lg-2">
+                            {{ form.distribution_code }}
+                        </div>
+                        <div class="col-lg-1 col-sm-1">
+                            <button id="btnSearchDisCode" type="button" class="btn btn-info" data-toggle="modal"
+                                    href="#DisCodeListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                        <div class="col-lg-5">
+                            <input id="id_distribution_name" name="distribution_name" class="form-control"
+                                  {% if tax.id %} value="{{ tax.distribution_code.name }}" {% endif %} disabled>
+                        </div> -->
+                    </div>
+                    <div class="form-group ">
+                        <label for="tax_authority" class="col-lg-2 col-sm-2 control-label">Tax Authority</label>
+                        <div class="col-lg-2">
+                            <select id="tax_authority" class="form-control" name="tax_authority">
+                                <option value=""></option>
+                                {% for tx_auth in tax_authority_list %}
+                                    {% if tax.tax_authority_id == tx_auth.id %}
+                                        <option value="{{tx_auth.id}}" data-txauth_name="{{tx_auth.name}}" selected="selected">{{tx_auth.code}}</option>
+                                    {% else %}
+                                        <option value="{{tx_auth.id}}" data-txauth_name="{{tx_auth.name}}">{{tx_auth.code}}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-lg-1 col-sm-1">
+                            <button id="btnSearchTaxAuthority" type="button" class="btn btn-info" data-toggle="modal"
+                                    href="#TaxAuthorityListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                        <div class="col-lg-5">
+                            <input id="tax_authority_name" name="tax_authority_name" class="form-control"
+                                  {% if tax.id %} value="{{ tax.tax_authority.name }}" {% endif %} disabled>
+                        </div>
+                    </div>
+                    {% comment %} <div class="form-group ">
+                        <label for="tax_group" class="col-lg-2 col-sm-2 control-label">Tax Group</label>
+                        <div class="col-lg-2">
+                            <select id="tax_group" class="form-control" name="tax_group">
+                                <option value=""></option>
+                                {% for tx_group in tax_group_list %}
+                                    {% if tax.tax_group_id == tx_group.id %}
+                                        <option value="{{tx_group.id}}" data-txgrp_name="{{tx_group.name}}" selected="selected">{{tx_group.name}}</option>
+                                    {% else %}
+                                        <option value="{{tx_group.id}}" data-txgrp_name="{{tx_group.name}}">{{tx_group.name}}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-lg-1 col-sm-1">
+                            <button id="btnSearchTaxGroup" type="button" class="btn btn-info" data-toggle="modal"
+                                    href="#TaxGroupListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                        <div class="col-lg-5">
+                            <input id="tax_group_name" name="tax_group_name" class="form-control"
+                                  {% if tax.id %} value="{{ tax.tax_group.name }}" {% endif %} disabled>
+                        </div>
+                    </div> {% endcomment %}
+                    <div class="form-group">
+                        <label for="number" class="col-lg-2 col-sm-2 control-label">Last Update</label>
+                        <div class="col-lg-8">
+                            {{ form.update_date }}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" name="btnSave" class="btn btn-success">Save</button>
+                            {% if 'taxes.delete_tax' in user.get_all_permissions %}
+                                <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger"
+                                   {% if tax.id == None %}style="display: none"{% endif %}>Delete</a>
+                            {% endif %}
+                            <a class="btn btn-default" href="{% url 'acc_tax_list' %}">Cancel</a>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+                 class="modal fade">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                            <h4 class="modal-title">Delete Confirm Dialog</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form role="form" action="{% url 'tax_delete' tax.id 2 %}" method="post"> {# PAGE_TYPE['Accounting']#}
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                                </div>
+                                <button type="submit" class="btn btn-success">OK</button>
+                                <a class="btn btn-default" href="{% url 'tax_edit' tax.id 2 %}">Cancel</a> {# PAGE_TYPE['Accounting']#}
+                            </form>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <div class="modal fade" id="AccountListModal" tabindex="-1" role="dialog"
+         aria-labelledby="AccountListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Account</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div id="account_error" class="messages"
+                             style="font-size: 12.5px !important;"></div>
+                    </div>
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="account-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Account Code</th>
+                                                    <th>Account Name</th>
+                                                    <th>Account Type</th>
+                                                    <th>Balance Type</th>
+                                                    <th>Account Group</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button id="btnAccountSelect" class="btn btn-success" type="button">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="DisCodeListModal" tabindex="-1" role="dialog"
+         aria-labelledby="DisCodeListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Distribute Code</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="dis-code-div">
+                                            <table id="dis-code-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Distribute Code</th>
+                                                    <th>Description</th>
+                                                    <th>G/L Account</th>
+                                                    <th>Select</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for dis_code_item in dis_code_list %}
+                                                    <tr class="gradeX">
+                                                        <td class="text-left">{{ dis_code_item.code }}</td>
+                                                        <td class="text-left">{{ dis_code_item.name }}</td>
+                                                        <td class="text-left">{{ dis_code_item.gl_account.code }}</td>
+                                                        <td>
+                                                            <input type="radio" name="dis-code-choices"
+                                                                   id="{{ dis_code_item.id }}" class="call-checkbox"
+                                                                   value="{{ dis_code_item }}">
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" id="btnDisCodeSelect">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="TaxGroupListModal" tabindex="-1" role="dialog"
+         aria-labelledby="TaxGroupListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Tax Group</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="tax-group-div">
+                                            <table id="tax-group-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Tax Group</th>
+                                                    <th>Description</th>
+                                                    <th>Transaction Type</th>
+                                                    <th>Tax Reporting Currency</th>
+                                                    <th>Tax Authority</th>
+                                                    <th>Select</th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" id="btnTaxGroupSelect">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="TaxAuthorityListModal" tabindex="-1" role="dialog"
+         aria-labelledby="TaxAuthorityListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Tax Authority</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="tax-authority-div">
+                                            <table id="tax-authority-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Tax Authority</th>
+                                                    <th>Description</th>
+                                                    <th>Tax Reporting Currency</th>
+                                                    <th>Tax Revocerable</th>
+                                                    <th>Revocerable Rate</th>
+                                                    <th>Revocerable Account</th>
+                                                    <th>Select</th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" id="btnTaxAuthoritySelect">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="application/javascript" src="{% static 'js/ga.js' %}"></script>
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+
+    <script>
+        $('#id_number_select').on('change',function(){ 
+            var id_number = $('#id_number_select').val();
+            if (id_number == 1){
+                $('#number_name').val("Standard Rate"); 
+            }
+            else if (id_number == 2){
+                $('#number_name').val("Zero Rate"); 
+            }
+            else if (id_number == 3){
+                $('#number_name').val("Exempted");
+            }
+            else if (id_number == 4){
+                $('#number_name').val("Out of Scope");
+            }
+        });
+
+        $(document).ready(function () {
+            $('#id_number_select').select2({
+                placeholder: "Select Class",
+            });
+            $('#id_number').addClass('hide');
+            var tax_class = $('#id_number').val();
+            $('#id_number_select').val(tax_class);
+            $('#id_number_select').val(tax_class).trigger('change');
+            $('#id_number_select').on('change', function () {
+                var sel = $( "#id_number_select" ).val();
+                $('#id_number').val(sel);
+            });
+            
+
+            var distribution_code_id = $('#distribution_code_id').val();
+            if(!distribution_code_id){
+                $("#id_distribution_code").val(0).trigger('change');
+            }else{
+                $("#id_distribution_code").val(distribution_code_id).trigger('change');
+            }
+            // Init of DataTable
+            $('#dis-code-table').DataTable({
+                iDisplayLength: 5,
+                bFilter: true,
+                bLengthChange: false
+            });
+
+            $('#id_distribution_code').select2({
+                placeholder: "Select Distribution Code ",
+            });
+
+            $('#id_tax_account_code').select2({
+                placeholder: "Select Account Code ",
+            });
+
+            $('#id_tax_group').select2({
+                placeholder: "Select Tax Group ",
+            });
+
+            $('#tax_authority').select2({
+                placeholder: "Select Tax Authority ",
+            });
+
+            $('#tax-group-table').dataTable({
+                "iDisplayLength": 5,
+                "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+                "order": [[1, "asc"]],
+                'columnDefs': [
+                    { targets: [1,2,3,4], orderable: false},
+                    { className: "text-left", targets: [ 0,1,2,3,4 ] }
+                ],
+                "serverSide": true,
+                "ajax": {
+                    "url": "{% url 'TaxGroupList__asJson' %}"
+                },
+                "columns": [
+                    {"data": "code"},
+                    {"data": "name"},
+                    {"data": "transaction_type"},
+                    {"data": "currency"},
+                    {"data": "tax_authority"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            var button_radio = '<input type="radio" name="tax_group_choises" data-txgrp_id="'+full['id']+'" value="'+full['name']+'">'
+                            return button_radio;
+                        }
+                    }
+                ]
+            });
+
+            $('#tax-authority-table').dataTable({
+                "iDisplayLength": 5,
+                "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+                "order": [[1, "asc"]],
+                'columnDefs': [
+                    { targets: [1,2,3,4], orderable: false},
+                    { className: "text-left", targets: [ 0,1,2,4,5 ] },
+                    { className: "text-center", targets: [ 3 ] },
+                ],
+                "serverSide": true,
+                "ajax": {
+                    "url": "{% url 'TaxAuthorityList__asJson' %}"
+                },
+                "columns": [
+                    {"data": "code"},
+                    {"data": "name"},
+                    {"data": "currency"},
+                    {
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            if (full.is_recoverable == true) {
+                                var mSpan = '<span class="label label-success label-mini">Yes</span>'
+                                return mSpan
+                            }
+                            else {
+                                var mSpan = '<span class="label label-danger label-mini">No</span>'
+                                return mSpan
+                            }
+                        }
+                    },
+                    {"data": "recoverable_rate"},
+                    {"data": "recoverable_account"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "sClass": "hide_column",
+                        "render": function (data, type, full, meta) {
+                            var button_radio = '<input type="radio" name="tax_authority_choises" data-txauth_id="'+full['id']+'" value="'+full['name']+'">'
+                            return button_radio;
+                        }
+                    }
+                ]
+            });
+
+            $('#tax-authority-table').on( 'draw.dt', function () {
+                selectTableRow('#tax-authority-table', 6);
+                $("input[type='radio']").each(function () {
+                    $(this).closest('tr').css('background-color', '#f9f9f9');
+                });
+            });
+
+            $('#btnTaxGroupSelect').on('click', function () {
+                var item_select_id = $("input[name='tax_group_choises']:checked").attr('id');
+                var nRow = $("input[name='tax_group_choises']:checked").parents('tr')[0];
+                var jqInputs = $('td', nRow);
+                $('#tax_group').find('option:selected').removeAttr('selected');
+                $('#tax_group option[value=' + item_select_id + ']').attr('selected', 'selected');
+                $('#tax_group').val(item_select_id);
+                $('#select2-tax_group-container').attr('title', jqInputs[0].innerText);
+                $('#select2-tax_group-container').text(jqInputs[0].innerText);
+                $('#tax_group_name').val('');
+                $('#tax_group_name').val(jqInputs[1].innerText);
+                $(this).attr('data-dismiss', 'modal');
+            });
+
+            $('#tax_group').on('change', function () {
+                var item_select_name = $("#tax_group option:selected").data('txgrp_name');
+                $('#tax_group_name').val('');
+                $('#tax_group_name').val(item_select_name);
+            });
+
+            $('#btnTaxAuthoritySelect').on('click', function () {
+                var item_select_id = $("input[name='tax_authority_choises']:checked").attr('id');
+                var nRow = $("input[name='tax_authority_choises']:checked").parents('tr')[0];
+                var jqInputs = $('td', nRow);
+                $('#tax_authority').find('option:selected').removeAttr('selected');
+                $('#tax_authority option[value=' + item_select_id + ']').attr('selected', 'selected');
+                $('#tax_authority').val(item_select_id);
+                $('#select2-tax_authority-container').attr('title', jqInputs[0].innerText);
+                $('#select2-tax_authority-container').text(jqInputs[0].innerText);
+                $('#tax_authority_name').val('');
+                $('#tax_authority_name').val(jqInputs[1].innerText);
+                $(this).attr('data-dismiss', 'modal');
+            });
+
+            $('#tax_authority').on('change', function () {
+                var item_select_name = $("#tax_authority option:selected").data('txauth_name');
+                $('#tax_authority_name').val('');
+                $('#tax_authority_name').val(item_select_name);
+            });
+
+            $('#btnDisCodeSelect').on('click', function () {
+                var item_select_id = $("input[name='dis-code-choices']:checked").attr('id');
+                var nRow = $("input[name='dis-code-choices']:checked").parents('tr')[0];
+                var jqInputs = $('td', nRow);
+
+                $('#id_distribution_code').find('option:selected').removeAttr('selected');
+                $('#id_distribution_code option[value=' + item_select_id + ']').attr('selected', 'selected');
+                $('#id_distribution_code').val(item_select_id);
+
+                $('#select2-id_distribution_code-container').attr('title', jqInputs[0].innerText);
+                $('#select2-id_distribution_code-container').text(jqInputs[0].innerText);
+
+                $('#id_distribution_name').val('');
+                $('#id_distribution_name').val(jqInputs[1].innerText);
+
+                $(this).attr('data-dismiss', 'modal');
+            });
+
+            $('#id_distribution_code').on('change', function () {
+                var dis_id = parseInt($('#id_distribution_code').val());
+                $.ajax({
+                    method: "POST",
+                    url: '/suppliers/load_dis_code/',
+                    dataType: 'JSON',
+                    data: {
+                        'dis_id': dis_id,
+                    },
+                    success: function (json) {
+                        $('#id_distribution_name').val('');
+                        $('#id_distribution_name').val(json.name);
+                    }
+                });
+            });
+
+            $('#id_tax_account_code').on('change', function () {
+                var account_id = parseInt($('#id_tax_account_code').val());
+                $.ajax({
+                    method: "POST",
+                    url: '/accounts/load_account/',
+                    dataType: 'JSON',
+                    data: {
+                        'account_id': account_id,
+                    },
+                    success: function (json) {
+                        $('#id_account_name').val('');
+                        $('#id_account_name').val(json.name);
+                    }
+                });
+            });
+
+            $('#btnSearchAccount').on('click', function () {
+
+                $('#account-table').DataTable().destroy();
+                $('#account-table').dataTable({
+                    "iDisplayLength": 10,
+                    //"bLengthChange": false,
+                    "order": [[0, "desc"]],
+                    "serverSide": true,
+                    "ajax": {
+                        "url": "/accounts/list/pagination/"
+                    },
+                    "columns": [
+                        {"data": "code", "sClass": "text-left"},
+                        {"data": "name", "sClass": "text-left"},
+                        {"data": "account_type", "sClass": "text-left"},
+                        {"data": "balance_type", "sClass": "text-left"},
+                        {"data": "account_group", "sClass": "text-left hide_column"},
+                        {
+                            "orderable": false,
+                            "data": null,
+                            "sClass": "hide_column",
+                            "render": function (data, type, full, meta) {
+                                return '<input type="radio" name="account-choices" id="' +
+                                        full.id + '" class="call-checkbox" value="' + meta.row + '">';
+                            }
+                        }
+                    ]
+                });
+            });
+
+            $('#account-table').on( 'draw.dt', function () {
+                selectTableRow('#account-table', 5);
+                $("input[type='radio']").each(function () {
+                    $(this).closest('tr').css('background-color', '#f9f9f9');
+                });
+            });
+
+            $('#btnAccountSelect').on('click', function () {
+
+                var item_select_id = $("input[name='account-choices']:checked").attr('id');
+                var nRow = $("input[name='account-choices']:checked").parents('tr')[0];
+                var jqInputs = $('td', nRow);
+
+
+                $('#id_tax_account_code').find('option:selected').removeAttr('selected');
+                $('#id_tax_account_code option[value=' + item_select_id + ']').attr('selected', 'selected');
+                $('#id_tax_account_code').val(item_select_id);
+
+                $('#select2-id_tax_account_code-container').attr('title', jqInputs[0].innerText);
+                $('#select2-id_tax_account_code-container').text(jqInputs[0].innerText);
+
+                $('#id_account_name').val('');
+                $('#id_account_name').val(jqInputs[1].innerText);
+
+                $(this).attr('data-dismiss', 'modal');
+            });
+        });
+    </script>
+{% endblock %}

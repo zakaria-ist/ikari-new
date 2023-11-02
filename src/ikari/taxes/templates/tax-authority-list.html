@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <style>
+        td.dt-center { text-align: center; }
+        td.dt-right { text-align: right; }
+    </style>
+{% endblock %}
+
+{% block title %}Tax Authority{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block com_tax_services_a_active %}active{% endblock %}
+{% block com_tax_services_i_active %}active{% endblock %}
+{% block com_tax_auth_active %}active{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    Tax Authority
+                    <span class="tools pull-right">
+                        {% if request.session.staff_admin %}
+                            <a class="btn btn-success start" href="{% url 'tax_authority_add' %}">
+                                <i class="glyphicon glyphicon-plus"></i>
+                                <span>Add new</span>
+                            </a>
+                        {% endif %}
+                    </span>
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table">
+                        <table class="display table table-bordered table-striped"
+                               id="dynamic-table" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Last Maintained</th>
+                                <th>Tax Authority</th>
+                                <th>Description</th>
+                                <th>Tax Reporting Currency</th>
+                                <th>Tax Recoverable</th>
+                                <th>Recoverable Rate</th>
+                                <th>Recoverable Account</th>
+                                {% if request.session.staff_admin %}
+                                    <th class="text-center">Edit</th>
+                                {% endif %}
+                            </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <!--dynamic table initialization -->
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#dynamic-table').dataTable({
+                "order": [[1, "asc"]],
+                "scrollX": true,
+                'columnDefs': [
+                    { targets: [1,2,3,4,5,6], orderable: false},
+                    { targets: [4], className: "dt-center"},
+                    { targets: [5], className: "dt-right"}
+                ],
+                "serverSide": true,
+                "ajax": {
+                    "url": "{% url 'TaxAuthorityList__asJson' %}"
+                },
+                "columns": [
+                    {"data": "update_date"},
+                    {"data": "code"},
+                    {"data": "name"},
+                    {"data": "currency"},
+                    {
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            if (full.is_recoverable == true) {
+                                var mSpan = '<span class="label label-success label-mini">Yes</span>'
+                                return mSpan
+                            }
+                            else {
+                                var mSpan = '<span class="label label-danger label-mini">No</span>'
+                                return mSpan
+                            }
+                        }
+                    },
+                    {"data": "recoverable_rate"},
+                    {"data": "recoverable_account"},
+                    {% if request.session.staff_admin %}
+                        {
+                            "className": "text-center",
+                            "orderable": false,
+                            "data": null,
+                            "render": function (data, type, full, meta) {
+                                var button_edit = '<a href="/taxes/tax_authority_edit/' + full.id + '/" class="fa fa-pencil fa-lg btn btn-primary btn-sm"></a> ';
+                                return button_edit;
+                            }
+                        }
+                    {% endif %}
+                ]
+            });
+        });
+
+    </script>
+{% endblock %}
+
+

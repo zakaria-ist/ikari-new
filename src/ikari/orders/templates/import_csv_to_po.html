@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <style>
+        .hide_column {
+            display: none;
+        }
+    </style>
+{% endblock %}
+{% block title %} Import CSV{% endblock %}
+{% block parent_order_a_active %}active{% endblock %}
+{% block parent_order_i_active %}active{% endblock %}
+{% block document_entry_a_active %}active{% endblock %}
+{% block document_entry_i_active %}active{% endblock %}
+
+{% block order_purchase_active %}active{% endblock %}
+
+
+{% block content %}              
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading"> {# ORDER_TYPE['SALES ORDER'] #}
+                    Import P/O Order
+                <span class="tools pull-right">
+                    <a href="javascript:;" class="fa fa-chevron-down"></a>
+                </span>
+            </header>
+            
+            <div class="panel-body">
+                <form class="form-horizontal" role="form" method="post" id="form"  onsubmit="return checkForm(this);"
+                    action="{% url 'create_po_from_csv' %}" enctype="multipart/form-data">
+                    {% csrf_token %} 
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-6">
+                            <div class="form-group">
+                                <label class="control-label col-lg-4 col-sm-4">Upload CSV File</label>
+                                <div class="col-md-8">
+                                    <div id="template-container">
+                                        <input type="file" id="po_template" name="po_template" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="transaction_code" class="col-lg-4 col-sm-4 control-label">Transaction Code:</label>
+                                <div class="col-lg-8">
+                                    <input class="form-control form-control-inline input-medium" id="transaction_code" name="transaction_code" type="text" value="P/O" disabled>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="select_supplier" class="col-lg-4 col-sm-4 control-label">Default Supplier:<span
+                                        class="span-required">(*)</span></label>
+                                <div class="col-lg-8 col-sm-8" >
+                                    <select id="id_select_supplier" class="form-control" name="select_supplier">
+                                        <option data-code_data="" value="">Select Supplier</option>
+                                        {% for code in customers %}
+                                        <option data-code_data="" value="{{ code.0 }}">{{ code.1 }}</option>
+                                        {% endfor %}
+                                    </select> 
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="document_date" class="col-lg-4 col-sm-4 control-label">P/O date:<span
+                                        class="span-required">(*)</span></label>
+                                <div class="col-lg-8 col-sm-8">
+                                    <input class="form-control form-control-inline input-medium" id="document_date" name="document_date" type="text" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-md-4"></div>
+                                <div class="col-md-8" style="text-align: center">
+                                    <button type="submit" class="btn btn-success" id="btnSave" name="btnSave">Process</button>
+                                    <a type="submit" class="btn btn-default" href="{% url 'order_list' 2 %}">Cancel</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+        <section class="panel">
+            <div id="fail-div" class="col-lg-offset-1 adv-table table-responsive" style="display: none; width:80%;">
+                <label class="col-lg-offset-5 control-label" style="font-size: 25px;">Fail List:</label>
+                <table class="display table table-bordered table-striped table-condensed"
+                        id="fail-table" style="width:100%;">
+                    <thead>
+                        <tr>
+                            <th class="text-center">CSV Line</th>
+                            <th class="text-center">Document Date</th>
+                            <th class="text-center">Refer Number</th>
+                            <th class="text-center">Refer Line</th>
+                            <th class="text-center">Customer PO No.</th>
+                            <th class="text-center">Part No.</th>
+                            <th class="text-center">Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in fail_list%}
+                        <tr>
+                            <td class="text-center">{{ row.0 }}</td>
+                            <td class="text-center">{{ row.1 }}</td>
+                            <td class="text-center">{{ row.2 }}</td>
+                            <td class="text-center">{{ row.3 }}</td>
+                            <td class="text-right">{{ row.4 }}</td>
+                            <td class="text-center">{{ row.5 }}</td>
+                            <td class="text-right">{{ row.6 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+{% endblock %}
+
+{% block extrafoot %}
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script> 
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var fail = '{{fail}}';
+            if (fail == 'True') {
+                $('#fail-div').css('display', 'block');
+            } else {
+                $('#fail-div').css('display', 'none');
+            }
+
+            var failtbl = $('#fail-table').DataTable(
+                {
+                    
+                }
+            );
+        
+            $('#id_select_supplier').select2({
+                placeholder: "Select Supplier",
+                allowClear: true,
+            });
+
+            $('#btnSave').prop('disabled', true);
+        });
+
+        $('#po_template').on('change', function(e){
+            var file = $('#po_template')[0].files[0]
+            if (file) {
+                console.log(file.name);
+                var ext = file.name.split('.').pop();
+                if(ext != 'csv' && ext != 'CSV') {
+                    pop_info_dialog("Failed", "Wrong Extension", "Failed");
+                    $('#po_template').val(null);
+                } else {
+                    if ($('#id_select_supplier').val()) {
+                        $('#btnSave').prop('disabled', false);
+                    }
+                }
+            } else {
+                $('#btnSave').prop('disabled', true);
+            }
+        });
+
+        $('#id_select_supplier').on('change', function(){
+            if ($('#id_select_supplier').val()) {
+                var file = $('#po_template')[0].files[0]
+                if (file) {
+                    $('#btnSave').prop('disabled', false);
+                }
+            } else {
+                $('#btnSave').prop('disabled', true);
+            }
+        });
+
+        $('#document_date').on('change', function() {
+            var date_from = get_date_from("#document_date");
+            date_from = date_from.split('/').join('-');
+            var date_from_valid = moment(date_from, "DD-MM-YYYY", true).isValid();
+            if (!date_from_valid){
+                $("#document_date").val(moment().format("DD-MM-YYYY"));
+            }
+        });
+
+        $('#document_date').keyup(function(event){
+            adjust_input_date(this);
+        });
+
+
+        
+    </script>
+
+{% endblock %}

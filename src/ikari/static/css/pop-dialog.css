@@ -1,0 +1,43 @@
+#dialog-modal p{
+    margin: 0px;
+    font-size: 18px;
+}
+.ui-dialog-buttonset .ui-button-text-only .ui-button-text {
+    display: block;
+}
+
+.ui-button-icon-only .ui-icon {
+    left: 0px;
+    margin-left: 0px;
+}
+
+.ui-widget-content {
+    border: 1px solid rgba(255, 255, 255, .15) !important;
+    max-height: 600px !important;
+    background: #eee !important;
+    overflow-y: hidden !important;
+    color: #000000;
+}
+
+.ui-dialog {
+    box-shadow: 1px 1px 1px 1px;
+    
+}
+
+.dialog-modal {
+    z-index: 9999;
+}
+
+/* .no-close .ui-dialog-titlebar-close {
+    display: none;
+} */
+
+.ui-dialog-title {
+    font-size: 18px;
+}
+
+.ui-widget-header {
+    border: none;
+    background: none;
+    color: #999999; 
+}

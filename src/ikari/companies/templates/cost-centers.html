@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+  <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}
+{% if costcenters.id == None %}
+    Add Cost Centers
+{% else %}
+    Edit Cost Centers
+{% endif %}
+{% endblock %}
+
+{% block cost_center_active %}
+{% if menu_type == '0'%} {# TRN_CODE_TYPE_DICT['Global'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_system_setting_a_active %}
+{% if menu_type == '0'%} {# TRN_CODE_TYPE_DICT['Global'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_system_setting_i_active %}
+{% if menu_type == '0'%} {# TRN_CODE_TYPE_DICT['Global'] #}
+    active
+{% endif %}
+{% endblock %}
+
+
+{% block parent_order_a_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_order_i_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_a_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_i_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block cost_center_sp_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                {% if costcenters.id == None %} Add Cost Centers
+                {% else %} Edit Cost Centers {% endif %}
+            </header>
+            <div class="panel-body">
+
+                <form class="form-horizontal"
+                        {% if costcenters.id == None %} action="{% url 'cost_centers_add' menu_type %}"
+                        {% else %} action="{% url 'cost_centers_edit' costcenters.id menu_type %}" {% endif %}
+                      role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+{#                    <div class="form-group">#}
+{#                        <label for="code" class="col-lg-2 col-sm-2 control-label">Code Type</label>#}
+{#                        <div class="col-lg-3">#}
+{#                           <select id="code_type" class="form-control" >#}
+{#                           <option>Cost Center</option>#}
+{#                           </select>#}
+{#                        </div>#}
+{#                    </div>#}
+                    <div class="form-group">
+                        <label for="code" class="col-lg-2 col-sm-2 control-label">Code<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-3">
+                            {{ form.code }}
+                            <span class="messages">{{ form.errors.code }}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Name</label>
+                        <div class="col-lg-3">
+                            {{ form.name }}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description" class="col-lg-2 col-sm-2 control-label">Description</label>
+                        <div class="col-lg-3">
+                            {{ form.description }}
+                        </div>
+                    </div>
+                    {% if costcenters.id %}
+                        <div class="form-group">
+                            <label for="name" class="col-lg-2 col-sm-2 control-label"><i>Last Update*</i></label>
+                            <div class="col-lg-3">
+                                <input type="text" class="form-control" id="name" name="name" disabled="true"
+                                       value="{{ costcenters.update_date }}">
+                            </div>
+                        </div>
+                    {% endif %}
+                    <!-- <div class="form-group">
+                        <label for="inputPassword1" class="col-lg-2 col-sm-2 control-label"></label>
+                        <div class="col-lg-10">
+                            <div class="checkbox checkbox-primary">
+                                <input name="IsActive" id="IsActive" class="styled" type="checkbox"
+                                       {% if costcenters.is_active %}checked{% endif %}/>
+                                <label for="IsActive">
+                                    Active
+                                </label>
+                            </div>
+                        </div>
+                    </div> -->
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" name="btnSave" class="btn btn-success">Save</button>
+                            {% if 'companies.delete_costcenters' in user.get_all_permissions %}
+                                <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger"
+                                   {% if costcenters.id == None %}style="display: none"{% endif %}>Delete</a>
+                            {% endif %}
+
+                            {% if menu_type = '0' %} {# TRN_CODE_TYPE_DICT['Global'] #}
+                                <a class="btn btn-default" href="{% url 'cost_centers_list' %}" >Cancel</a>
+                            {% else %}
+                                <a class="btn btn-default" href="{% url 'cost_centers' %}" >Cancel</a>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+                 class="modal fade">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                            <h4 class="modal-title">Delete Confirm Dialog</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form role="form" action="{% url 'cost_centers_delete' costcenters.id %}" method="post">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                                </div>
+                                <button type="submit" class="btn btn-success">OK</button>
+                                <a class="btn btn-default"
+                                   href="{% url 'cost_centers_edit' costcenters.id menu_type %}">Cancel</a>
+                            </form>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="application/javascript" src="{% static 'js/ga.js' %}?{% now 'H' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#code_type').select2();
+            $(document).on('keyup', '.select2-selection.select2-selection--single', function (e) {
+                var keycode = (e.keyCode ? e.keyCode : e.which);
+                if(keycode == '9'){
+                    $(this).closest(".select2-container").siblings('select:enabled').select2('open');
+                }
+            });
+            $('#code_type').on('select2:close', function () {
+                $('#id_code').focus();
+            });
+
+            var cost_id = '{{costcenters.id}}';
+            if (cost_id == 'None') {
+                $('#id_code').focus();
+            } else {
+                $('#id_name').focus();
+            }
+        });
+    </script>
+{% endblock %}

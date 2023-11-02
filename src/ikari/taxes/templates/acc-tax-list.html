@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <style>
+        .hide_column, .ui-helper-hidden-accessible {
+            display: none;
+        }
+
+    </style>
+{% endblock %}
+
+{% block title %}Tax List{% endblock %}
+{% block acc_tax_active %}active{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block com_tax_services_a_active %}active{% endblock %}
+{% block com_tax_services_i_active %}active{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    Tax List
+                    <span class="tools pull-right">
+                        {% if request.session.staff_admin %}
+                            <a class="btn btn-success start" href="{% url 'tax_add' 2 %}"> {# PAGE_TYPE['Accounting']#}
+                                <i class="glyphicon glyphicon-plus"></i>
+                                <span>Add new</span>
+                            </a>
+                        {% endif %}
+                    </span>
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table">
+                        <table class="display table table-bordered table-striped"
+                               id="dynamic-table" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Update Date</th>
+                                <th>Code</th>
+                                <th>Description</th>
+                                <th>Rate</th>
+                                <th>Tax Account Code</th>
+                                <th>Tax Class</th>
+                                <th>Tax Type</th>
+                                <th>Mth to Date G/L</th>
+                                <th>Yer to Date G/L</th>
+                                <th>Mth to Date Doc</th>
+                                <th>Yer to Date Doc</th>
+                                {% if request.session.staff_admin %}
+                                    <th class="text-center">Edit</th>
+                                {% endif %}
+                            </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <!--dynamic table initialization -->
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var hdIdJson = $('#hdIdJson').val();
+            $('#dynamic-table').dataTable({
+                "order": [[0, "desc"]],
+                "scrollX": true,
+                stateSave: true,
+                'columnDefs': [
+                    {
+                        className: "hide_column",
+                        targets: [1, 6, 7, 8, 9, 10],
+                    }
+                ],
+                "serverSide": true,
+                "ajax": {
+                    "url": "{% url 'TaxList__asJson' %}"
+                },
+                "columns": [
+                    {"data": "update_date"},
+                    {"data": "code"},
+                    {"data": "name"},
+                    {"data": "rate"},
+                    {"data": "tax_account_code"},
+                    {"data": "number"},
+                    {"data": "tax_type"},
+                    {"data": "mtd"},
+                    {"data": "ytd"},
+                    {"data": "mtdoc"},
+                    {"data": "ytdoc"},
+                    {% if request.session.staff_admin %}
+                        {
+                            "className": "text-center",
+                            "orderable": false,
+                            "data": null,
+                            "render": function (data, type, full, meta) {
+                                var button_edit = '<a href="/taxes/edit/' + full.id + '/2/" class="fa fa-pencil fa-lg btn btn-primary btn-sm"></a> ';
+                                return button_edit;
+                            }
+                        }
+                    {% endif %}
+                ]
+            });
+        });
+
+    </script>
+{% endblock %}
+
+

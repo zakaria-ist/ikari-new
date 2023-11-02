@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap3-editable/css/bootstrap-editable.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <!-- Datatables -->
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+
+    <style type="text/css">
+        .hand {
+            cursor: pointer;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}
+    Create Migration
+{% endblock %} 
+
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+
+{% block parent_com_a_active %}
+    active
+{% endblock %}
+
+{% block createmigration_active %}
+    active
+{% endblock %}
+
+{% block content %}
+<div class="col-lg-14">
+    <section class="panel">
+        <header class="panel-heading">
+            Migration
+        </header>
+        <div class="panel-body">
+            <div class="row">
+                <form class="form-horizontal">
+                    <div class="col-lg-3">
+                        <div class="form-group">
+                            <div class="col-lg-3">
+                                <label for="code" class="control-label">GL Types</label>
+                            </div>
+                            <div class="col-lg-8">
+                                <select class="form-control" id="type" name="type">
+                                        <!-- {% for account_code in account_list %}
+                                           
+                                        {% endfor %} -->
+                                        <option value="opening">
+                                            Opening
+                                        </option>
+                                        <option value="netchange">
+                                            Net Change
+                                        </option>
+                                        <option value="closing">
+                                            Closing
+                                        </option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                            <div class="form-group">
+                                <div class="col-lg-3">
+                                    <label for="code" class="control-label">Year</label>
+                                </div>
+                                <div class="col-lg-8">
+                                    <select class="form-control" id="year" name="year">
+                                        {% for year in year_list %}
+                                            {% if year.period_year == this_year %}
+                                                <option value="{{ year.period_year }}" selected="selected">
+                                                    {{ year.period_year }}
+                                                </option>
+                                            {% else %}
+                                                <option value="{{ year.period_year }}">
+                                                    {{ year.period_year }}
+                                                </option>
+                                            {% endif %}
+                                        {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="form-group">
+                            <div class="col-lg-3">
+                                <label for="code" class="control-label">Month</label>
+                            </div>
+                            <div class="col-lg-8">
+                                <select class="form-control" id="month" name="month">
+                                    {% for month in month_list %}
+                                        <option value="{{ month }}">
+                                            {{ month }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <button id="btnCreateMigration" class="btn btn-success" type="button">Create Migration</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+
+
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+{% endblock %}
+
+{% block js %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}?{% now 'H' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script>
+        /* Load select 2 */
+        $('select').select2();
+
+        /* When closing the month can't be changed */
+        $('#type').on('change',function() {
+            if ($(this).val() == 'closing') {
+                $('#month').val('12').trigger('change').prop('disabled', true);    
+            }
+            else if ($(this).val() == 'netchange'){
+                $("#month option[value='CLS']").prop('disabled', true);
+                $('#month').prop('disabled', false);
+                $('#month').select2();
+            }
+            else {
+                $("#month option[value='CLS']").prop('disabled', false);
+                $('#month').prop('disabled', false);
+                $('#month').select2();
+            }
+        });
+
+        /* Create Migration button*/
+        $('#btnCreateMigration').on('click', function () {
+            $('#loading').show();
+            var type = $('#type').val();
+            var year = $('#year').val();
+            var month = $('#month').val();
+            if (type=='closing') {
+                window.location.href =  "{% url 'create_migration' %}"+type+'/'+year+'/';
+            }
+            else {
+                window.location.href =  "{% url 'create_migration' %}"+type+'/'+year+'/'+month+'/';
+            }
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,530 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <style>
+        .disabled {
+            pointer-events: none;
+            cursor: not-allowed;
+            background-color: #eee;
+        }
+        #stockItemModal {
+             line-height: 2;
+        }
+        #stockItemModal label{
+            float: left;
+            font-weight: 700;
+            padding-top: 5px;
+        }
+        #stockItemModal .col-lg-8 {
+            padding-bottom: 10px;
+        }
+
+        .required-span {
+            color: red;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}Stock Transaction Add{% endblock %}
+
+{% block inv_setting_a_active %}active{% endblock %}
+{% block inv_setting_i_active %}active{% endblock %}
+{% block inv_document_entry_a_active %}active{% endblock %}
+{% block inv_document_entry_i_active %}active{% endblock %}
+{% block inv_stock_transaction_active %}active{% endblock %}
+
+{% block content %}
+    <form class="form-horizontal" role="form" method="post" onsubmit="return checkForm(this);" id="form"
+          {% if stock_trans_id %}
+            action="{% url 'stock_transaction_edit' stock_trans_id 0 %}"
+          {% else %}
+            action="{% url 'stock_transaction_add' 0 %}"{% endif %}
+          enctype="multipart/form-data"> {# 0 = is_send #}
+        {% csrf_token %}
+        <div class="col-lg-12">
+            <section class="panel">
+                <header class="panel-heading">
+                    <strong>Add Stock Transaction</strong>
+                </header>
+                <div class="panel-body">
+                    <div class="form-group ">
+                        <label for="transaction_code" class="col-lg-2 col-sm-2 control-label">Transaction Code<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-4">
+                            <div class="col-lg-8" style="padding: 0;">
+                                {{ form.transaction_code }}
+                            </div>
+                            <div class="col-lg-4">
+                                <button id="btnSearchTransCode" tabindex="-1" type="button" class="btn btn-info"
+                                        data-toggle="modal" href="#modalTransaction">
+                                    <i class="fa fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <label for="document_date" class="col-lg-2 col-sm-2 control-label">Issue Date</label>
+                        <div class="col-lg-4">
+                            {{ form.document_date_fake }}{{ form.document_date }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="document_number" class="col-lg-2 col-sm-2 control-label">Document Number</label>
+                        <div class="col-lg-4">
+                            {{ form.document_number }}
+                        </div>
+                        <label for="currency" class="col-lg-2 col-sm-2 control-label">Currency</label>
+                        <div class="col-lg-4">
+                            {{ form.currency_id }}
+                            {{ form.currency }}
+                        </div>
+                    </div>
+                    <div class="form-group ">
+
+                        <label for="in_location" class="col-lg-2 col-sm-2 control-label">In Location</label>
+                        <div class="col-lg-4">
+                            <div class="col-lg-8" style="padding: 0;">
+                                {{ form.in_location }}
+                            </div>
+                            <div class="col-lg-4">
+                                <button id="btnSearchInLocation" tabindex="-1" type="button" class="btn btn-info"
+                                        data-toggle="modal">
+                                    <i class="fa fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+
+
+                        <label for="io_flag" class="col-lg-2 col-sm-2 control-label">Stock I/O Flag</label>
+                        <div class="col-lg-4">
+                            {{ form.io_flag }}
+                            {{ form.io_flag_name }}
+                        </div>
+                    </div>
+                    <div class="form-group ">
+
+                        <label for="out_location" class="col-lg-2 col-sm-2 control-label">Out Location</label>
+                        <div class="col-lg-4">
+                            <div class="col-lg-8" style="padding: 0;">
+                                {{ form.out_location }}
+                            </div>
+                            <div class="col-lg-4">
+                                <button id="btnSearchOutLocation" tabindex="-1" type="button" class="btn btn-info"
+                                        data-toggle="modal">
+                                    <i class="fa fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+
+
+                        <label for="price_flag" class="col-lg-2 col-sm-2 control-label">Pricing Flag</label>
+                        <div class="col-lg-4">
+                            {{ form.price_flag }}
+                            {{ form.price_flag_name }}
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+                        <label for="remark" class="col-lg-2 col-sm-2 control-label">Remark</label>
+                        <div class="col-lg-10">
+                            {{ form.remark }}
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <div class="col-lg-12">
+            <section class="panel">
+                <header class="panel-heading">
+                    <strong>Stock Transaction Detail</strong>
+                    <span class="tools pull-right">
+                        <a href="javascript:;" class="fa fa-chevron-down"></a>
+                    </span>
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table table-responsive"
+                         style="overflow-x: scroll; overflow-y: auto; margin-bottom: 20px">
+                        <table class="display table table-bordered table-striped header-fixed"
+                               id="dynamic-table" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th></th>
+                                <th>Line No</th>
+                                <th>Item Code</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Amount</th>
+                                <th style="display: none;">Stock Qty</th>
+                                <th>Inventory Measurement</th>
+                                <th>Item Description</th>
+                                <th>Onhand Qty</th>
+                                <th>Remark</th>
+
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for form in formset_item.forms %}
+                                <tr class="gradeX">
+                                    <td>
+                                        <div class="btn-group" style="width:154px">
+                                        <!-- <button type="button" class="addrow btn btn-white fa fa-plus" id="addrow{{forloop.counter0}}" name="addrow{{forloop.counter0}}" value="Add"></button> -->
+                                            <button type="button" class="prependrow btn btn-white fa fa-level-up" name="prependrow{{forloop.counter0}}" value="Prepend"></button>
+                                            <button type="button" class="appendrow btn btn-white fa fa-level-down" name="appendrow{{forloop.counter0}}" value="Append" style="margin-left:0.4rem;"></button>
+                                            <button type="button" class="editrow btn btn-white fa fa-square-o" id="editrow{{forloop.counter0}}" name="editrow{{forloop.counter0}}" value="Edit" data-toggle="modal"
+                                                data-target="#stockItemModal"  style="margin-left:0.4rem;"></button>
+                                            <button type="button" class="removerow btn btn-white fa fa-minus" id="removerow{{forloop.counter0}}" name="removerow{{forloop.counter0}}" value="Remove"  style="margin-left:0.4rem;"></button>
+                                        </div>
+                                    <td><label id="id_formset_item-{{forloop.counter0}}-line_number" class="control-label-item"
+                                               name="formset_item-{{forloop.counter0}}-line_number">{{ form.line_number.value }}</label>
+                                        {{ form.line_number }}
+                                    </td>
+                                    <td>
+
+                                        {{ form.item_code }}
+                                        {{ form.item_id }}
+
+                                        {% if form.item_code.value %}
+                                            <label class="control-label-item" id="id_formset_item-{{forloop.counter0}}-item_code"
+                                              name="formset_item-{{forloop.counter0}}-item_code" style="width: 180px;">{{ form.item_code.value }}</label>
+                                        {% else %}
+                                          <select id="id_select_formset_item-{{forloop.counter0}}-item_code"
+                                                name="formset_item-{{forloop.counter0}}-item_code"
+                                              class="form-control select-item-code">
+                                          </select>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ form.quantity }}</td>
+                                    <td>{{ form.price }}</td>
+                                    <td>
+                                        <label class="control-label-item"
+                                            id="id_formset_item-{{forloop.counter0}}-amount" name="formset_item-{{forloop.counter0}}-amount" 
+                                            style="text-align: right; width: 100px;">{{ form.amount.value|default_if_none:"" }}</label>
+                                        {{ form.amount }}</td>
+                                    <td style="display: none;">{{ form.stock_qty }}
+                                    </td>
+                                    <td>{{ form.item_inv_measure }}</td>
+                                    <td>{{ form.item_name }}</td>
+                                    <td>{{ form.item_onhand }}</td>
+                                    <td>{{ form.remark }}</td>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            {{ formset_item.management_form }}
+                            </tbody>
+                            <tfoot style="display: none">
+                            <tr>
+                                <td colspan="12" style="text-align: left;">
+                                <div style="display:inline-block;min-width:20%;">
+                                <select name="item_by_loc" id="item_by_loc" >
+                                    <option value="0">Select Item</option>
+                                </select>
+                                </div>
+                                </td>
+                                {% if is_send != '0' %}
+                                
+                                <span  id="items_error" class="messages">Please add at least one product !</span>
+                                {% endif %}
+                                <br>
+                            </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-lg-12" style="text-align: center">
+                            {% if stock_trans_id %}
+                                <button type="submit" name="btnSave"
+                                        class="btn btn-success" id="btnSendForEdit"
+                                        formaction="{% url 'stock_transaction_edit' stock_trans_id 1 %}"
+                                        {% if status == 2 %}
+                                            style="display: none"
+                                        {% endif %}>Save {# 1 = is_send, status = 2 = ORDER_STATUS['Posted'] #}
+                                </button>
+                            {% endif %}
+                            <button type="submit"
+                                    {% if stock_trans_id %}style="display: none" {% endif %}
+                                    class="btn btn-success" id="btnSend" name="btnSend"
+                                    formaction="{% url 'stock_transaction_add' 1 %}">Save {# is_send #}
+                            </button>
+                            {% if stock_trans_id %}
+                                <a type="button" class="btn btn-danger" id="btnRemove" name="btnRemove" onclick="deleteStockTransModal({{stock_trans_id}})">Delete</a>
+                            {% endif %}
+                            <a class="btn btn-default" href="{% url 'stock_transaction_list' %}">Cancel</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        {# Modal Transaction Code #}
+        <div class="modal fade" id="modalTransaction" tabindex="-1" role="dialog"
+             aria-labelledby="modalTransaction"
+             aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-hidden="true">&times;</button>
+                        <h4 class="modal-title">Search Transaction Code</h4>
+                    </div>
+                    <div class="modal-body" style="padding-bottom: 0px!important;">
+                        <div class="adv-table">
+                            <section class="panel" style="margin-bottom: 0px!important;">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="panel-body"
+                                             style="padding: 0px!important; font-size: 12.5px !important;">
+                                            <div class="adv-table">
+                                                <table id="tblTransCode" style="width: 100% !important;"
+                                                       class="display table table-bordered table-striped table-condensed ">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>Updated Date</th>
+                                                        <th>Code</th>
+                                                        <th style="text-align: center;">Description</th>
+                                                        <th>I/O Flag</th>
+                                                        <th>Price Flag</th>
+                                                        <th>Doc Type</th>
+                                                        <th>Auto Gen</th>
+                                                        <th>ICS Prefix</th>
+{#                                                        <th></th>#}
+                                                    </tr>
+                                                    </thead>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                        <div class="modal-footer">
+                            <button data-dismiss="modal" class="btn btn-default" type="button">Close
+                            </button>
+                            <button data-dismiss="modal" class="btn btn-success" type="button" id="btnAddTransCode">
+                                Select
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {# Modal Location #}
+        <div class="modal fade" id="modalLocation" tabindex="-1" role="dialog"
+             aria-labelledby="modalLocation"
+             aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-hidden="true">&times;</button>
+                        <h4 class="modal-title">Search Location</h4>
+                    </div>
+                    <input id="detectLocation" type="hidden">
+                    <div class="modal-body" style="padding-bottom: 0px!important;">
+                        <div class="adv-table">
+                            <section class="panel" style="margin-bottom: 0px!important;">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="panel-body"
+                                             style="padding: 0px!important; font-size: 12.5px !important;">
+                                            <div class="adv-table">
+                                                <table id="tblLocation" style="width: 100% !important;"
+                                                       class="display table table-bordered table-striped table-condensed ">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>Code</th>
+                                                        <th style="text-align: center;">Description</th>
+                                                        <th style="text-align: center;">Address</th>
+                                                    </tr>
+                                                    </thead>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                        <div class="modal-footer">
+                            <button data-dismiss="modal" class="btn btn-default" type="button">Close
+                            </button>
+                            <button data-dismiss="modal" class="btn btn-success" type="button" id="btnAddLocation">
+                                Select
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {# Modal Stock Transaction Item #}
+        <div class="modal fade" id="modalItems" tabindex="-1" role="dialog"
+             aria-labelledby="modalItems"
+             aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-hidden="true">&times;</button>
+                        <h4 class="modal-title">Search Location</h4>
+                    </div>
+                    <div class="modal-body" style="padding-bottom: 0px!important;">
+                        <div class="adv-table">
+                            <section class="panel" style="margin-bottom: 0px!important;">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="panel-body"
+                                             style="padding: 0px!important; font-size: 12.5px !important;">
+                                            <div class="adv-table">
+                                                <table id="tbldataItems" style="width: 100% !important;"
+                                                       class="display table table-bordered table-striped table-condensed ">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>Item Code</th>
+                                                        <th>Item Name</th>
+                                                        <th style="text-align: center">On Quantity</th>
+                                                        <th>Location Code</th>
+                                                        <th></th>
+                                                    </tr>
+                                                    </thead>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                        <div class="modal-footer">
+                            <button data-dismiss="modal" class="btn btn-default" type="button">Close
+                            </button>
+                            <button data-dismiss="modal" class="btn btn-success" type="button" id="btnAddItems">
+                                Select
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {# Modal Edit Stock Transaction Row #}
+        <div class="modal fade" id="stockItemModal" tabindex="-1" role="dialog"
+                aria-labelledby="OrderItem"
+                aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content" style="width: 882px; margin-left: auto; margin-right: auto;">
+                    <div class="modal-header">
+{#                        <button type="button" class="close" data-dismiss="modal"#}
+{#                                aria-hidden="true">&times;</button>#}
+                        <h4 class="modal-title">Stock Transaction Item</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                            <section class="panel">
+                                <div class="row">
+                                        <div class="panel-body"
+                                            style="padding: 0px!important; font-size: 14px !important;">
+                                            <div class="col-lg-6">
+                                                <div class="col-lg-4"><label>Line</label>
+                                                </div>
+                                                <div class="col-lg-8"><input id="modal_line_number" tabindex="-1" style="text-align: center;" class="form-control" readonly="readonly" type="text"
+                                                    name="modal_line_number">
+                                                </div>
+                                                <div class="col-lg-4"><label>Item Code<span class="required required-span">*</span></label> </div>
+                                                <div class="col-lg-8">
+                                                  <input id="modal_item_code" tabindex="-1" class="form-control" style="display: none" readonly="readonly" type="text"
+                                                    name="modal_item_code">
+
+                                                  <select id="modal_item_code_select"
+                                                          name="modal_item_code_select"
+                                                        class="form-control" style="display: none">
+                                                  </select>
+                                                </div>
+                                                <div class="col-lg-4"><label>Inv. Measur.</label></div>
+                                                <div class="col-lg-8"><input id="modal_item_inv_measure" tabindex="-1" class="form-control" readonly="readonly" type="text"
+                                                    name="modal_item_inv_measure"></div>
+                                                <div class="col-lg-4"><label>Item Desc.</label></div>
+                                                <div class="col-lg-8"><input class="form-control" tabindex="-1" id="modal_item_name" name="modal_item_name" required="required" readonly="readonly" type="text"></div>
+                                                <div class="col-lg-4"><label>Item On-hand</label></div>
+                                                <div class="col-lg-8"><input class="form-control" id="modal_item_onhand" tabindex="-1" name="modal_item_onhand" readonly="readonly" type="text"></div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div class="col-lg-3"><label>Quantity<span class="required required-span">*</span></label></div>
+                                                <div class="col-lg-8"><input class="form-control text-right numeric_qty" id="modal_quantity" name="modal_quantity" step="0.01" style="text-align: right;" type="text"></div>
+                                                <div class="col-lg-3" style="padding-right: 0px !important;"><label>Unit Price<span class="required required-span">*</span></label></div>
+                                                <div class="col-lg-8"><input class="form-control text-right numeric_price" id="modal_price" name="modal_price" step="0.000001" style="text-align: right;" type="text"></div>
+                                                <div class="col-lg-3"><label>Amount</label></div>
+                                                <div class="col-lg-8"><input id="modal_amount" tabindex="-1" class="form-control" readonly="readonly" type="text" style="text-align: right;"
+                                                    name="modal_amount"></div>
+                                                <div class="col-lg-3"><label>Remarks</label></div>
+                                                <div class="col-lg-8"><input class="form-control" id="modal_remarks" name="modal_remarks" style="text-align: left;" type="text"></div>
+                                            </div>
+                                        </div>
+                                </div>
+                            </section>
+                        </div>
+                        <div class="modal-footer row">
+                            <div class="col-lg-offset-4 col-lg-8">
+                                <button class="btn btn-info" tabindex="-1" type="button" id="btnOrderItemPrev"><span class="glyphicon glyphicon-fast-backward"></button>
+                                <button class="btn btn-info" tabindex="-1" type="button" id="btnOrderItemNext"><span class="glyphicon glyphicon-fast-forward"></button>
+                                <button class="btn btn-primary" type="button" id="btnOrderItemNew">New</button>
+                                <button class="btn btn-success" type="button" id="btnOrderItemSave">Save</button>
+                                <button class="btn btn-danger" type="button" id="btnOrderItemDelete">Delete</button>
+                                <button class="btn btn-default" type="button" id="btnOrderItemCancel">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    {#Comfirm Delete tranasaction#}
+    <div class="modal fade" id="comfirmDeleteStockTransModal" tabindex="-1" role="dialog"
+        aria-labelledby="myModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-sm" style="margin-top: 20%;">
+            <form id="comfirmDeleteStockTransForm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-hidden="true">&times;</button>
+                        <h4 class="modal-title"><strong>Delete Confirm Dialog</strong></h4>
+                    </div>
+                    <div class="modal-body" style="padding-bottom: 0px!important;">
+                        <div class="form-group">
+                            <label>Are you sure want to delete?</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="text-align: center">
+                        <button class="btn btn-default" type="button" data-dismiss="modal">No</button>
+                        <button class="btn btn-success" type="submit">Yes</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    {#End Comfirm delete transaction#}
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript" src="{% static 'js/order/common-order.js' %}?{% now 'H' %}"></script>
+    <!--dynamic table initialization -->
+    <script>
+        var stock_trans_id = "{{ stock_trans_id }}";
+        var load_transaction_code_list = "{% url 'load_transaction_code_list' menu_type %}";
+        var request_method = "{{ request_method }}";
+        var load_location_list = "{% url 'load_location_list' %}";
+        var load_stock_transaction_items_list = "{% url 'load_stock_transaction_items_list' %}";
+        var status = "{{ status }}";
+        var search_transaction_code = "{% url 'search_transaction_code' %}";
+        var url_search_location_code = "{% url 'search_location_code' %}";
+        var url_item_by_loc = "{% url 'item_detail_loc' %}";
+
+        function deleteStockTransModal(id) {
+            var url = '/inventory/stock_transaction_delete/'+id+'/';
+            $("#comfirmDeleteStockTransModal").modal("show");
+            $("#comfirmDeleteStockTransForm").attr("action", url);
+        }
+
+    </script>
+    <script src="{% static 'js/order/stock_transaction.js' %}"></script>
+{% endblock %}

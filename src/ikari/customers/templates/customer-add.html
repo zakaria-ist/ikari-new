@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+{% endblock %}
+
+{% block title %}Add Customer{% endblock %}
+{% block customer_active %}active{% endblock %}
+{% block sp_setting_a_active %}active{% endblock %}
+{% block sp_setting_i_active %}active{% endblock %}
+{% block parent_order_a_active %}active{% endblock %}
+{% block parent_order_i_active %}active{% endblock %}
+
+{% block content %}
+    <form class="form-horizontal" action="{% url 'customer_add' %}" role="form" method="post" onsubmit="return checkForm(this);"
+          enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="col-lg-12">
+            <section class="panel">
+                <div style="width: 100%">
+                    <header id="customer_info" class="panel-heading">
+                        <strong>Customer Info</strong>
+                    </header>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label for="code" class="col-lg-2 col-sm-2 control-label">Customer Code<span
+                                    class="span-required">(*)</span></label>
+                            <div class="col-lg-4">
+                                <input type="text" class="form-control" id="code" name="code" required>
+                            </div>
+                            <label for="country" class="col-lg-2 col-sm-2 control-label">Country</label>
+                            <div class="col-lg-4">
+                                <select class="form-control" id="country" name="country">
+                                    <option value="0">---Select---</option>
+                                    {% for country in country_list %}
+                                        <option value="{{ country.id }}">{{ country.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="name" class="col-lg-2 col-sm-2 control-label">Customer Name<span
+                                    class="span-required">(*)</span></label>
+                            <div class="col-lg-4">
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                            <label for="currency" class="col-lg-2 col-sm-2 control-label">Currency</label>
+                            <div class="col-lg-4">
+                                <select class="form-control" id="currency" name="currency">
+                                    <option value="0">---Select---</option>
+                                    {% for currency in currency_list %}
+                                        <option value="{{ currency.id }}">{{ currency.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="note1" class="col-lg-2 col-sm-2 control-label">Address</label>
+                            <div class="col-lg-4">
+                                <textarea class="form-control" rows="3" name="address" id="address"></textarea>
+                            </div>
+                            <div>
+                                <label style="margin-bottom: 15px" for="payment_mode"
+                                       class="col-lg-2 col-sm-2 control-label">Payment Mode</label>
+                                <div class="col-lg-4" style="margin-bottom: 15px">
+                                    <select class="form-control" id="payment_mode" name="payment_mode">
+                                        <option value="0">---Select---</option>
+                                        {% for pay in payment_mode_list %}
+                                            <option value="{{ pay.id }}">{{ pay.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <label for="payment_term" class="col-lg-2 col-sm-2 control-label">Payment Term</label>
+                                <div class="col-lg-4">
+                                    <select class="form-control" id="term" name="term">
+                                        <option value="-1">---Select---</option>
+                                        {% for term in term_list %}
+                                            <option value="{{ term.id }}">{{ term.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="note1" class="col-lg-2 col-sm-2 control-label">Remark</label>
+                            <div class="col-lg-4">
+                                <textarea class="form-control" rows="3" name="note1" id="note1"></textarea>
+                            </div>
+                            <div>
+                                <label for="credit_limit" class="col-lg-2 col-sm-2 control-label">Credit Limit</label>
+                                <div style="margin-bottom: 15px" class="col-lg-4">
+                                    <input type="number" step="0.01" class="form-control" id="credit_limit"
+                                           name="credit_limit">
+                                </div>
+                                <label for="tax" class="col-lg-2 col-sm-2 control-label">Tax
+                                    Code</label>
+                                <div class="col-lg-4">
+                                    <select class="form-control" id="tax" name="tax">
+                                        <option value="0">---Select---</option>
+                                        {% for tax in tax_list %}
+                                            <option value="{{ tax.id }}">{{ tax.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        {% if request.session.use_inventory %}
+                            <div class="form-group">
+                                <label for="location"
+                                       class=" col-lg-offset-6  col-lg-2 col-sm-2 control-label">Location Stock</label>
+                                <div class="col-lg-4">
+                                    <select class="form-control" id="location" name="location">
+                                        <option value="0">---Select---</option>
+                                        {% for location in location_list %}
+                                            <option value="{{ location.id }}">{{ location.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        {% endif %}
+                        <div class="form-group">
+                            <label for="account_set" class=" col-lg-offset-6 col-lg-2 col-sm-2 control-label">Account
+                                Set</label>
+                            <div class="col-lg-4">
+                                <select class="form-control" id="account_set" name="account_set">
+                                    <option value="0">---Select---</option>
+                                    {% for account_set in account_set %}
+                                        <option value="{{ account_set.id }}">{{ account_set.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group" style="display: none;">
+                            <label for="label_check" class="col-lg-2 col-sm-2 control-label"></label>
+                            <div class="col-lg-10">
+                                <div class="checkbox checkbox-primary">
+                                    <input name="sample-checkbox" id="checkbox-03" class="styled" type="checkbox"
+                                           checked/>
+                                    <label for="checkbox-03">
+                                        Active
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="width: 50%; float: left">
+                    <header class="panel-heading">
+                        <strong>Contact Info</strong>
+                    </header>
+                    <div id="contact_info" class="panel-body">
+                        <div class="form-group">
+                            <label for="contact_name" class="col-lg-2 col-sm-2 control-label" style="display: none;">Name</label>
+                            <div class="col-lg-4" style="display: none;">
+                                <input type="text" class="form-control" id="contact_name" name="contact_name">
+                            </div>
+                            <label for="contact_attention" class="col-lg-4 col-sm-4 control-label">Attention</label>
+                            <div class="col-lg-8">
+                                <input type="text" class="form-control" id="contact_attention" name="contact_attention">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="contact_designation" class="col-lg-4 col-sm-4 control-label">Designation</label>
+                            <div class="col-lg-8">
+                                <input type="text" class="form-control" id="contact_designation"
+                                       name="contact_designation">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="contact_phone" class="col-lg-4 col-sm-4 control-label">Telephone</label>
+                            <div class="col-lg-8">
+                                <input type="text" class="form-control" id="contact_phone" name="contact_phone">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="contact_fax" class="col-lg-4 col-sm-4 control-label">Fax</label>
+                            <div class="col-lg-8">
+                                <input type="text" class="form-control" id="contact_fax" name="contact_fax">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="contact_company_name" class="col-lg-4 col-sm-4 control-label">Consignee</label>
+                            <div class="col-lg-8">
+                                <input type="text" class="form-control" id="contact_company_name"
+                                       name="contact_company_name">
+                            </div>
+                            <label style="display: none;" for="contact_email" class="col-lg-2 col-sm-2 control-label">Email</label>
+                            <div style="display: none;" class="col-lg-4">
+                                <input type="email" class="form-control" id="contact_email" name="contact_email">
+                            </div>
+                            <label style="display: none;" for="contact_web"
+                                   class="col-lg-2 col-sm-2 control-label">Web</label>
+                            <div style="display: none;" class="col-lg-4">
+                                <input type="text" class="form-control" id="contact_web" name="contact_web">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="contact_address" class="col-lg-4 col-sm-4 control-label">Consignee Add.</label>
+                            <div class="col-lg-8">
+                                <textarea class="form-control" rows="3" id="contact_address"
+                                          name="contact_address"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="width: 50%; float: right">
+                    <header class="panel-heading">
+                        <strong>Consignee Info</strong>
+                    </header>
+                    <div id="consignee_info" class="panel-body">
+                        <div class="form-group">
+                            <div>
+                                <label for="consignee_name" class="col-lg-4 col-sm-4 control-label">Contact
+                                    Person</label>
+                                <div class="col-lg-8">
+                                    <input type="text" class="form-control" id="consignee_name" name="consignee_name">
+                                </div>
+                            </div>
+                            <div>
+                                <label style="display: none;" for="consignee_attention"
+                                       class="col-lg-2 col-sm-2 control-label">Attention</label>
+                                <div style="display: none;" class="col-lg-4">
+                                    <input type="text" class="form-control" id="consignee_attention"
+                                           name="consignee_attention">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="consignee_phone" class="col-lg-4 col-sm-4 control-label">Consignee Tel</label>
+                            <div class="col-lg-8">
+                                <input type="text" class="form-control" id="consignee_phone" name="consignee_phone">
+                            </div>
+                        </div>
+                        <div class="form-group" style="display: none;">
+                            <label for="consignee_company_name" class="col-lg-2 col-sm-2 control-label">Company
+                                Name</label>
+                            <div class="col-lg-4">
+                                <input type="text" class="form-control" id="consignee_company_name"
+                                       name="consignee_company_name">
+                            </div>
+                            <label for="consignee_designation"
+                                   class="col-lg-4 col-sm-4 control-label">Designation</label>
+                            <div class="col-lg-8">
+                                <input type="text" class="form-control" id="consignee_designation"
+                                       name="consignee_designation">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label style="display: none;" for="consignee_fax" class="col-lg-4 col-sm-4 control-label">Fax</label>
+                            <div style="display: none;" class="col-lg-8">
+                                <input type="text" class="form-control" id="consignee_fax" name="consignee_fax">
+                            </div>
+                        </div>
+                        <div class="form-group" style="display: none;">
+                            <label for="consignee_email" class="col-lg-2 col-sm-2 control-label">Email</label>
+                            <div class="col-lg-4">
+                                <input type="email" class="form-control" id="consignee_email" name="consignee_email">
+                            </div>
+                            <label for="consignee_web" class="col-lg-2 col-sm-2 control-label">Web</label>
+                            <div class="col-lg-4">
+                                <input type="text" class="form-control" id="consignee_web" name="consignee_web">
+                            </div>
+                        </div>
+                        <div class="form-group" style="display: none;">
+                            <label for="consignee_address" class="col-lg-2 col-sm-2 control-label">Address</label>
+                            <div class="col-lg-10">
+                                <textarea class="form-control" rows="3" id="consignee_address"
+                                          name="consignee_address"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-group" style="display: none;">
+                            <label for="consignee_remark" class="col-lg-2 col-sm-2 control-label">Remark</label>
+                            <div class="col-lg-10">
+                                <textarea class="form-control" rows="3" id="consignee_remark"
+                                          name="consignee_remark"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="width: 100%">
+                    <div class="panel-body">
+                        <div class="form-group" style="text-align: center">
+                            <div class="col-lg-12">
+                                <button type="submit" name="btnSave" class="btn btn-success">Save</button>
+                                <a class="btn btn-default" href="{{ request.session.url_referer }}">Cancel</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </form>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="text/javascript">
+        $('#add_more_address').click(function () {
+            var divAddress1 = $('.divAddress').last();
+            var divNewAddress = divAddress1.clone(true);
+            var indexAddress = $('.divAddress').length + 1;
+            divNewAddress.find('label')[0].innerHTML = 'Address ' + indexAddress;
+            var divMinusAddress = divNewAddress.find('#divMinusAddress');
+            var divAreaAddress = divNewAddress.find('#divAreaAddress');
+            divMinusAddress.css("display", "block");
+            divAreaAddress.removeClass("col-lg-12");
+            divAreaAddress.addClass("col-lg-11");
+            divAddress1.after(divNewAddress);
+        });
+        $('#removerow0').click(function () {
+            var arrAddress = $('.divAddress');
+            if (arrAddress.length > 1) {
+                this.parentNode.parentNode.parentNode.parentNode.remove();
+                arrAddress = $('.divAddress');
+                for (var i = 0; i < arrAddress.length; i++) {
+                    var divAddress = arrAddress[i];
+                    divAddress.childNodes[1].innerHTML = 'Address ' + (i + 1);
+                }
+            }
+        });
+    </script>
+{% endblock %}

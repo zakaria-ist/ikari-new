@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+{% endblock %}
+
+{% block title %}Generate Purchase Orders{% endblock %}
+{% block parent_order_a_active %}active{% endblock %}
+{% block parent_order_i_active %}active{% endblock %}
+{% block document_entry_a_active %}active{% endblock %}
+{% block document_entry_i_active %}active{% endblock %}
+{% block order_good_receive_active %}active{% endblock %}
+
+{% block content %}
+    <br/>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="border-head">
+                <h3>Generate Delivery Orders/Invoice</h3>
+            </div>
+        </div>
+    </div>
+    <section class="panel">
+        <form class="form-horizontal" onsubmit="return checkForm(this);"
+              role="form"
+              method="post"
+              enctype="multipart/form-data" id="formMain" action="{% url 'generate_DO_from_GR' good_receive_id %}">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-lg-12">
+                    <section class="panel">
+                        <div class="panel-body">
+                            
+                            <div class="adv-table">
+                                <table class="display table table-bordered table-striped table-condensed"
+                                       id="purchase-order-table-info">
+                                    <thead>
+                                    <tr>
+                                        <th>Customer</th>
+                                        <th>Reference ID</th>
+                                        <th>S.O Document Number</th>
+                                        <th>P.O Document Number</th>
+                                        <th>Total</th>
+                                        <th style="display: none;">Select</th>
+                                    </tr>
+                                    </thead>
+                                    {% if customer_list %}
+                                        <tbody>
+                                        {% for e in customer_list %}
+                                            <tr class="gradeX">
+                                                <td>{{ e.customer_name }}</td>
+                                                <td>{{ e.reference_id }}</td>
+                                                <td>{{ e.so_no }}</td>
+                                                <td>{{ e.refer_number }}</td>
+                                                <td>{{ e.total }}</td>
+                                                <td class="text-center" style="display: none;">
+                                                    <input class="suppler-checkbox" type="checkbox" name="choices"
+                                                           id="{{ e.reference_id }}"
+                                                           value="{{ e.reference_id }}"
+                                                           checked>
+                                                    <input type="hidden" value="{{ good_receive_id }}"
+                                                           name="good_receive_id">
+                                                    <input type="hidden" value="{{ e.so_id }}" name="sale_order_id">
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    {% endif %}
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                <div class="form-group bottom-group">
+                    <div class="col-lg-12 text-center">
+                        <button  type="submit" name="btnSave" class="btn btn-success" id="btnGenerate">Generate</button>
+                        <a class="btn btn-default" href="{% url 'order_list' 5 %}">Cancel</a> {# ORDER_TYPE['PURCHASE INVOICE'] #}
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </section>
+
+{% endblock %}
+{% block extrafoot %}
+    {% load staticfiles %}
+
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <!--dynamic table initialization -->
+    <script>
+        $('.suppler-checkbox').click(function () {
+            supplier_selected = $('input[name="supplier_selected"]').val();
+            if (this.checked) {
+                supplier_selected += this.value + ';';
+                $('input[name="supplier_selected"]').val(supplier_selected);
+            }
+            else {
+                var supplier_remove = this.value + ';'
+                var suppler_removed = supplier_selected.replace(supplier_remove, '');
+                $('input[name="supplier_selected"]').val(suppler_removed);
+            }
+        });
+
+
+        function fnFormatDetails(oTable, nTr) {
+            var sOut = '';
+            var aData = oTable.fnGetData(nTr);
+            var jqInputs = $('input', nTr);
+
+            $.ajax({
+                method: "POST",
+                url: '/orders/load_sales_items_by_customer/' + jqInputs[1].value + '/' + jqInputs[0].value + '/',
+                dataType: 'JSON',
+                data: {
+                    'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val()
+                },
+                responseTime: 200,
+                success: function (json) {
+                    if (json.length > 0) {
+                        var sOut = '<table class="display table table-bordered table-striped table-condensed" ' +
+                                'style="margin-bottom: 0px! important;">';
+                        sOut += '<tr><th>Product</th><th>Quantity</th><th>Price</th><th>Exchange Rate</th><th>Amount</th></tr>'
+                        for (j = 0; j < json.length; j++) {
+                            sOut += '<tr>';
+                            sOut += '<td>' + json[j]['item__name'] + '</td>';
+                            sOut += '<td>' + json[j]['quantity_to_delivery'] + '</td>';
+                            sOut += '<td>' + json[j]['price'] + '</td>';
+                            sOut += '<td>' + json[j]['exchange_rate'] + '</td>';
+                            sOut += '<td>' + json[j]['amount'] + '</td>';
+                            sOut += '</tr>';
+                        }
+                        sOut += '</table>';
+                        oTable.fnOpen(nTr, sOut, 'details');
+                    }
+
+                }
+            });
+
+            return sOut;
+        }
+
+        /*
+         * Insert a 'details' column to the table
+         */
+        var nCloneTh = document.createElement('th');
+        var nCloneTd = document.createElement('td');
+        nCloneTd.innerHTML = '<img src="/static/img/details_open.png">';
+        nCloneTd.className = "center";
+
+        $('#purchase-order-table-info thead tr').each(function () {
+            this.insertBefore(nCloneTh, this.childNodes[0]);
+        });
+
+        $('#purchase-order-table-info tbody tr').each(function () {
+            this.insertBefore(nCloneTd.cloneNode(true), this.childNodes[0]);
+        });
+
+        /*
+         * Initialse DataTables, with no sorting on the 'details' column
+         */
+        var oTable = $('#purchase-order-table-info').dataTable({
+            "aoColumnDefs": [
+                {"bSortable": false, "aTargets": [0]}
+            ],
+            "aaSorting": [[0, 'asc']]
+        });
+
+        /* Add event listener for opening and closing details
+         * Note that the indicator for showing which row is open is not controlled by DataTables,
+         * rather it is done here
+         */
+        $(document).on('click', '#purchase-order-table-info tbody td img', function () {
+            var nTr = $(this).parents('tr')[0];
+            if (oTable.fnIsOpen(nTr)) {
+                /* This row is already open - close it */
+                this.src = "/static/img/details_open.png";
+                oTable.fnClose(nTr);
+            }
+            else {
+                /* Open this row */
+                this.src = "/static/img/details_close.png";
+                oTable.fnOpen(nTr, fnFormatDetails(oTable, nTr), 'details');
+            }
+        });
+        $(document).ready(function () {
+            var currentRow;
+            var countCheckbox = 0;
+            $('#purchase-order-table-info tr.gradeX').each(function () {
+                currentRow = $(this).closest('tr').find('td');
+                currentCheckbox = $(this).closest('tr').find("input[type='checkbox']");
+                total = currentRow[5].textContent;
+                if (parseFloat(total) <= 0) {
+                    currentCheckbox.removeAttr('checked');
+                } else {
+                    countCheckbox += 1;
+                }
+            });
+
+            {% if messages %}
+                $('#btnGenerate').prop('disabled', true);
+            {% else %}
+                $('#btnGenerate').prop('disabled', false);
+            {% endif %}
+        });
+    </script>
+{% endblock %}
+
+

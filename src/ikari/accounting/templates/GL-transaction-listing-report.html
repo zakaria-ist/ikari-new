@@ -1,0 +1,818 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <style>
+      .dropdown-menu {width: 400px;}
+      .hide_column {
+        display : none;
+      }
+    </style>
+{% endblock %}
+
+{% block title %}Report View{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block parent_GL_a_active %}active{% endblock %}
+{% block parent_GL_i_active %}active{% endblock %}
+{% block gl_transaction_listing_active %}active{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-3">
+            <section class="panel" id="secFilterCondition">
+                <header class="panel-heading">
+                    Transaction Listing
+                </header>
+                <div class="panel-body form-horizontal">
+                    <div id="divDateFromTo" class="form-group filter divGL1 divGL2">
+                        <label class="control-label col-md-6">From Period-Year</label>
+                        <label class="control-label col-md-6">To Period-Year</label>
+                        <div class="col-md-6">
+                            <div id="from-container" class="dropdown">
+                                <div class="" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                    <input type="text" class="form-control text-center year-period year-period-from" value="">
+                                </div>
+                                {% comment %} <div class="dropdown-toggle col-md-5" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                    <i class="fa fa-calendar" aria-hidden="true"></i>
+                                    <span class="caret"></span>
+                                </div> {% endcomment %}
+                                <div class="dropdown-menu" id="from_menu" aria-labelledby="dropdownMenu1">
+                                    <button type="button" style="border-color: transparent;" class="btn btn-white col-md-offset-2 col-md-2" onclick="changeYear('from','Prev')"><i class="fa fa-chevron-circle-left fa-2x"></i></button>
+                                    <div class="col-md-4">
+                                        <select class="form-control" name="f_year" id="f_year" class="form-control">
+                                            {% for year in fsc_years %}
+                                                <option value="{{year}}">{{year}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <button type="button" style="border-color: transparent;" class="btn btn-white col-md-2" onclick="changeYear('from','Next')"><i class="fa fa-chevron-circle-right fa-2x"></i></button>
+                                    <table class="table table-condensed table-hover table-striped" id="fromTable">
+                                        <thead>
+                                            <tr>
+                                                <th id="period" class="th-fsc" style="width: 5%;">Prd.</th>
+                                                <th id="start" class="th-fsc" style="width: 35%;">Start Date</th>
+                                                <th id="end" class="th-fsc" style="width: 35%;">End Date</th>
+                                                <th id="status" class="th-fsc" style="width: 25%;">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="f">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div id="to-container" class="dropdown">
+                                <div class="" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                    <input type="text" class="form-control text-center year-period year-period-to" value="">
+                                </div>
+                                {% comment %} <div class="dropdown-toggle col-md-5" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                    <i class="fa fa-calendar" aria-hidden="true"></i>
+                                    <span class="caret"></span>
+                                </div> {% endcomment %}
+                                <div class="dropdown-menu" id="to_menu" aria-labelledby="dropdownMenu2">
+                                    <button type="button" style="border-color: transparent;" class="btn btn-white col-md-offset-2 col-md-2" onclick="changeYear('to','Prev')"><i class="fa fa-chevron-circle-left fa-2x"></i></button>
+                                    <div class="col-md-4">
+                                        <select class="form-control" name="t_year" id="t_year" class="form-control">
+                                            {% for year in fsc_years %}
+                                                <option value="{{year}}">{{year}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <button type="button" style="border-color: transparent;" class="btn btn-white col-md-2" onclick="changeYear('to','Next')"><i class="fa fa-chevron-circle-right fa-2x"></i></button>
+                                    <table class="table table-condensed table-hover table-striped" id="toTable">
+                                        <thead>
+                                            <tr>
+                                                <th id="period" class="th-fsc" style="width: 5%;">Prd.</th>
+                                                <th id="start" class="th-fsc" style="width: 35%;">Start Date</th>
+                                                <th id="end" class="th-fsc" style="width: 35%;">End Date</th>
+                                                <th id="status" class="th-fsc" style="width: 25%;">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="t">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <label class="control-label col-md-12">Account from:</label>
+                        <div class="col-md-8">
+                            <select class="form-control" id="code_acc_from" name="code_acc_from">
+                                <option value="">Select Account</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                        <button id="btn_account_from" tabindex="-1" type="button" class="btn btn-info sended" data-toggle="modal"
+                                href="#account_from"><i class="fa fa-search"></i></button>
+                        </div>
+                        <label class="control-label col-md-12">Account To:</label>
+                        <div class="col-md-8">
+                            <select class="form-control" id="code_acc_to" name="code_acc_to">
+                                <option value="">Select Account</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                        <button id="btn_account_to" tabindex="-1" type="button" class="btn btn-info sended" data-toggle="modal"
+                                href="#account_to"><i class="fa fa-search"></i></button>
+                        </div>
+
+                        <label class="control-label col-md-12">Currency</label>
+                        <div class="col-md-11">
+                            <select class="form-control" id="currency_report_list" name="currency_report_list">
+                                {% for currency in currency_report_list %}
+                                    <option value="{{ currency.0 }}">
+                                        {{ currency.0 }} - {{ currency.1 }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <label class="control-label col-md-12">Transaction Status</label>
+                        <div class="col-md-11">
+                            <select class="form-control" id="status_list" name="status_list">
+                                <option value="0">
+                                    All select
+                                </option>
+                                {% for status in status_type %}
+                                    <option value="{{ status.0 }}">
+                                        {{ status.0 }} - {{ status.1 }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                         {% comment %} <label class="control-label col-md-12">Report options</label>
+                        <div class="col-md-11">
+                            <select class="form-control" id="report_option_1" name="report_option_1">
+                                <option value="0">------------------------------</option>
+                                <option value="1">GL Entry Description</option>
+                                <option value="2" selected>GL Transaction Reference</option>
+                                <option value="3">GL Transaction Description</option>
+                                <option value="4">GL Transaction Comment</option>
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12"></label>
+                        <div class="col-md-11">
+                            <select class="form-control" id="report_option_2" name="report_option_2">
+                                <option value="0">------------------------------</option>
+                                <option value="1">GL Entry Description</option>
+                                <option value="2">GL Transaction Reference</option>
+                                <option value="3" selected>GL Transaction Description</option>
+                                <option value="4">GL Transaction Comment</option>
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12"></label>
+                        <div class="col-md-11">
+                            <select class="form-control" id="report_option_3" name="report_option_3">
+                                <option value="0">-----------------------------</option>
+                                <option value="1">GL Entry Description</option>
+                                <option value="2">GL Transaction Reference</option>
+                                <option value="3">GL Transaction Description</option>
+                                <option value="4">GL Transaction Comment</option>
+                            </select>
+                        </div>  {% endcomment %}
+                        <div class="col-lg-offset-1 col-md-offset-1 col-lg-11 col-md-11" style="font-size: 15px">
+                            <div class="col-lg-11 col-md-11 checkbox checkbox-primary">
+                                <input name="checkbox-03" id="checkbox-03" class="styled" type="checkbox" checked/>
+                                <label for="checkbox-03">
+                                    Balance and Net Change
+                                </label>
+                            </div>
+                            <div class="col-lg-11 col-md-11 checkbox checkbox-primary">
+                                <input name="checkbox-04" id="checkbox-04" class="styled" type="checkbox" checked/>
+                                <label for="checkbox-04">
+                                    Posting Seq and Batch Entry
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="divButton" class="form-group bottom-group">
+                        <div class="col-md-5" style="">
+                            <a id="btnReview" tabindex="1" class="btn btn-success" style="margin-top: 10px;">Review</a>
+                        </div>
+                        <div class="col-md-7" style="">
+                            <a id="excel_file" tabindex="1" class="btn btn-success" style="margin-top: 10px;">Export Excel</a>
+                        </div>
+ 
+                </div>
+            </section>
+        </div>
+        <div class="col-md-9">
+            <section class="panel">
+                <div class="panel-body" style="height: 100%; min-height: 500px;">
+                    <div id="divViewPDF" class="adv-table">
+                        <iframe id="frViewPDF" width="100%" height="100%" style="height: 100%; min-height: 510px;"
+                                src=""></iframe>
+                    </div>
+                    <div id="loadpage"
+                         style="position:absolute; left:0px; top:0px; background-color:white; layer-background-color:white; width: 100%; height: 100%;">
+                        <p align="center" style="font-size: large;">
+                            <img src="/static/img/loading1.gif">
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <div class="modal fade" id="account_to" tabindex="-1" role="dialog"
+         aria-labelledby="account_to"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Account</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                    </div>
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="account_to-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th id="acc-code">Account Code</th>
+                                                    <th id="acc-name">Account Name</th>
+                                                    <th id="acc-type">Acc. Type</th>
+                                                    <th id="acc-balance">Balance</th>                                                    
+                                                    <th id="acc-id" style="display: none;">ID</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" onclick="change_acct_to()">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="account_from" tabindex="-1" role="dialog"
+         aria-labelledby="account_from"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Account</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                    </div>
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="account_from-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th id="acc-code">Account Code</th>
+                                                    <th id="acc-name">Account Name</th>
+                                                    <th id="acc-type">Acc. Type</th>
+                                                    <th id="acc-balance">Balance</th>                                                    
+                                                    <th id="acc-id" style="display: none;">ID</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" onclick="change_acct()">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}?{% now 'H' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+    var EMPTY_DATE_MSG = 'Please select a valid date!';
+    var f_year = '';
+    var f_perd = '';
+    var t_year = '';
+    var t_perd = '';
+    var fiscal_data = [];
+    var acc_code_list = [];
+    var frViewPDF = $('#frViewPDF')[0];
+    var divViewPDF = $('#divViewPDF');
+
+    $(document).on('keyup', '.select2-selection.select2-selection--single', function (e) {
+        var keycode = (e.keyCode ? e.keyCode : e.which);
+        if(keycode == '9'){
+            $(this).closest(".select2-container").siblings('select:enabled').select2('open');
+        }
+    });
+
+    $(document).ready(function () {
+        var date = '{{fsc_date}}';
+        date = date.split('-');
+        f_year = date[2];
+        t_year = date[2];
+        f_perd = date[1];
+        t_perd = date[1];
+        date = date[1] + '-' + date[2];
+        $('#from-container input').val(date);
+        $('#to-container input').val(date);
+        get_fiscal_data();
+        get_account_data();
+        $("#currency_report_list").select2({});
+        $("#status_list").select2({});
+
+        $('#currency_report_list').on('select2:close', function (e)
+        {
+            $('#status_list').focus();
+            $('#status_list').select2('open');
+        });
+        $('#status_list').on('select2:close', function (e)
+        {
+            $('#btnReview').focus();
+        });
+
+        $('#btnReview').bind('keydown', function (event) {
+            if (event.which == 13) {
+                $(this).click()
+            }
+        });
+
+        $('#excel_file').bind('keydown', function (event) {
+            if (event.which == 13) {
+                $(this).click()
+            }
+        });
+    });
+
+    function changeYear(selector, to) {
+        var curr_year = '';
+        if(selector == 'from') {
+            curr_year = $('#from-container select option:selected').val();
+        } else {
+            curr_year = $('#to-container select option:selected').val();
+        }
+        var to_year = curr_year;
+        if (to == 'Next') {
+            to_year = parseInt(curr_year) + 1;
+        } else {
+            to_year = parseInt(curr_year) - 1;
+        }
+
+        fiscal_data.forEach(element => {
+            if(element.year == to_year) {
+                if(selector == 'from') {
+                    $("#from-container select").val(to_year).trigger('change');
+                } else {
+                    $("#to-container select").val(to_year).trigger('change');
+                }
+            }
+        });
+    }
+
+    $('#dropdownMenu1').on('click', function(){
+        update_fiscal_table('#fromTable tbody', f_year, f_perd);
+        $("#from-container select").val(f_year);
+        $('#to_menu').removeClass('show');
+        $('#from_menu').addClass('show');
+    });
+
+    $('#dropdownMenu2').on('click', function(){
+        update_fiscal_table('#toTable tbody', t_year, t_perd);
+        $("#to-container select").val(t_year);
+        $('#from_menu').removeClass('show');
+        $('#to_menu').addClass('show');
+    });
+
+    $("#from-container select").on('change', function(){
+        f_year = $(this).val();
+        $('#from-container input').val(f_perd + '-' + f_year);
+        update_fiscal_table('#fromTable tbody', f_year, f_perd);
+    });
+
+    $("#to-container select").on('change', function(){
+        t_year = $(this).val();
+        $('#to-container input').val(t_perd + '-' + t_year);
+        update_fiscal_table('#toTable tbody', t_year, t_perd);
+    });
+
+    function get_fiscal_data() {
+        $.ajax({
+            type: "GET",
+            url: "/accounting/get_cls_fiscal_data/",
+            success: function (data) {
+                fiscal_data = data;
+            }
+        });
+    }
+
+    function update_fiscal_table(selector, year, perd='1'){
+        $(selector).empty();
+        fiscal_data.forEach(element => {
+            if(element.year == year) {
+                let tr = '<tr class="rows';
+                if (parseInt(perd) == parseInt(element.period)) {
+                    tr += ' success';
+                }
+                tr += '"><td class="td-fsc">' + element.period + '</td>';
+                tr += '<td class="td-fsc">' + element.start + '</td>';
+                tr += '<td class="td-fsc">' + element.end + '</td>';
+                tr += '<td class="td-fsc">' + element.status + '</td>';
+                tr += '</tr>';
+                $(selector).append(tr);
+
+            }
+        });
+    }
+
+    $(document).on("click","tr.rows", function(e){
+        if($(this).parent().hasClass('f')){
+            f_perd = $(this).find('td').eq(0).text();
+            $('#from-container input').val(f_perd + '-' + f_year);
+            update_fiscal_table("#fromTable tbody", f_year, f_perd);
+            $('#from_menu').removeClass('show');
+        } else {
+            t_perd = $(this).find('td').eq(0).text();
+            $('#to-container input').val(t_perd + '-' + t_year);
+            update_fiscal_table("#toTable tbody", t_year, t_perd);
+            $('#to_menu').removeClass('show');
+        }
+        
+    });
+
+    $(document).on('click', function(e){
+        if($(e.target).hasClass('year-period-from')) {
+            $('#from_menu').addClass('show');
+        } else {
+            if($(e.target).parent().parent().hasClass('dropdown-menu') == false) {
+                $('#from_menu').removeClass('show');
+            }
+        }
+        if($(e.target).hasClass('year-period-to')) {
+            $('#to_menu').addClass('show');
+        } else {
+            if($(e.target).parent().parent().hasClass('dropdown-menu') == false) {
+                $('#to_menu').removeClass('show');
+            }
+        }
+    });
+
+    $('#btn_account_to').on('click', function () {
+        $('#account_to-table').DataTable().destroy();
+        $('#account_to-table').dataTable({
+            "iDisplayLength": 10,
+            scrollY: '50vh',
+            scrollCollapse: true,
+            "order": [[1, "asc"]],
+            "serverSide": true,
+            "ajax": {
+                "url": "/accounts/list/pagination/"
+            },
+            "columns": [
+                    {"data": "code", "sClass": "text-left"},
+                    {"data": "name", "sClass": "text-left"},
+                    {"data": "account_type", "sClass": "text-left"},
+                    {"data": "balance_type", "sClass": "text-left"},
+                    {"data": "id", "sClass": "hidden"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "sClass": "hide_column",
+                        "render": function (data, type, full, meta) {
+                            return '<input type="radio" name="acc_to-choices" id="' +
+                                full.id + '" class="call-checkbox" value="' + meta.row + '">';
+                            }
+                        }
+                    ]
+        });
+        
+        setTimeout(() => {
+            $('#account_to-table').DataTable().columns.adjust();
+        }, 300);
+    })
+
+    $('#account_from-table').on( 'draw.dt', function () {
+        selectTableRow('#account_from-table', 5);
+        $("input[type='radio']").each(function () {
+            $(this).closest('tr').css('background-color', '#f9f9f9');
+        });
+    });
+
+    $('#account_to-table').on( 'draw.dt', function () {
+        selectTableRow('#account_to-table', 5);
+        $("input[type='radio']").each(function () {
+            $(this).closest('tr').css('background-color', '#f9f9f9');
+        });
+    });
+
+    function get_account_data() {
+        $.ajax({
+            type: "GET",
+            url: "/accounts/get_account_code_list/",
+            success: function (data) {
+                acc_code_list = data.account_list;
+                $.each(acc_code_list, function (i, item) {
+                    $('#code_acc_from').append($('<option>', { 
+                        value: item[0],
+                        text : item[1] 
+                    }));
+                });
+                $.each(acc_code_list, function (i, item) {
+                    $('#code_acc_to').append($('<option>', { 
+                        value: item[0],
+                        text : item[1] 
+                    }));
+                });
+                $('#code_acc_from').select2({
+                    placeholder: "Select Account",
+                    allowClear: true
+                });
+                $('#code_acc_to').select2({
+                    placeholder: "Select Account",
+                    allowClear: true
+                });
+
+                $('#code_acc_from').on('select2:close', function (e)
+                {
+                    $('#code_acc_to').focus();
+                    $('#code_acc_to').select2('open');
+                });
+
+                $('#code_acc_to').on('select2:close', function (e)
+                {
+                    $('#currency_report_list').focus();
+                    $('#currency_report_list').select2('open');
+                });
+            }
+        });
+    }
+
+    function change_acct_to() {
+        var row = $("input[name='acc_to-choices']:checked").val();
+        if (row) {
+            var table = $('#account_to-table').DataTable();
+            var acct_id = table.cell(row, $("#acc-id").index()).data();
+            $("#code_acc_to").val(acct_id).trigger('change');
+            $("#account_to").modal("hide");
+        }
+    }
+
+
+    $('#btn_account_from').on('click', function () {
+        $('#account_from-table').DataTable().destroy();
+        $('#account_from-table').dataTable({
+            "iDisplayLength": 10,
+            scrollY: '50vh',
+            scrollCollapse: true,
+            "order": [[1, "asc"]],
+            "serverSide": true,
+            "ajax": {
+                "url": "/accounts/list/pagination/"
+            },
+            "columns": [
+                {"data": "code", "sClass": "text-left"},
+                {"data": "name", "sClass": "text-left"},
+                {"data": "account_type", "sClass": "text-left"},
+                {"data": "balance_type", "sClass": "text-left"},
+                {"data": "id", "sClass": "hidden"},
+                {
+                    "orderable": false,
+                    "data": null,
+                    "sClass": "hide_column",
+                    "render": function (data, type, full, meta) {
+                        return '<input type="radio" name="acc_from-choices" id="' +
+                            full.id + '" class="call-checkbox" value="' + meta.row + '">';
+                    }
+                }
+            ]
+        });
+        setTimeout(() => {
+            $('#account_from-table').DataTable().columns.adjust();
+        }, 300);
+
+    })
+    function change_acct() {
+        var row = $("input[name='acc_from-choices']:checked").val();
+        if (row) {
+            var table = $('#account_from-table').DataTable();
+            var acct_id = table.cell(row, $("#acc-id").index()).data();
+            $("#code_acc_from").val(acct_id).trigger('change');
+            $("#account_from").modal("hide");
+        }
+    }
+    $('#excel_file').on('click', function () {
+        var hdReportId = $('#currency_report_list').val();
+        var divFilter = $('.divGL' + hdReportId)[0];
+        var url = "";
+        var date = $('#date_list').val();
+        var document_type = $('#document_list').val();
+
+        var check_type = $('#checkbox-03').prop('checked')
+        var status = $('#status_list').val();
+        //var line_1 = $('#report_option_1').val();
+        //var line_2 = $('#report_option_2').val();
+        //var line_3 = $('#report_option_3').val();
+        var inputData = divFilter.getElementsByTagName("input");
+        var check_Batch = $('#checkbox-04').prop('checked');
+        //Print SR.... reports
+        switch (hdReportId) {
+            case '1':
+            case '2':
+                inputData = divFilter.getElementsByTagName("input");
+                if (inputData.length > 0) {
+                    var data0 = inputData[0].value.split("-").reverse().join("-");
+                    var data1 = inputData[1].value.split("-").reverse().join("-");
+                    var data2 = inputData[2].value;
+                    selectData = $('#divDateFromTo').find("select");
+                    if (selectData.length > 0) {
+                        data3 = selectData[2].value ? selectData[2].value : '0';
+                        data4 = selectData[3].value ? selectData[3].value : '0';
+                    }
+                    var acc_list = param_list_string(data3, data4, acc_code_list);
+                    var url = '';
+                    if (data0.length > 1 && data1.length > 1) {
+                        if ((check_Batch == true) && (check_type == true)) {
+                            url = '/reports/print_GL' + hdReportId + 'Batch_XLS' + '/' + data0 + '/' + data1 + '/'
+                                    + status + '/' + acc_list + '/';
+                        }
+
+                        if ((check_Batch == true) && (check_type != true)) {
+                            url = '/reports/print_GL' + hdReportId + 'a' + 'Batch_XLS' + '/' + data0 + '/' + data1 + '/'
+                                    + status + '/' + acc_list + '/';
+                        }
+
+                        if ((check_type == true) && (check_Batch != true)) {
+                            url = '/reports/print_GL' + hdReportId + '_XLS/' + data0 + '/' + data1 + '/'
+                                    + status + '/' + acc_list + '/';
+                        }
+                        if ((check_type != true) && (check_Batch != true)) {
+                            url = '/reports/print_GL' + hdReportId + 'a_XLS' + '/' + data0 + '/' + data1 + '/'
+                                    + status + '/' + acc_list + '/';
+                        }
+                        frViewPDF.setAttribute("src", url);
+                        //divViewPDF.innerHTML = frViewPDF.outerHTML;
+                        
+                    }
+                    else {
+                        pop_ok_dialog("Invalid Date",
+                            EMPTY_DATE_MSG,
+                            function () {
+                                $("#loadpage").hide();
+                            }
+                        );
+                    }
+                }
+                break;
+            default:
+                frViewPDF.setAttribute("src", "");
+                divViewPDF.innerHTML = frViewPDF.outerHTML;
+                break;
+        }
+
+    });
+ 
+    $(document).ready(function () {
+        $("#loadpage").hide();
+        $("#report_list").trigger('change');
+        //Set height of report view
+        var header = $('.header');
+        var height = $(this).height() - header.height() * 2;
+        divViewPDF.height(height);
+        var window = $(window).on('resize', function () {
+            divViewPDF.height(height);
+        }).trigger('resize'); //on page load
+    });
+
+    $('#checkbox-03').on('change', function(e){
+        if(this.checked) {
+            var curr = $('#currency_report_list').val();
+            if(curr == '2') {
+                $('#checkbox-04').prop('checked', true);
+                $('#checkbox-04').prop('disabled', true);
+            }
+        } else {
+            $('#checkbox-04').prop('disabled', false);
+        }
+    });
+
+    $('#currency_report_list').on('change', function(e){
+        var curr = $('#currency_report_list').val();
+        if(curr == '1') {
+            $('#checkbox-04').prop('disabled', false);
+        } else {
+            $('#checkbox-03').trigger('change');
+        }
+    });
+
+    $('#btnReview').on('click', function () {
+        var hdReportId = $('#currency_report_list').val();
+        var divFilter = $('.divGL' + hdReportId)[0];
+        var url = "";
+        var date = $('#date_list').val();
+        var document_type = $('#document_list').val();
+
+        var check_type = $('#checkbox-03').prop('checked')
+        var status = $('#status_list').val();
+        var line_1 = $('#report_option_1').val();
+        var line_2 = $('#report_option_2').val();
+        var line_3 = $('#report_option_3').val();
+        var inputData = divFilter.getElementsByTagName("input");
+        var check_Batch = $('#checkbox-04').prop('checked');
+
+        $("#loadpage").show();
+
+        //Print SR.... reports
+        switch (hdReportId) {
+            case '1':
+            case '2':
+                inputData = divFilter.getElementsByTagName("input");
+                if (inputData.length > 0) {
+                    var data0 = inputData[0].value.split("-").reverse().join("-");
+                    var data1 = inputData[1].value.split("-").reverse().join("-");
+                    var data2 = inputData[2].value;
+                    selectData = $('#divDateFromTo').find("select");
+                    if (selectData.length > 0) {
+                        data3 = selectData[2].value ? selectData[2].value : '0';
+                        data4 = selectData[3].value ? selectData[3].value : '0';
+                    }
+                    var acc_list = param_list_string(data3, data4, acc_code_list);
+                    var url = '';
+                    if (data0.length > 1 && data1.length > 1) {
+                        if ((check_Batch == true) && (check_type == true)) {
+                            url = '/reports/print_GL' + hdReportId + 'Batch' + '/' + data0 + '/' + data1 + '/'
+                                    + status + '/' + line_1 + '/' + line_2 + '/' + line_3 + '/' + acc_list + '/';
+                        }
+
+                        if ((check_Batch == true) && (check_type != true)) {
+                            url = '/reports/print_GL' + hdReportId + 'a' + 'Batch' + '/' + data0 + '/' + data1 + '/'
+                                    + status + '/' + line_1 + '/' + line_2 + '/' + line_3 + '/' + acc_list + '/';
+                        }
+
+                        if ((check_type == true) && (check_Batch != true)) {
+                            url = '/reports/print_GL' + hdReportId + '/' + data0 + '/' + data1 + '/'
+                                    + status + '/' + line_1 + '/' + line_2 + '/' + line_3 + '/' + acc_list + '/';
+                        }
+                        if ((check_type != true) && (check_Batch != true)) {
+                            url = '/reports/print_GL' + hdReportId + 'a' + '/' + data0 + '/' + data1 + '/'
+                                    + status + '/' + line_1 + '/' + line_2 + '/' + line_3 + '/' + acc_list + '/';
+                        }
+                        frViewPDF.setAttribute("src", url);
+                        divViewPDF.innerHTML = frViewPDF.outerHTML;
+                    }
+                    else {
+                        pop_ok_dialog("Invalid Date",
+                            EMPTY_DATE_MSG,
+                            function () {
+                                $("#loadpage").hide();
+                            }
+                        );
+                    }
+                }
+                break;
+            default:
+                frViewPDF.setAttribute("src", "");
+                divViewPDF.innerHTML = frViewPDF.outerHTML;
+                break;
+        }
+
+        document.getElementById("frViewPDF").onload = function () {
+            $("#loadpage").hide();
+        }
+
+    });
+
+</script>
+{% endblock %}
+
+

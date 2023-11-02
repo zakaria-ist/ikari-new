@@ -1,0 +1,133 @@
+Step A. FoxPro system migration:
+================================
+1. Get data from customer (P drive)
+2. Connect to RemoteDesktop/FoxPro.rdp and put the data in P drive
+3. Run "DBF Commander" open all the dbs files dbf files in the following packages and run "Pack Table"
+   AP, AR, GL, IC, ICHIS, SP, TX
+4. Run "DBF to MySql" and make sure to migrate all of the above files.
+5. Open cmd file and merge all the sql file into a single one (make sure TX is the last one)
+   copy *.sql ikari_db_foxprosp.sql
+
+
+Step B. Sage system migration:
+==============================
+1. Get dump data from customer
+2. Connect to RemoteDesktop/Sage.rdp, change system date to July 2017 as Sage evaluation license has expired and open Sage
+   Warning: do not disconnect from remote desktop when the date is back-dated, otherwise you can't connect anymore
+3. Login to "Sample Company Ltd"
+4. Select "Administrative Services" - "Database Load"
+5. Select "TEST : TEST" as the database and specify the location of the dump data retrieved from customer
+   (C:\DumpData\CROWN  --> for Crown) and press "Load" button
+6. Close dialog and Open and login to "TEST : TEST" company now.
+7. Select "Administrative Services" - "Data Activation".
+   Check "Yes, I have ..." and Press "Proceed" button
+   Check "Accounts Payable 6.2A" and press "Yes" on the information dialog and some other check boxes will be selected automatically.
+   Press "Next" and " Activate button"
+8. The dump data is now inside MS SQL Server, we need to convert it to MySQL using Workbench
+9. Open Workbench "Database" - "Migration Wizard"
+10. In the Source Selection, set the followings:
+    Connection Method: "ODBC (native)"
+    Driver: "SQL Server Native Client 11.0"
+    Server: "localhost\SQLEXPRESS"
+    Username: "sa"
+    Password: "Sage@300"
+    Press "Test Connection" to make sure it can connect and press "Next" button
+11. In the Target Selection, set the followings:
+    Stored Connection: "Local Instance MySQL"
+    Hostname: "localhost"
+    Port: "3306"
+    Username: "root"
+    Password: "123456"
+    Press "Test Connection" to make sure it can connect and press "Next" button
+12. In the Schemata Selection, check "TEST" and its "dbo" and press "Next" button
+13. Keep on pressing "Next" button till it reaches "Data Transfer Setup"
+    Note that it takes about 5-10 minutes to load "Manual Editing" page
+14. In "Data Transfer Setup", check "Truncate target tables..." and press press "Next" button
+15. Once it's migrated, we use Workbench to Export the MySQL.
+16. On Workbench, select "Database" - "Connect to Database..." and set
+    Stored Connection: "Local Instance MySQL"
+    Hostname: "localhost"
+    Port: "3306"
+    Username: "root"
+    Password: "123456"
+    Press "OK" button
+17. On the "Management" select "Data Export", specify
+    Export to Dump Project Folder: "C:\DumpData\CrownMySQL" and press "Start Export"
+18. Run the following command from Command Prompt
+    cd C:\DumpData\CrownMySQL
+    copy *.sql ikari_db_sage300.sql
+19. Open ikari_db_sage300.sql with text editor and replace all 'test' string with 'ikari_db_sage300'
+
+
+
+Step C. Migrate data to new System
+==================================
+Step C1. Setting up crown_acc_all_trx
+-------------------------------------
+0. Make sure there's already ikari_db_sage300 created in step B inside the MySQL server
+1. Connect to ikari_test_db
+2. Run the following script
+   a. Init_All/01 Accounting/00_ResetDB.sql
+   b. Init_All/01 Accounting/01_Master_data.sql
+   c. Generate Balance Sheet in Sage and add migration script in Init_All/01 Accounting/02_BalanceSheet_Report.sql
+   d. Replace @company_id with the actual number and run Init_All/01 Accounting/03_Transaction.sql
+3. Export the data and import it to a new db called crown_acc_all_trx
+
+Step C2. Migrating Sage database
+--------------------------------
+0. Make sure there's already ikari_db_sage300 and crown_acc_all_trx inside MySQL server
+1. Connect to ikari_test_db
+2. Run the following script
+   a. Init_All/00_*
+   b. Init_Crown/00_*
+   c. Init_Crown/01_*
+3. Open Init_Crown/02a1_*, and adjust the following and run
+   Cut off date: ??
+4. Open Init_Crown/02a2_*, and adjust the following and run
+
+5. Open Init_Crown/02a3_*, and adjust the following and run
+
+6. Open Init_Crown/02a4_*, and adjust the following and run the query (This will create batch 14, 15)
+
+7. Post the Invoice conversion batch in AR & AP, then set its status to 3 (Deleted)
+8. Check if there's duplicate entry in the batch created in AR/AP
+   For Crown data, it's at entry 5203 (Batch 144 Entry 1- AP Payment) and 5231 (Batch 145 last Entry- AP Payment)
+9. Post all the Opening Balance and Net change batches from  Jan - Nov 2016
+10. Post batch 14 & 15 & 13
+11. Post all AP AR batches and Revaluation for month of December
+12. Post the GL batches in December according to posting sequence
+13. Make sure the GL Revaluation data is correct (1201 -1603 USD, 1604-2004 YEN)
+10. Perform monthly closing for Year 2016
+
+Step C3. Migrating S&P database
+-------------------------------
+1. Connect to ikari_test_db and run Misc_Script/Delete_SP_Tables.sql
+2. Import MySQL script created in step A
+3. Run Init_Crown/FOXPRO_TO_IKARI_CROWN.sql
+4. Run Misc_Script/Delete_SP_Tables.sql
+
+
+Optional Step: To create new company in Sage, follow the following steps:
+=========================================================================
+1. Connect to RemoteDesktop/Sage.rdp, Open SQL Server Management Studio and connect to "WIN-VI9G71FF8RI\SQLEXPRESS"
+2. In "WIN-VI9G71FF8RI\SQLEXPRESS"'s Databases, add new Database
+   Database name: YourDBName
+   Owner: sa
+3. Open "All Programs", the navigate and open "Sage/Sage 300 ERP 2017/Database Setup"
+4. Login with the following ID:
+   User: ADMIN
+   Password: admin
+5. Press "New" button and input the following information:
+   Database ID: YourDBName
+   Database Format: Microsoft SQL Server
+6. Press "OK" button and set
+   Data Source: "WIN-VI9G71FF8RI\SQLEXPRESS"
+   Login ID: sa
+   Password: 123456
+   Database: YourDBName
+   and press "OK" button and close the applicaton
+7. Change system date to July 2017 as Sage evaluation license has expired and open Sage and login to "YourDBName" company
+   Note: It will take a while till the company loads the data
+8. Set "Fiscal Year Starting Date" to 01/01/2017, then press "Proceed" button
+9. On the dialog, select "Option" tab, and set "Functional Currency" to "SGD" and press "OK" button
+10. Logout and load the database data from other company.

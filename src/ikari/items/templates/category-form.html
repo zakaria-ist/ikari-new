@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}
+    {% if category.id %}
+        Edit Part Group
+    {% else %}
+        Add Part Group
+    {% endif %}
+{% endblock %}
+
+{% block category_active %}
+{% if menu_type == '1' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_order_a_active %}
+{% if menu_type == '1' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_order_i_active %}
+{% if menu_type == '1' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_a_active %}
+{% if menu_type == '1' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_i_active %}
+{% if menu_type == '1' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block part_group_sp_active %}
+{% if menu_type == '1' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block ics_a_active %}
+{% if menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Inventory Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block inv_category_active %}
+{% if menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Inventory Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block inv_setting_i_active %}
+{% if menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Inventory Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block inv_setting_a_active %}
+{% if menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Inventory Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                {% if category.id %}
+                    Edit Group
+                {% else %}
+                    Add Group
+                {% endif %}
+            </header>
+            <div class="panel-body">
+                <form class="form-horizontal"
+                        {% if category.id %}
+                      action="{% url 'category_edit' category.id menu_type%}"
+                        {% else %}
+                      action="{% url 'category_add' menu_type%}"
+                        {% endif %}
+                      role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="code" class="col-lg-2 col-sm-2 control-label">Code<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-4">
+                            {{ form.code }}
+                            <span class="messages">{{ form.errors.code }}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Description</label>
+                        <div class="col-lg-4">
+                            {{ form.name }}
+                            <span class="messages">{{ form.errors.name }}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Use for</label>
+                        <div class="col-lg-4">
+                            {% if is_inventory %}
+                                <select class="form-control" id="id_type" name="type">
+                                {% for flag in type_category %}
+                                    <option value="{{ flag.0 }}">{{ flag.1 }}</option>
+                                {% endfor %}
+                                </select>
+                            {% else %}
+                                <select class="form-control" id="id_type" name="type">
+                                    <option value="1">S&P MODULE</option>
+                                </select>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="form-group" style="display: none">
+                        <label for="short_description" class="col-lg-2 col-sm-2 control-label">Description</label>
+                        <div class="col-lg-4">
+                            {{ form.description }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="last_update" class="col-lg-2 col-sm-2 control-label">Last Update</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="last_update" name="last_update"
+                                    {% if category.id %} value="{{ category.update_date }}" {% endif %}
+                                   disabled="true">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" name="btnSave" id="btnSave" class="btn btn-success">Save</button>
+                            {% if 'items.delete_itemcategory' in user.get_all_permissions and category.id %}
+                                <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger">Delete</a>
+                            {% endif %}
+                            {% if menu_type == '2' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+                                <a class="btn btn-default" href="{% url 'category_list' %}">Cancel</a>
+                            {% else %}
+                                <a class="btn btn-default" href="{% url 'inv_category_list' %}">Cancel</a>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            {% if category.id %}
+                <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+                     class="modal fade">
+                    <div class="modal-dialog modal-sm">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                                <h4 class="modal-title">Delete Confirm Dialog</h4>
+                            </div>
+                            <div class="modal-body">
+                                <form role="form" action="{% url 'category_delete' category.id %}" method="post">
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-success">OK</button>
+                                    <a class="btn btn-default" href="{% url 'category_edit' category.id menu_type%}">Cancel</a>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </section>
+    </div>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="application/javascript" src="{% static 'js/ga.js' %}?{% now 'H' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="application/javascript">
+        $(document).on('keyup', '.select2-selection.select2-selection--single', function (e) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if(keycode == '9'){
+                $(this).closest(".select2-container").siblings('select:enabled').select2('open');
+            }
+        });
+        var category_id = '{{ category.id }}'
+        $(document).ready(function () {
+            if (category_id == '') {
+                $('#id_code').focus();
+            } else {
+                $('#id_name').focus();
+                $('#id_code').attr('tabIndex', '-1');
+            }
+            $('#id_type').select2({
+                placeholder: "Select Type",
+            });
+
+            $('#id_type').on('select2:close', function (e)
+            {
+                $('#btnSave').focus();
+            });
+        });
+        $(document).on('click', 'input[type="text"]', function(){
+            $(this).select();
+        });
+        $(document).on('click', 'input[type="number"]', function(){
+            $(this).select();
+        });
+        {% if category.id %}
+            $('#id_type').val({{ category.type }});
+        {% endif %}
+    </script>
+{% endblock %}

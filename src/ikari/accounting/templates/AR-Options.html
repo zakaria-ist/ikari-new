@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}AR Options{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+
+{% block parent_AR_a_active %}active{% endblock %}
+{% block parent_AR_i_active %}active{% endblock %}
+{% block ar_options_active %}active{% endblock %}
+
+{% block content %}
+    <div class="panel">
+        <header class="panel-heading">
+            AR Options
+        </header>
+        <div class="panel-body">
+            {% csrf_token %}
+            <div id="content">
+                <ul id="tabs" class="nav nav-tabs" data-tabs="tabs"
+                    style="padding-left: 20px; margin-left: 18px; margin-right: 24px;">
+                    <li {% if active_tab_index == '0' %}class="active"{% else %}class=""{% endif %}>
+                        <a href="#num_tab" data-toggle="tab">Numbering</a>
+                    </li>
+                    <li {% if active_tab_index == '1' %}class="active"{% else %}class=""{% endif %}>
+                        <a href="#stat_tab" data-toggle="tab">Statement</a>
+                    </li>
+                </ul>
+
+                <div id="my-tab-content" class="tab-content">
+                    <div id="num_tab"
+                        {% if active_tab_index == '0' %}class="tab-pane active"
+                        {% else %}class="tab-pane"{% endif %}>
+                        <label id="" class="control-label-item" name="" style="margin: 20px">Document Numbers</label>
+                        <form class="form-horizontal" action="{% url 'ar_options' %}"
+                            role="form" method="post"  
+                            onsubmit="return checkForm(this);" 
+                            enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ form.errors }}
+                        <div class="adv-table table-responsive">
+                            <input type="text" name="active_tab_index" class="form-control hidden active_tab_index">
+                            <table class="display table table-bordered table-striped table-condensed"
+                                    id="number-table" style="width: 70%;">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center">Document Type</th>
+                                        <th class="text-center">Length</th>
+                                        <th class="text-center">Prefix</th>
+                                        <th class="text-center">Next Number</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><label id="id_invoice" class="control-label-item" name="invoice">Invoice</label></td>
+                                        <td class="text-center">{{ form.invoice_length }}</td>
+                                        <td class="text-center">{{ form.invoice_prefix }}</td>
+                                        <td class="text-center">{{ form.invoice_next_number }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><label id="id_cnote" class="control-label-item" name="cnote">Credit Note</label></td>
+                                        <td class="text-center">{{ form.cnote_length }}</td>
+                                        <td class="text-center">{{ form.cnote_prefix }}</td>
+                                        <td class="text-center">{{ form.cnote_next_number }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><label id="id_dnote" class="control-label-item" name="dnote">Debit Note</label></td>
+                                        <td class="text-center">{{ form.dnote_length }}</td>
+                                        <td class="text-center">{{ form.dnote_prefix }}</td>
+                                        <td class="text-center">{{ form.dnote_next_number }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><label id="id_interest" class="control-label-item" name="interest">Interest Invoice</label></td>
+                                        <td class="text-center">{{ form.interest_length }}</td>
+                                        <td class="text-center">{{ form.interest_prefix }}</td>
+                                        <td class="text-center">{{ form.interest_next_number }}</td>
+                                    </tr>
+                                    {% comment %} <tr>
+                                        <td><label id="id_recurring" class="control-label-item" name="recurring_pay">Recurring Charge</label></td>
+                                        <td class="text-center">{{ form.recurring_length }}</td>
+                                        <td class="text-center">{{ form.recurring_prefix }}</td>
+                                        <td class="text-center">{{ form.recurring_next_number }}</td>
+                                    </tr> {% endcomment %}
+                                    <tr>
+                                        <td><label id="id_receipt" class="control-label-item" name="receipt">Receipt</label></td>
+                                        <td class="text-center">{{ form.receipt_length }}</td>
+                                        <td class="text-center">{{ form.receipt_prefix }}</td>
+                                        <td class="text-center">{{ form.receipt_next_number }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><label id="id_prepayment" class="control-label-item" name="prepayment">Prepayment</label></td>
+                                        <td class="text-center">{{ form.prepayment_length }}</td>
+                                        <td class="text-center">{{ form.prepayment_prefix }}</td>
+                                        <td class="text-center">{{ form.prepayment_next_number }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><label id="id_ucash" class="control-label-item" name="ucash">Unapplied Cash</label></td>
+                                        <td class="text-center">{{ form.ucash_length }}</td>
+                                        <td class="text-center">{{ form.ucash_prefix }}</td>
+                                        <td class="text-center">{{ form.ucash_next_number }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><label id="id_adjustment" class="control-label-item" name="adjustment">Adjustment</label></td>
+                                        <td class="text-center">{{ form.adjustment_length }}</td>
+                                        <td class="text-center">{{ form.adjustment_prefix }}</td>
+                                        <td class="text-center">{{ form.adjustment_next_number }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><label id="id_refund" class="control-label-item" name="refund">Refund</label></td>
+                                        <td class="text-center">{{ form.refund_length }}</td>
+                                        <td class="text-center">{{ form.refund_prefix }}</td>
+                                        <td class="text-center">{{ form.refund_next_number }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-left" style="margin: 20px">
+                            <button id="btnSaveNum" type="submit" class="btn btn-success" name="btnSave" onclick="">
+                                Update
+                            </button>
+                        </div>
+                        </form>
+                    </div>
+                    <div id="stat_tab"
+                        {% if active_tab_index == '1' %}class="tab-pane active"
+                        {% else %}class="tab-pane"{% endif %}>
+                        <label id="" class="control-label-item" name="" style="margin: 20px">Aging Periods</label>
+                        <form class="form-horizontal" action="{% url 'ar_options' %}"
+                            role="form" method="post"  
+                            onsubmit="return checkForm(this);" 
+                            enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ form.errors }}
+                        <div class="adv-table table-responsive">
+                            <input type="text" name="active_tab_index" class="form-control hidden active_tab_index">
+                            <table class="display table table-bordered table-striped table-condensed"
+                                    id="state-table" style="width:50%;">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center">From</th>
+                                        <th class="text-center">To</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="text-right"><label id="" class="control-label-item" name="">Current</label></td>
+                                        <td class="text-right"><label id="" class="control-label-item" name=""></label></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right"><label id="aging_start_1" class="control-label-item" name="aging_start_1">1</label></td>
+                                        <td class="text-center">{{ state_form.aging_period_1 }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right"><label id="aging_start_2" class="control-label-item" name="aging_start_2">{{ state_form.aging_period_1.value }}</label></td>
+                                        <td class="text-center">{{ state_form.aging_period_2 }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right"><label id="aging_start_3" class="control-label-item" name="aging_start_3">{{ state_form.aging_period_2.value }}</label></td>
+                                        <td class="text-center">{{ state_form.aging_period_3 }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right"><label id="aging_start_4" class="control-label-item" name="aging_start_3">Over</label></td>
+                                        <td class="text-right"><label id="id_aging_period_4" class="control-label-item" name="aging_period_4">{{ state_form.aging_period_3.value }}</label></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-left" style="margin: 20px">
+                            <button id="btnSaveState" type="submit" class="btn btn-success" name="btnSave" onclick="">
+                                Update
+                            </button>
+                        </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}
+
+{% block js %}
+<script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>    
+<script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+<script src="{% static "js/select2/select2.js" %}"></script>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        var numtbl = $('#number-table').DataTable(
+            {
+                "paging":   false,
+                "ordering": false,
+                "info":     false,
+                "searching": false
+            }
+        );
+        var sttbl = $('#state-table').DataTable(
+            {
+                "paging":   false,
+                "ordering": false,
+                "info":     false,
+                "searching": false
+            }
+        );
+    });
+    $('.active_tab_index').val('0');
+
+    $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        var target = $(e.target).attr("href") // activated tab
+        if (target == '#num_tab') {
+            $('.active_tab_index').val('0');
+        } else if (target == '#stat_tab') {
+            $('.active_tab_index').val('1');
+            $('#aging_start_2').text(parseInt($('#id_aging_period_1').val()) + 1);
+            $('#aging_start_3').text(parseInt($('#id_aging_period_2').val()) + 1);
+        }
+    });
+
+    $('#id_aging_period_1').on('change', function(){
+        $('#aging_start_2').text(parseInt($('#id_aging_period_1').val()) + 1);
+    });
+    $('#id_aging_period_2').on('change', function(){
+        $('#aging_start_3').text(parseInt($('#id_aging_period_2').val()) + 1);
+    });
+    $('#id_aging_period_3').on('change', function(){
+        $('#id_aging_period_4').text($('#id_aging_period_3').val());
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,570 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <style>
+        .hide_column {
+            display : none;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}Report View{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block parent_AP_a_active %}active{% endblock %}
+{% block parent_AP_i_active %}active{% endblock %}
+{% block ap_vend_active %}active{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-3">
+            <section class="panel" id="secReportList">
+                <header class="panel-heading">
+                    AP letters/Labels
+                </header>
+                <div class="panel-body form-horizontal">
+                    <form class="form-horizontal" action="" role="form" method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <input type="hidden" id="hdReportId">
+                            <!-- <label class="control-label col-md-12">A/R Aged Trial Report</label> -->
+                            <div class="col-md-12">
+                                <select class="form-control" id="report_list" name="report_list">
+                                    {% for report in ar_report_list %}
+                                        <option value="{{ report.0 }}">
+                                            {{ report.0 }} - {{ report.1 }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </section>
+            <section class="panel" id="secFilterCondition">
+                <header class="panel-heading">
+                    Filter Conditions
+                </header>
+                <div class="panel-body form-horizontal">
+                    <div id="divDateFromTo" class="form-group filter divAR1 divAR2 divAR3">
+
+                        <label class="control-label col-md-12 ">Run Date</label>
+                        <div class="col-md-10 ">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    id="run_date" size="16"
+                                    type="text" value="{{session_date}}" required/>
+                        </div>
+
+
+                        <label class="control-label col-md-12">Cutoff Date</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    id="cutoff_date" size="16"
+                                    type="text" value="{{session_date}}" required/>
+                        </div>
+
+                        <label class="control-label col-md-12 hidden">Age By</label>
+                        <div class="col-md-11 hidden">
+                            <select class="form-control" id="date_list" name="date_list">
+                                {% for date in date_type %}
+                                    <option value="{{ date.0 }}">
+                                        {{ date.0 }} - {{ date.1 }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <label class="control-label col-md-12 hidden">Account Type</label>
+                        <div class="col-md-11 hidden">
+                            <select class="form-control" id="document_list" name="document_list">
+                                {% for document in document_type %}
+                                    <option value="{{ document.0 }}">
+                                        {{ document.0 }} - {{ document.1 }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+
+                        <label class="control-label col-md-12">Vendor From :</label>
+                        <div class="col-md-8">
+                            <input type="text" name="id_cust_from" id="id_cust_from" class="hidden">
+                            {% comment %} <input type="text" class="form-control" id="lbSR7405Customer" name="lbSR7405Customer"> {% endcomment %}
+                            <select class="form-control" id="lbSR7405Customer" name="lbSR7405Customer">
+                                <option value="">Select Vendor</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                           <button id="btnSearchCustomer" type="button" class="btn btn-info sended" data-toggle="modal"
+                                href="#myCustomerListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                         <label class="control-label col-md-12">Vendor To :</label>
+                        <div class="col-md-8">
+                            <input type="text" name="id_cust_to" id="id_cust_to" class="hidden">
+                            {% comment %} <input type="text" class="form-control" id="lbSR7405Customer_to" name="lbSR7405Customer_to"> {% endcomment %}
+                            <select class="form-control" id="lbSR7405Customer_to" name="lbSR7405Customer_to">
+                                <option value="">Select Vendor</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                           <button id="btnSearchCustomer_to" type="button" class="btn btn-info sended" data-toggle="modal"
+                                href="#myCustomerListModal_to"><i class="fa fa-search"></i></button>
+                        </div>
+                    </div>
+                    <div id="divButton" class="form-group bottom-group">
+                        <div class="col-md-5" style="">
+                            <a id="btnReview" class="btn btn-success" style="margin-top: 10px;">Review</a>
+                        </div>
+                        {% comment %} <div class="col-md-7" style="">
+                            <a id="email_send" class="btn btn-success" style="margin-top: 10px;">Send Email</a>
+                        </div> {% endcomment %}
+                    </div>
+                </div>
+            </section>
+        </div>
+        <div class="col-md-9">
+            <section class="panel">
+                <div class="panel-body" style="height: 100%; min-height: 500px;">
+                    <div id="divViewPDF" class="adv-table">
+                        <iframe id="frViewPDF" width="100%" height="100%" style="height: 100%; min-height: 510px;"
+                                src=""></iframe>
+                    </div>
+                    <div id="loadpage"
+                         style="position:absolute; left:0px; top:0px; background-color:white; layer-background-color:white; width: 100%; height: 100%;">
+                        <p align="center" style="font-size: large;">
+                            <img src="/static/img/loading1.gif">
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <div class="modal fade" id="myCustomerListModal" tabindex="-1" role="dialog"
+         aria-labelledby="myCustomerListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Vendor</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div id="customer_error" class="messages"
+                             style="font-size: 12.5px !important;"></div>
+                    </div>
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+
+                                            <table id="customer-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th id="cus-id" class="hidden">ID</th>
+                                                    <th id="cus-code">Customer Code</th>
+                                                    <th id="cus-name">Customer Name</th>
+                                                    <th id="cus-payment_term">Payment Term</th>
+                                                    <th id="cus-currency_code">Currency Code</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" onclick="changeCustomer()">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="myCustomerListModal_to" tabindex="-1" role="dialog"
+         aria-labelledby="myCustomerListModal_to"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Customer</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div id="customer_error" class="messages"
+                             style="font-size: 12.5px !important;"></div>
+                    </div>
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+
+                                            <table id="customer_to-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th id="cus-id_to" class="hidden">ID</th>
+                                                    <th id="cus-code_to">Customer Code</th>
+                                                    <th id="cus-name_to">Customer Name</th>
+                                                    <th id="cus-payment_term_to">Payment Term</th>
+                                                    <th id="cus-currency_code_to">Currency Code</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" onclick="changeCustomer_to()">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block extrafoot %}
+    {% load staticfiles %}
+
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}?{% now 'H' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+        function get_supplier_data() {
+            $.ajax({
+                type: "GET",
+                url: "/suppliers/get_supplier_code_list/",
+                success: function (data) {
+                    cust_code_list = data.supplier_list;
+                    $.each(cust_code_list, function (i, item) {
+                        $('#lbSR7405Customer').append($('<option>', {
+                            value: item[0],
+                            text : item[1]
+                        }));
+                    });
+                    $.each(cust_code_list, function (i, item) {
+                        $('#lbSR7405Customer_to').append($('<option>', {
+                            value: item[0],
+                            text : item[1]
+                        }));
+                    });
+                    $('#lbSR7405Customer').select2({
+                        placeholder: "Select Vendor",
+                        allowClear: true
+                    });
+                    $('#lbSR7405Customer_to').select2({
+                        placeholder: "Select Vendor",
+                        allowClear: true
+                    });
+                }
+            });
+        }
+        $("#lbSR7405Customer").on('change', function(){
+            var selected_to = $("#lbSR7405Customer").val();
+            $("#id_cust_from").val(selected_to).trigger('change');
+        });
+        $("#lbSR7405Customer_to").on('change', function(){
+            var selected_to = $("#lbSR7405Customer_to").val();
+            $("#id_cust_to").val(selected_to).trigger('change');
+        });
+
+        $('#customer-table').on( 'draw.dt', function () {
+            selectTableRow('#customer-table', 5);
+            $("input[type='radio']").each(function () {
+                $(this).closest('tr').css('background-color', '#f9f9f9');
+            });
+        });
+        $('#btnSearchCustomer').on('click', function () {
+            $("#customer_error").text(""); // Delete error message
+            $('#customer-table').DataTable().destroy();
+            $('#customer-table').dataTable({
+                "iDisplayLength": 10,
+                "bLengthChange": false,
+                "order": [[0, "asc"]],
+                "serverSide": true,
+                "ajax": {
+                    "url": "/accounting/supplier_list/"
+                },
+                "columns": [
+                    {"data": "id", "sClass": "hidden"},
+                    {"data": "code", "sClass": "text-left"},
+                    {"data": "name", "sClass": "text-left"},
+                    {"data": "term_days", "sClass": "text-left"},
+                    {"data": "currency_code", "sClass": "text-left"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "sClass": "hide_column",
+                        "render": function (data, type, full, meta) {
+                            return '<input type="radio" name="customer-choices" id="' +
+                                full.id + '" class="call-checkbox" value="' + meta.row + '">';
+                        }
+                    }
+                ]
+            });
+            setTimeout(() => {
+                $('#customer-table').DataTable().columns.adjust();
+            }, 300);
+        });
+
+        $('#customer_to-table').on( 'draw.dt', function () {
+            selectTableRow('#customer_to-table', 5);
+            $("input[type='radio']").each(function () {
+                $(this).closest('tr').css('background-color', '#f9f9f9');
+            });
+        });
+        $('#btnSearchCustomer_to').on('click', function () {
+            $("#customer_error").text(""); // Delete error message
+            $('#customer_to-table').DataTable().destroy();
+            $('#customer_to-table').dataTable({
+                "iDisplayLength": 10,
+                "bLengthChange": false,
+                "order": [[0, "asc"]],
+                "serverSide": true,
+                "ajax": {
+                    "url": "/accounting/supplier_list/"
+                },
+                "columns": [
+                    {"data": "id", "sClass": "hidden"},
+                    {"data": "code", "sClass": "text-left"},
+                    {"data": "name", "sClass": "text-left"},
+                    {"data": "term_days", "sClass": "text-left"},
+                    {"data": "currency_code", "sClass": "text-left"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "sClass": "hide_column",
+                        "render": function (data, type, full, meta) {
+                            return '<input type="radio" name="customer_to-choices" id="' +
+                                full.id + '" class="call-checkbox" value="' + meta.row + '">';
+                        }
+                    }
+                ]
+            });
+            setTimeout(() => {
+                $('#customer_to-table').DataTable().columns.adjust();
+            }, 300);
+        });
+        $('#sandbox-container input').datepicker({
+            format: "mm-yyyy",
+            startView: 1,
+            minViewMode: 1,
+            autoclose: true
+        });
+        // var run_date = cutoff_date = moment().format("DD-MM-YYYY");
+        // $('#cutoff_date').bind('keyup', function (event) {
+        //     if (event.which == 13) {
+        //         $('#cutoff_date').val(moment(cutoff_date, "DD-MM-YYYY").format("DD-MM-YYYY"));
+        //         $('#lbSR7405Customer').select();
+        //         return false;
+        //     } else {
+        //         temp_date = $(this).val();
+        //         valid_date = moment(temp_date, "DD-MM-YYYY", true).isValid();
+        //         if (valid_date) {
+        //             cutoff_date = temp_date;
+        //         }
+        //         return true;
+        //     }
+        // });
+        // $('#run_date').bind('keyup', function (event) {
+        //     if (event.which == 13) {
+        //         if (run_date != '') {
+        //             $('#run_date').val(moment(run_date, "DD-MM-YYYY").format("DD-MM-YYYY"));
+        //         }
+        //         $('#cutoff_date').select();
+        //         return false;
+        //     } else {
+        //         temp_date = $(this).val();
+        //         valid_date = moment(temp_date, "DD-MM-YYYY", true).isValid();
+        //         if(valid_date) {
+        //             run_date = temp_date;
+        //         }
+        //         return true;
+        //     }
+        // });
+        //
+        // $('#run_date').keydown(function(event){
+        //     adjust_input_date(this);
+        // });
+        // $('#cutoff_date').keydown(function(event){
+        //     adjust_input_date(this);
+        // });
+
+        function validateDate(inputId) {
+          // press enter
+          $(inputId).on('keyup', function(event) {
+            if (event.which != 13) {
+              adjust_input_date(this);
+              date = $(this).val();
+            } else {
+               if (date && moment(date, "DD-MM-YYYY", true).isValid()) {
+                 $(this).val(date);
+               } else {
+                   $(this).datepicker('setDate', new Date());
+               }
+               $('#cutoff_date').select();
+             }
+          });
+
+          // blur
+          $(inputId).on('blur', function() {
+            date = $(this).val();
+            if (date && moment(date, "DD-MM-YYYY", true).isValid()) {
+                return;
+            } else {
+                $(this).datepicker('setDate', new Date());
+            }
+          });
+        }
+
+        validateDate($('#run_date'));
+        validateDate($('#cutoff_date'));
+
+        function changeCustomer() {
+            var row = $("input[name='customer-choices']:checked").val();
+            if (row) {
+                var table = $('#customer-table').DataTable();
+                var customer_id = table.cell(row, $("#cus-code").index()).data();
+                var cust_id = table.cell(row, $("#cus-id").index()).data();
+                $("#id_cust_from").val(cust_id).trigger('change');
+                $("#lbSR7405Customer").val(cust_id).trigger('change');
+                $("#myCustomerListModal").modal("hide");
+            }
+        }
+        function changeCustomer_to() {
+            var row = $("input[name='customer_to-choices']:checked").val();
+            if (row) {
+                var table = $('#customer_to-table').DataTable();
+                var customer_id = table.cell(row, $("#cus-code_to").index()).data();
+                var cust_id = table.cell(row, $("#cus-id").index()).data();
+                $("#id_cust_to").val(cust_id).trigger('change');
+                $("#lbSR7405Customer_to").val(cust_id).trigger('change');
+                $("#myCustomerListModal_to").modal("hide");
+            }
+        }
+
+        var frViewPDF = $('#frViewPDF')[0];
+        var divViewPDF = $('#divViewPDF');
+        $(document).ready(function () {
+            $("#loadpage").hide();
+            $("#report_list").trigger('change');
+            //Set height of report view
+            var header = $('.header');
+            var height = $(this).height() - header.height() * 2;
+            divViewPDF.height(height);
+            var window = $(window).on('resize', function () {
+                divViewPDF.height(height);
+            }).trigger('resize'); //on page load
+            $('#report_list').select2({});
+            get_supplier_data();
+        });
+
+        $("#report_list").change(function () {
+            var report = $('#report_list').val();
+            if('2' == report){
+                $('#email_send').attr('disabled', true);
+            } else {
+                $('#email_send').attr('disabled', false);
+            }
+            var ord_code = "";
+            $('.divAR' + ord_code).removeAttr("style");
+        });
+        $('#btnReview').on('click', function () {
+            var review = 'review';
+            sendEmailOrReviewReport(review);
+        });
+
+        $('#email_send').on('click', function () {
+            var email = 'email';
+            sendEmailOrReviewReport(email);
+        });
+
+        function sendEmailOrReviewReport(report_type) {
+            var hdReportId = $("#report_list option:selected").val();
+            var divFilter = $('.divAR' + hdReportId)[0];
+            var url = "";
+            var date = $('#date_list').val();
+            var document_type = $('#document_list').val();
+            var full_paid = $('#full_paid:checked').val();
+            var curr_list = $('#curr_list').val();
+            $("#loadpage").show();
+            paid_full = 0;
+            if (full_paid) {
+                paid_full = 1;
+            }
+            else {
+                paid_full = 0;
+            }
+
+            inputData = divFilter.getElementsByTagName("input");
+            if (inputData.length > 0) {
+                ageAsOfDate = inputData[0].value.split("-").reverse().join("-");
+                cutOffDate = inputData[1].value.split("-").reverse().join("-");
+                customerCode = inputData[2].value
+
+            }
+            if (ageAsOfDate.length == 0 || cutOffDate.length == 0) {
+                alert("Please select a valid date!");
+                $("#loadpage").hide();
+            }
+            if (ageAsOfDate.length == 0)
+                ageAsOfDate = '0'
+            if (cutOffDate.length == 0)
+                cutOffDate = '0'
+            var url = "";
+
+            var customerCode = '0';
+            var cust_to = '0';
+            var namecust = $('#lbSR7405Customer').val()
+            if (namecust) {
+                customerCode = $('#id_cust_from').val();
+            }
+            var namecust_to = $('#lbSR7405Customer_to').val()
+            if (namecust_to) {
+                cust_to = $('#id_cust_to').val();
+            }
+            if (parseInt(hdReportId) == 1) {
+                if(report_type == 'email') hdReportId = report_type;
+                url = '/reports/print_AP_vendor_letter' + '/' + hdReportId + '/' + ageAsOfDate + '/' + cutOffDate + '/'
+                    + customerCode + '/' + date + '/' + document_type + '/' + cust_to + '/' + paid_full + '/';
+                frViewPDF.setAttribute("src", url);
+                divViewPDF.innerHTML = frViewPDF.outerHTML;
+            } else {
+                if (report_type == 'email') hdReportId = report_type;
+                url = '/reports/print_AP_vendor_Label' + '/' + hdReportId + '/' + ageAsOfDate + '/' + cutOffDate + '/'
+                    + customerCode + '/' + date + '/' + document_type + '/' + cust_to + '/' + paid_full + '/';
+                frViewPDF.setAttribute("src", url);
+                divViewPDF.innerHTML = frViewPDF.outerHTML;
+            }
+
+            document.getElementById("frViewPDF").onload = function () {
+                $("#loadpage").hide();
+            }
+        }
+
+    </script>
+
+{% endblock %}

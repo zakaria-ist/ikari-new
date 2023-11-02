@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}
+Edit Country
+{% endblock %}
+
+{% block country_active %}
+{% if menu_type == '0' %} {# TRN_CODE_TYPE_DICT['Global'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_system_setting_a_active %}
+{% if menu_type == '0' %} {# TRN_CODE_TYPE_DICT['Global'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_system_setting_i_active %}
+{% if menu_type == '0' %} {# TRN_CODE_TYPE_DICT['Global'] #}
+    active
+{% endif %}
+{% endblock %}
+
+
+{% block parent_order_a_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_order_i_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_a_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_i_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block country_sp_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                Edit Country
+            </header>
+            <div class="panel-body">
+                <form class="form-horizontal" action="{% url 'country_edit' country.id menu_type %}" role="form" method="post"
+                       onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+{#                    <div class="form-group">#}
+{#                        <label for="code" class="col-lg-2 col-sm-2 control-label">Code Type</label>#}
+{#                        <div class="col-lg-3">#}
+{#                           <select id="countries_id" class="form-control" >#}
+{#                           <option>Country</option>#}
+{#                           </select>#}
+{#                        </div>#}
+{#                    </div>#}
+                    
+                    <div class="form-group">
+                        <label for="code" class="col-lg-2 col-sm-2 control-label">Country Code<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-3">
+                            <input tabindex="-1" type="text" class="form-control" id="code" name="code" value="{{ country.code }}"
+                                   required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Description<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-3">
+                            <input type="text" class="form-control" id="name" name="name" value="{{ country.name }}"
+                                   required>
+                        </div>
+                    </div>
+                    <!-- last update -->
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label"><i>Last Update*</i></label>
+                        <div class="col-lg-3">
+                            <input type="text" tabindex="-1" class="form-control" id="name" name="name" disabled="true" value="{{ country.update_date }}">
+                        </div>
+                    </div>
+                    <!-- 
+                    <div class="form-group">
+                        <label for="currency" class="col-lg-2 col-sm-2 control-label">Currency</label>
+                        <div class="col-sm-4"> -->
+                            <select class="form-control hidden" id="currency" name="currency">
+                                {% for currency in currency_list %}
+                                    <option value="{{ currency.id }}"
+                                            {% if currency.id == country.currency_id %}selected{% endif %}>
+                                        {{ currency.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            {% if not currency_list %}
+                                <!-- <span class="messages">Currency is empty. Please input currency!</span> -->
+                            {% endif %}
+                        <!-- </div> -->
+                        <!-- <label for="tax" class="col-lg-1 col-sm-1 control-label">Tax</label>
+                        <div class="col-sm-3"> -->
+                            <select class="form-control hidden" id="tax" name="tax">
+                                <option value="0">---Select---</option>
+                                {% for tax in tax_list %}
+                                    <option value="{{ tax.id }}"
+                                            {% if tax.id == country.tax_id %}selected{% endif %}>{{ tax.name }}</option>
+                                {% endfor %}
+                            </select>
+                        <!-- </div> -->
+                    <!-- </div> -->
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" name="btnSave" class="btn btn-success" {% if not currency_list %}
+                                    disabled {% endif %}>Save
+                            </button>
+                            {% if 'countries.delete_country' in user.get_all_permissions %}
+                                <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger">Delete</a>
+                            {% endif %}
+
+                            {% if menu_type = '0' %} {# TRN_CODE_TYPE_DICT['Global'] #}
+                            <a class="btn btn-default" href="{% url 'country_list' %}" >Cancel</a>
+                            {% else %}
+                            <a class="btn btn-default" href="{% url 'list_country' %}" >Cancel</a>
+                            {% endif%}
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+                 class="modal fade">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content" style="top:33%; margin-left: auto; margin-right: auto;">
+                        <div class="modal-header">
+                            <button aria-hidden="true" tabindex="-1" data-dismiss="modal" class="close" type="button">×</button>
+                            <h4 class="modal-title">Delete Confirm Dialog</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form role="form" action="{% url 'country_delete' country.id %}" method="post">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                                </div>
+                                <button type="submit" class="btn btn-success">OK</button>
+                                <a class="btn btn-default" href="{% url 'country_edit' country.id menu_type %}">Cancel</a>
+                            </form>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="application/javascript" src="{% static 'js/ga.js' %}?{% now 'H' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+             $('#countries_id').select2({
+                placeholder: "Select Country",
+            });
+            $('#countries_id').focus()
+            $('#countries_id').on('select2:close', function (e)
+            {
+                $('#name').focus();
+            });
+
+            $(document).on('keyup', '.select2-selection.select2-selection--single', function (e) {
+                var keycode = (e.keyCode ? e.keyCode : e.which);
+                if(keycode == '9'){
+                    $(this).closest(".select2-container").siblings('select:enabled').select2('open');
+                }
+            });
+
+            $('#name').focus();
+        });
+    </script>
+{% endblock %}

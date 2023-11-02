@@ -1,0 +1,399 @@
+
+{#Comfirm Delete tranasaction#}
+<div class="modal fade" id="comfirmDeleteOrderModal" tabindex="-1" role="dialog"
+    data-backdrop="static" data-keyboard="false"
+    aria-labelledby="myModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-sm confirm-dialog" style="margin-top: 20%;">
+        <form id="comfirmDeleteOrderForm">
+            <div class="modal-content" style="top:33%; width: 33%; margin-left: auto; margin-right: auto;">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title"><strong>Delete Confirm Dialog</strong></h4>
+                </div>
+                <div class="modal-body" style="padding-bottom: 0px!important;">
+                    <div class="form-group">
+                        <label>Are you sure want to delete?</label>
+                    </div>
+                </div>
+                <div class="modal-footer" style="text-align: center">
+                    <button class="btn btn-default" type="button" data-dismiss="modal">No</button>
+                    <button class="btn btn-success" type="submit">Yes</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{#End Comfirm delete transaction#}
+{#Comfirm Save/Delete tranasaction#}
+<div class="modal fade" id="comfirmSaveDeleteOrderModal" tabindex="-1" role="dialog"
+    data-backdrop="static" data-keyboard="false"
+    aria-labelledby="myModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-sm confirm-dialog" style="margin-top: 20%;">
+        <div class="modal-content" style="top:33%; width: 33%; margin-left: auto; margin-right: auto;">
+            <div class="modal-header">
+                {% comment %} <button type="button" class="close" data-dismiss="modal"
+                        aria-hidden="true">&times;</button> {% endcomment %}
+                <h4 class="modal-title"><strong>Confirm Dialog</strong></h4>
+            </div>
+            <div class="modal-body" style="padding-bottom: 0px!important;">
+                <div class="form-group">
+                    <label>Are you sure?</label>
+                </div>
+            </div>
+            <div class="modal-footer" style="text-align: center">
+                <button class="btn btn-success" type="button" data-dismiss="modal" id="remove_line">Yes</button>
+                <button class="btn btn-default" type="button" data-dismiss="modal" id="save_line">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+{#End Comfirm Save/delete transaction#}
+{#Comfirm Save/Delete tranasaction#}
+<div class="modal fade" id="comfirmSaveOrderModal" tabindex="-1" role="dialog"
+    data-backdrop="static" data-keyboard="false"
+    aria-labelledby="myModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-sm confirm-dialog" style="margin-top: 20%;">
+        <div class="modal-content" style="top:33%; width: 33%; margin-left: auto; margin-right: auto;">
+            <div class="modal-header">
+                {% comment %} <button type="button" class="close" data-dismiss="modal"
+                        aria-hidden="true">&times;</button> {% endcomment %}
+                <h4 class="modal-title"><strong>Confirm Dialog</strong></h4>
+            </div>
+            <div class="modal-body" style="padding-bottom: 0px!important;">
+                <div class="form-group">
+                    <label>Do you want to save this entry?</label>
+                </div>
+            </div>
+            <div class="modal-footer" style="text-align: center">
+                <button class="btn btn-success" type="button" data-dismiss="modal" id="saves_line">Yes</button>
+                <button class="btn btn-default" type="button" data-dismiss="modal" id="reset_line">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+{#End Comfirm Save/delete transaction#}
+{#Comfirm Save/New tranasaction#}
+<div class="modal fade" id="comfirmSaveNewOrderModal" tabindex="-1" role="dialog"
+    data-backdrop="static" data-keyboard="false"
+    aria-labelledby="myModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-sm confirm-dialog" style="margin-top: 20%;">
+        <div class="modal-content" style="top:33%; width: 33%; margin-left: auto; margin-right: auto;">
+            <div class="modal-header">
+                {% comment %} <button type="button" class="close" data-dismiss="modal"
+                        aria-hidden="true">&times;</button> {% endcomment %}
+                <h4 class="modal-title"><strong>Confirm Dialog</strong></h4>
+            </div>
+            <div class="modal-body" style="padding-bottom: 0px!important;">
+                <div class="form-group">
+                    <label>Do you want to save this entry?</label>
+                </div>
+            </div>
+            <div class="modal-footer" style="text-align: center">
+                <button class="btn btn-success" type="button" data-dismiss="modal" id="save_new_line">Save</button>
+                <button class="btn btn-default" type="button" data-dismiss="modal" id="discard_line">Don't Save</button>
+                <button class="btn btn-danger" type="button" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+{#End Comfirm Save/New transaction#}
+<div class="modal fade" id="invalidInputModal" tabindex="-1" role="dialog"
+    data-backdrop="static" data-keyboard="false"
+    aria-labelledby="myModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-sm" style="margin-top: 20%;">
+        <div class="modal-content" style="top:33%; width: 100%; margin-left: auto; margin-right: auto;">
+            <div class="modal-header">
+                {% comment %} <button type="button" class="close" data-dismiss="modal"
+                        aria-hidden="true">&times;</button> {% endcomment %}
+                <h4 class="modal-title"><strong>Invalid</strong></h4>
+            </div>
+            <div class="modal-body" style="padding-bottom: 0px!important;">
+                <div class="form-group">
+                    <label>Please check input data again !</label>
+                </div>
+            </div>
+            <div class="modal-footer" style="text-align: center">
+                <button class="btn btn-success cancel_nothing" type="button" data-dismiss="modal">Ok</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="invalidSoModal" tabindex="-1" role="dialog"
+    data-backdrop="static" data-keyboard="false"
+    aria-labelledby="myModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-sm confirm-dialog" style="margin-top: 20%;">
+        <div class="modal-content" style="top:33%; width: 55%; margin-left: auto; margin-right: auto;">
+            <div class="modal-header">
+                <h4 class="modal-title"><strong id="modal-title">Invalid Information</strong></h4>
+            </div>
+            <div class="modal-body" style="padding-bottom: 0px!important;">
+                <div id="msg_id" style="font-size: 14.5px;color: red;float: left;"></div>
+                <div class="form-group">
+                      <section class="panel" style="margin-top: 10px!important;">
+                          <div class="row">
+                              <div class="col-lg-12">
+                                  <div class="panel-body"
+                                       style="padding: 0px!important; font-size: 12.5px !important;">
+                                      <div class="adv-table">
+                                          <table id="invalid-so-list" style="width: 100% !important;"
+                                                 class="display table table-bordered table-striped table-condensed">
+                                              <thead>
+                                              <tr>
+                                                  <th id="th-0">No</th>
+                                                  <th id="th-1">Part No</th>
+                                                  <th id="th-2">Quantity</th>
+                                                  <th id="th-3">Unit Price</th>
+                                                  <th id="th-4">Customer PO</th>
+                                              </tr>
+                                              </thead>
+                                          </table>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                      </section>
+                </div>
+            </div>
+            <div class="modal-footer" id="footer-invalid" style="text-align: center">
+                <button class="btn btn-success cancel_nothing" id="invalid_ok_id" type="button" data-dismiss="modal">Ok</button>
+            </div>
+            <div class="modal-footer" id="footer-duplicate" style="text-align: center">
+                <button class="btn btn-success cancel_nothing" id="duplicate_ok_id" type="button" data-dismiss="modal">Continue Anyway</button>
+                <button class="btn btn-default cancel_nothing" id="duplicate_cancel_id" type="button" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="duplicateSoItemModal" tabindex="-1" role="dialog"
+    data-backdrop="static" data-keyboard="false"
+    aria-labelledby="myModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-sm confirm-dialog" style="margin-top: 20%;">
+        <div class="modal-content" style="top:20%; width: 80%; margin-left: auto; margin-right: auto;">
+            <div class="modal-header">
+                <h4 class="modal-title"><strong id="modal-title">Duplicate Entry Error</strong></h4>
+            </div>
+            <div class="modal-body" style="padding-bottom: 0px!important;">
+                <div id="dupl_msg_id" style="font-size: 14.5px;color: red;float: left;">
+                    <span>Duplicate entry found, do you want to proceed?</span>
+                </div>
+                <div class="form-group">
+                      <section class="panel" style="margin-top: 10px!important;">
+                          <div class="row">
+                              <div class="col-lg-12">
+                                  <div class="panel-body"
+                                       style="padding: 0px!important; font-size: 12.5px !important;">
+                                      <div class="adv-table">
+                                          <table id="duplicateSoItemList" style="width: 100% !important;"
+                                                 class="display table table-bordered table-striped table-condensed nowrap">
+                                              <thead>
+                                              <tr id="thead_tr">
+                                                  <th id="th_0">Line No</th>
+                                                  <th id="th_1">Document No</th>
+                                                  <th id="th_2">Customer-Part No</th>
+                                                  <th id="th_3">Customer PO No.</th>
+                                                  <th id="th_4">Supplier</th>
+                                                  <th id="th_5">Location</th>
+                                              </tr>
+                                              </thead>
+                                          </table>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                      </section>
+                </div>
+            </div>
+            <div class="modal-footer" id="footer-duplicate_ok" style="text-align: center">
+                <button class="btn btn-success cancel_nothing" id="duplicate_so_ok_id" type="button" data-dismiss="modal">Ok</button>
+            </div>
+            <div class="modal-footer" id="footer-duplicate_po" style="text-align: center">
+                <button class="btn btn-success cancel_nothing" id="duplicate_yes_id" type="button" data-dismiss="modal">Yes</button>
+                <button class="btn btn-default cancel_nothing" id="duplicate_no_id" type="button" data-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="invalidQuantityModal" tabindex="-1" role="dialog"
+    data-backdrop="static" data-keyboard="false"   
+    aria-labelledby="myModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-sm confirm-dialog" style="margin-top: 20%;">
+        <div class="modal-content" style="top:33%; width: 39%; margin-left: auto; margin-right: auto;">
+            <div class="modal-header">
+                <h4 class="modal-title"><strong>Warning Information</strong></h4>
+            </div>
+            <div class="modal-body" style="padding-bottom: 0px!important;">
+                <div id="msg_id_1" style="font-size: 14.5px;color: red;float: left;"></div>
+                <div id="msg_id_2" style="font-size: 14.5px;color: red;float: left; padding: 5px 0px;"></div>
+                <div class="form-group">
+                      <section class="panel" style="margin-top: 10px!important;">
+                          <div class="row">
+                              <div class="col-lg-12">
+                                  <div class="panel-body"
+                                       style="padding: 0px!important; font-size: 12.5px !important;">
+                                      <div class="adv-table">
+                                          <table id="warning-list" style="width: 100% !important;"
+                                                 class="display table table-bordered table-striped table-condensed">
+                                              <thead>
+                                              <tr>
+                                                  <th>Document No</th>
+                                                  <th>Line No</th>
+                                                  <th>Quantity</th>
+                                              </tr>
+                                              </thead>
+                                          </table>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                      </section>
+                </div>
+            </div>
+            <div class="modal-footer" style="text-align: center">
+                <button class="btn btn-success cancel_nothing" id="warning_ok_id" type="button" data-dismiss="modal">Ok</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="warningLinkedModal" tabindex="-1" role="dialog"
+    data-backdrop="static" data-keyboard="false"
+    aria-labelledby="myModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-sm confirm-dialog" style="margin-top: 20%;">
+        <div class="modal-content" style="top:33%; width: 39%; margin-left: auto; margin-right: auto;">
+            <div class="modal-header">
+                <h4 class="modal-title"><strong>Warning Linked</strong></h4>
+            </div>
+            <div class="modal-body" style="padding-bottom: 0px!important;">
+                <div id="msg_linked" style="font-size: 14.5px;color: red;float: left;"></div>
+                <div class="form-group">
+                      <section class="panel" style="margin-top: 10px!important;">
+                          <div class="row">
+                              <div class="col-lg-12">
+                                  <div class="panel-body"
+                                       style="padding: 0px!important; font-size: 12.5px !important;">
+                                      <div class="adv-table">
+                                          <table id="linked-list" style="width: 100% !important;"
+                                                 class="display table table-bordered table-striped table-condensed">
+                                              <thead>
+                                              <tr>
+                                                  <th>Document No</th>
+                                                  {% comment %} <th>Line No</th> {% endcomment %}
+                                              </tr>
+                                              </thead>
+                                          </table>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                      </section>
+                </div>
+            </div>
+            <div class="modal-footer" style="text-align: center">
+                <button class="btn btn-success cancel_nothing" id="warning_ok_id" type="button" data-dismiss="modal">Ok</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% comment %} Part list Modal {% endcomment %}
+<div class="modal fade" id="partListModal" tabindex="-1" role="dialog" style="z-index: 1052 !important;"
+        data-backdrop="static" data-keyboard="false"
+        aria-labelledby="myModalLabel"
+        aria-hidden="true">
+    <div class="modal-dialog modal-lg" style="margin-top: 20%;">
+        <div class="modal-content" style="top:33%; width: 100%; margin-left: auto; margin-right: auto;">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                    aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Search Part No.</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                    <section class="panel">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="panel-body"
+                                        style="padding: 0px!important; font-size: 12.5px !important;">
+                                    <div class="adv-table">
+                                        <table id="part-table" style="width: 100% !important;"
+                                                class="display table table-bordered table-striped table-condensed">
+                                            <thead>
+                                            <tr>
+                                                <th>Part Code</th>
+                                                <th>Part Name</th>
+                                                <th></th>
+                                                <th></th>
+                                            </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                <div class="modal-footer">
+                    <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                    <button class="btn btn-success" type="button" id="btnPartSelect">Select</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% comment %} Refer list Modal {% endcomment %}
+<div class="modal fade" id="referListModal" tabindex="-1" role="dialog" style="z-index: 1052 !important;"
+        data-backdrop="static" data-keyboard="false"
+        aria-labelledby="myModalLabel"
+        aria-hidden="true">
+    <div class="modal-dialog modal-lg" style="margin-top: 20%;">
+        <div class="modal-content" style="top:33%; width: 100%; margin-left: auto; margin-right: auto;">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                    aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Search Refer Line</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                    <section class="panel">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="panel-body"
+                                        style="padding: 0px!important; font-size: 12.5px !important;">
+                                    <div class="adv-table">
+                                        <table id="refer-table" style="width: 100% !important;"
+                                                class="display table table-bordered table-striped table-condensed">
+                                            <thead>
+                                            <tr>
+                                                <th>Refer Number</th>
+                                                <th>Refer Line</th>
+                                                <th></th>
+                                                <th></th>
+                                            </tr>
+                                            </thead>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                <div class="modal-footer">
+                    <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                    <button class="btn btn-success" type="button" id="btnReferSelect">Select</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

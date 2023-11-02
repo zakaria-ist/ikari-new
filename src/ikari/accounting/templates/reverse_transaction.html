@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <style>
+        .disabled {
+            pointer-events: none;
+            cursor: not-allowed;
+            background-color: #eee;
+        }
+
+        .hide_column, .ui-helper-hidden-accessible {
+            display: none;
+        }
+
+        select::-ms-expand {
+            display: none;
+        }
+
+        .no-select {
+            /*for firefox*/
+            -moz-appearance: none;
+            /*for chrome*/
+            -webkit-appearance: none;
+        }
+        .hide_column {
+           display : none;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}
+    Reverse Transaction
+{% endblock %}
+
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block parent_com_a_active %}active{% endblock %}
+{% block parent_com_i_active %}active{% endblock %}
+{% block com_reverse_active %}active{% endblock %}
+
+{% block content %}
+    <section class="panel">
+        <header class="panel-heading">
+            Reverse Transaction
+        </header>
+        <div class="panel-body">
+            <form class="form-horizontal"
+                  role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="bank_code" class="col-md-2 col-sm-2 control-label">Bank Code</label>
+                    <div class="col-md-2 col-sm-2">
+                        {{ reverse_form.bank }}
+                    </div>
+                    <div class="col-md-1 col-lg-1">
+                        <button id="btnSearchBank" type="button" class="btn btn-info" data-toggle="modal"
+                                href="#BankListModal"><i class="fa fa-search"></i></button>
+                    </div>
+                    <label for="batch_description" class="col-md-2 col-sm-2 control-label">Bank
+                        Description</label>
+                    <div class="col-md-5 col-sm-5">
+                        {{ reverse_form.description }}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="batch_date" class="col-md-2 col-sm-2 control-label">Bank Account Number</label>
+                    <div class="col-md-2 col-lg-2">
+                        {{ reverse_form.bank_account_number }}
+                    </div>
+                    <div class="col-md-1 col-lg-1">
+                        {{ reverse_form.currency }}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="id_bank" class="col-lg-2 col-sm-2 control-label">Source Application</label>
+                    <div class="col-lg-2 col-md-2">
+                        {{ reverse_form.journal_type }}
+                    </div>
+                </div>
+                <hr width="100%" style="margin-left: -20px;"/>
+                <div class="form-group">
+                    <div class="col-lg-12">
+                        {# Table Transaction Receipt#}
+                        <div class="adv-table table-responsive" id="transaction_div"
+                             style="overflow-x: scroll; overflow-y: auto; margin-bottom: 20px">
+                            <table class="display table table-bordered table-striped header-fixed"
+                                   id="transaction-table">
+                                <div class="form-group">
+                                    <div id="message_error" class="messages"
+                                         style="font-size: 12.5px !important; padding-left: 20px"></div>
+                                </div>
+                                <thead>
+                                <tr>
+                                    <th id="trs-rev-date">Reversal Date</th>
+                                    <th id="trs-number">Vendor Number</th>
+                                    <th id="trs-name">Vendor Name</th>
+                                    <th id="trs-check-no">Check/Payment No.</th>
+                                    <th id="trs-amount">Payment Amount</th>
+                                    <th id="trs-trans-date">Payment Date</th>
+                                    <th id="trs-reason">Reason for Reversal</th>
+                                    <th id="trs-journal-id">Journal ID</th>
+                                    <th id="trs-action" style="width:auto">Action</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                                <tfoot>
+                                <tr>
+                                    <th colspan="9" style=" text-align: left;">
+                                        <a id="btnAddTransactionDialog" href="#TransactionModal"
+                                           data-toggle="modal" class="btn btn-white fa fa-plus" disabled="true"></a>
+                                    </th>
+                                </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="BankListModal" tabindex="-1" role="dialog"
+                     aria-labelledby="BankListModal" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal"
+                                        aria-hidden="true">&times;</button>
+                                <h4 class="modal-title">Search Bank</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                                    <section>
+                                        <div class="row">
+                                            <div class="col-lg-12">
+                                                <div class="panel-body"
+                                                     style="padding: 0px!important; font-size: 12.5px !important;">
+                                                    <div class="adv-table">
+                                                        <table id="bank-table" style="width: 100% !important;"
+                                                               class="display table table-bordered table-striped table-condensed">
+                                                            <thead>
+                                                            <tr>
+                                                                <th>Bank Code</th>
+                                                                <th>Description</th>
+                                                                <th>Currency ID</th>
+                                                                <th>Currency</th>
+                                                                <th>Account Number</th>
+                                                                <th></th>
+                                                            </tr>
+                                                            </thead>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </section>
+                                </div>
+                                <div class="modal-footer">
+                                    <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                                    <button data-dismiss="modal" class="btn btn-success" type="button"
+                                            id="btnSelectBank">Select
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-lg-offset-5 col-lg-6">
+                        <button type="submit" class="btn btn-success" id="btnPost" name="btnSave" disabled>Post</button>
+                    </div>
+                </div>
+                <input type="hidden" id="listTrans" name="listTrans">
+                <div class="modal fade" id="TransactionModal" tabindex="-1" role="dialog"
+                     aria-labelledby="TransactionModal"
+                     aria-hidden="true">
+                    <div class="modal-dialog modal-lg" style="width: 100%; padding-left: 20%; padding-right: 20%">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal"
+                                        aria-hidden="true">&times;</button>
+                                <h4 class="modal-title">Document Schedule Receipt</h4>
+                            </div>
+                            <div class="modal-body" style="padding-top: 0px;">
+                                <div class="form-group">
+                                    <div id="document_error" class="messages"
+                                         style="font-size: 12.5px !important;"></div>
+                                </div>
+                                <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                                    <section class="panel">
+                                        <div class="row" id="advanceSearchForm">
+                                            {% include 'advance_search_form.html' %}
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-lg-12">
+                                                <div class="panel-body"
+                                                     style="padding: 0px!important; font-size: 12.5px !important;">
+                                                    <div class="adv-table">
+                                                        <table id="document-journal-table"
+                                                               style="width: 100% !important;"
+                                                               class="display table table-bordered table-striped table-condensed">
+                                                            <thead>
+                                                            <tr>
+                                                                <th>Vendor Number</th>
+                                                                <th>Vendor Name</th>
+                                                                <th>Functional Amount</th>
+                                                                <th>Batch Number</th>
+                                                                <th>Entry Number</th>
+                                                                <th>Payment Code</th>
+                                                                <th>Transaction Date</th>
+                                                                <th>Payment Check No</th>
+                                                                <th>Journal ID</th>
+                                                                <th></th>
+                                                            </tr>
+                                                            </thead>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </section>
+                                </div>
+                                <div class="modal-footer">
+                                    <button class="btn btn-success" type="button" onclick="selectDocuments()">Select</button>
+                                    <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}?{% now 'H' %}"></script>
+    <!-- jQuery autocomplete -->
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="application/javascript">
+        var url_load_bank_list = "{% url 'load_bank_list' %}";
+        var url_load_currency = "{% url 'AccLoad_currency' %}";
+        var url_journal_list = "{% url 'JournalList__inReverseTransaction' %}";
+        var url_advance_search = "{% url 'advanceSearch__inReverseTransaction' %}";
+        var url_advance_search_form = "{% url 'advance_search_form' %}";
+        $(document).ready(function () {
+            $('#id_bank').select2({
+                placeholder: "Select Bank",
+            });
+            $('#id_journal_type').select2({
+                placeholder: "Select Source",
+            });
+            $('#transaction-table').DataTable({
+                'bFilter': false,
+                'bLengthChange': false,
+                'bSort': false,
+                'columnDefs': [
+                    {
+                        "visible": false,
+                        targets: [7],
+                    }
+                ]
+            });
+            $('#document-journal-table').DataTable({
+                'bFilter': false,
+                'bLengthChange': false,
+                'bSort': false,
+                'columnDefs': [
+                    {
+                        "visible": false,
+                        targets: [9],
+                    }
+                ]
+            });
+        })
+    </script>
+    <script src="{% static "js/accounting/reverse_transaction.js" %}"></script>
+{% endblock %}

@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}{% if tax_authority.id == None %}
+    Add Tax Authority{% else %} Edit Tax Authority
+{% endif %}{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block com_tax_services_a_active %}active{% endblock %}
+{% block com_tax_services_i_active %}active{% endblock %}
+{% block com_tax_auth_active %}active{% endblock %}
+
+{% block content %}
+<div class="col-lg-12">
+    <section class="panel">
+        <header class="panel-heading">
+            {% if tax_authority.id == None %}
+                Add Tax Authority{% else %} Edit Tax Authority
+            {% endif %}
+        </header>
+        <div class="panel-body">
+            <form id="frmTaxAuthority" class="form-horizontal"
+                    {% if tax_authority.id == None %} action="{% url 'tax_authority_add' %}"
+                    {% else %} action="{% url 'tax_authority_edit' tax_authority.id %}" {% endif %}
+                  role="form" method="POST" onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="code" class="col-lg-2 col-sm-2 control-label">Tax Authority<span
+                            class="span-required">(*)</span></label>
+                    <div class="col-lg-2">
+                        {{ form.code }}
+                        <span class="messages">{{ form.errors.code }}</span>
+                    </div>
+                    <label for="name" class="col-lg-2 col-sm-2 control-label">Description</label>
+                    <div class="col-lg-6">
+                        {{ form.name }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="name" class="col-lg-2 col-sm-2 control-label">Tax Reporting Currency<span class="span-required"> (*)</span></label>
+                    <div class="col-lg-4">
+                        {{ form.currency }}
+                    </div>
+                    <label for="name" class="col-lg-2 col-sm-2 control-label">Report Tax on Retainage Document</label>
+                    <div class="col-lg-4">
+                        {{ form.retainage_rpt_type }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="max_tax_allowable" class="col-lg-2 col-sm-2 control-label">Maximum Tax Allowed</label>
+                    <div class="col-lg-4">
+                        {{ form.max_tax_allowable }}
+                    </div>
+                    <label for="no_tax_charged_below" class="col-lg-2 col-sm-2 control-label">No Tax Charged Below</label>
+                    <div class="col-lg-4">
+                        {{ form.no_tax_charged_below }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="tax_base" class="col-lg-2 col-sm-2 control-label">Tax Base</label>
+                    <div class="col-lg-4">
+                        {{ form.tax_base }}
+                    </div>
+                    <label for="report_level" class="col-lg-2 col-sm-2 control-label">Report Level</label>
+                    <div class="col-lg-4">
+                        {{ form.report_level }}
+                    </div>
+                </div>
+
+                <div class="form-group ">
+                    <label for="liability_account" class="col-lg-2 col-sm-2 control-label">Tax Liability Account</label>
+                    <div class="col-lg-4">
+                        <select id="liability_account" class="form-control" name="liability_account">
+                            <option value=""></option>
+                            {% for acc in account_list %}
+                                {% if tax_authority.liability_account_id == acc.id %}
+                                    <option value="{{acc.id}}" selected="selected">{{acc.code}} - {{acc.name}}</option>
+                                {% else %}
+                                    <option value="{{acc.id}}">{{acc.code}} - {{acc.name}}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-lg-2 col-sm-2 control-label">Tax Recoverable</label>
+                    <div class="col-lg-4">
+                        <div class="checkbox checkbox-primary">
+                            <input name="is_recoverable" id="is_recoverable" class="styled" type="checkbox"
+                                   {% if tax_authority.is_recoverable %}checked{% endif %}/>
+                            <label for="is_recoverable"></label>
+                        </div>
+                    </div>
+                    <label class="col-lg-2 col-sm-2 control-label">Expense Separately</label>
+                    <div class="col-lg-4">
+                        <div class="checkbox checkbox-primary">
+                            <input name="is_expense_separately" id="is_expense_separately" class="styled" type="checkbox"
+                                   {% if tax_authority.is_expense_separately %}checked{% endif %}/>
+                            <label for="is_expense_separately"></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group ">
+                    <label for="recoverable_account" class="col-lg-2 col-sm-2 control-label">Recoverable Tax Account</label>
+                    <div class="col-lg-4">
+                        <select id="recoverable_account" class="form-control" name="recoverable_account">
+                            <option value=""></option>
+                            {% for acc in account_list %}
+                                {% if tax_authority.recoverable_account_id == acc.id %}
+                                    <option value="{{acc.id}}" selected="selected">{{acc.code}} - {{acc.name}}</option>
+                                {% else %}
+                                    <option value="{{acc.id}}">{{acc.code}} - {{acc.name}}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <label for="expense_account" class="col-lg-2 col-sm-2 control-label">Expense Account</label>
+                    <div class="col-lg-4">
+                        <select id="expense_account" class="form-control" name="expense_account">
+                            <option value=""></option>
+                            {% for acc in account_list %}
+                                {% if tax_authority.expense_account_id == acc.id %}
+                                    <option value="{{acc.id}}" selected="selected">{{acc.code}} - {{acc.name}}</option>
+                                {% else %}
+                                    <option value="{{acc.id}}">{{acc.code}} - {{acc.name}}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group ">
+                    <label for="recoverable_rate" class="col-lg-2 col-sm-2 control-label">Recoverable Rate</label>
+                    <div class="col-lg-4">
+                        {{ form.recoverable_rate }}
+                    </div>
+                </div>
+
+                <div class="form-group "></div>
+
+                <div class="form-group">
+                    <div class="col-lg-offset-2 col-lg-10">
+                        <button id="btnSave" name="btnSave" type="button" class="btn btn-primary">Save</button>
+                        <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger" {% if tax_authority.id == None %}style="display: none"{% endif %}>Delete</a>
+                        <a class="btn btn-default" href="{% url 'tax_authority_list' %}">Cancel</a>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+        <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+             class="modal fade">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                        <h4 class="modal-title">Delete Confirm Dialog</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form role="form" action="{% url 'tax_authority_delete' tax_authority.id %}" method="post">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label>Are you sure want to delete?</label>
+                            </div>
+                            <button type="submit" class="btn btn-primary">OK</button>
+                            <button class="btn btn-default" type="button" 
+                                data-dismiss="modal" style="margin-left:5px">Cancel</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </section>
+</div>
+
+{#notification#}
+<div class="modal fade" id="notificationModal" tabindex="-1" role="dialog"
+     aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title"><strong><span id='notificationModal_title'>Notification Title</span></strong></h4>
+            </div>
+            <div class="modal-body" style="padding-bottom: 0px!important;">
+                <div class="form-group">
+                    <div id="notificationModal_text1" class="text-left">Notification #1</div>
+                    <div id="notificationModal_text2" class="text-left">Notification #2</div>
+                </div>
+            </div>
+            <div class="modal-footer" style="text-align: center">
+                <button id="notification_ok" class="btn btn-primary" type="button" data-dismiss="modal">Ok</button>
+            </div>
+        </div>
+    </div>
+</div>
+{#End notification#}
+
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="application/javascript" src="{% static 'js/ga.js' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+
+    <script>
+        $(document).ready(function () {
+            if($('#is_recoverable').is(':checked')){
+                $('#recoverable_account').prop('disabled', false);
+            } else {
+                $('#recoverable_account').prop('disabled', true);
+            }
+
+            if($('#is_expense_separately').is(':checked')){
+                $('#expense_account').prop('disabled', false);
+            } else {
+                $('#expense_account').prop('disabled', true);
+            }
+
+            $('#id_currency').select2({
+                placeholder: "select currency ",
+            });
+            $('#id_retainage_rpt_type').select2();
+            $('#id_tax_base').select2();
+            $('#id_report_level').select2();
+            $('#liability_account').select2({
+                placeholder: "select liability account ",
+            });
+            $('#recoverable_account').select2({
+                placeholder: "select recoverable account ",
+            });
+            $('#expense_account').select2({
+                placeholder: "select expense account ",
+            });
+        });
+
+        $('#is_recoverable').on('change',function(){
+            if($(this).is(':checked')){
+                $(this).attr('checked', 'checked');
+                $('#recoverable_account').prop('disabled', false);
+            } else {
+                $(this).removeAttr('checked');
+                $('#recoverable_account').val('').trigger('change');
+                $('#recoverable_account').prop('disabled', true);
+            }
+        });
+
+        $('#is_expense_separately').on('change',function(){
+            if($(this).is(':checked')){
+                $(this).attr('checked', 'checked');
+                $('#expense_account').prop('disabled', false);
+            } else {
+                $(this).removeAttr('checked');
+                $('#expense_account').val('').trigger('change');
+                $('#expense_account').prop('disabled', true);
+            }
+        });
+
+        $('#btnSave').on('click',function(){
+            var is_recoverable = $('#is_recoverable').is(':checked');
+            var is_expense_separately = $('#is_expense_separately').is(':checked');
+            var code = $('#id_code').val()
+            var curr = $('#id_currency').val()
+            if ((!code)||(!curr)) {
+                $('#notificationModal_title').text('Invalid Input !');
+                $('#notificationModal_text1').text('Tax Authority and Tax Reporting Currency cannot be empty. Field with (*) marks is required.');
+                $('#notificationModal_text2').text('');
+                $("#notificationModal").modal("show");
+                return false;
+            } else if ((is_recoverable)&&(!$('#recoverable_account').val())){
+                $('#notificationModal_title').text('Invalid Input !');
+                $('#notificationModal_text1').text('Recoverable Tax Account cannot be empty.');
+                $('#notificationModal_text2').text('If you want to leave it empty, make sure to uncheck Tax Recoverable checkbox.');
+                $("#notificationModal").modal("show");
+                return false;
+            } else if ((is_expense_separately)&&(!$('#expense_account').val())){
+                $('#notificationModal_title').text('Invalid Input !');
+                $('#notificationModal_text1').text('Expense Account cannot be empty.');
+                $('#notificationModal_text2').text('If you want to leave it empty, make sure to uncheck Expense Separately checkbox.');
+                $("#notificationModal").modal("show");
+                return false;
+            } else {
+                $('#frmTaxAuthority').submit();
+            }
+        });
+    </script>
+{% endblock %}

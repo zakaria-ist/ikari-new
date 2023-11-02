@@ -1,0 +1,1160 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <style>
+      .hide_column {
+        display: none;
+      }
+    </style>
+{% endblock %}
+
+{% block title %}
+    {% if customer.id %}
+        Edit Customer Info
+    {% else %}
+        Add Customer Info
+    {% endif %}
+{% endblock %}
+{% block customer_active %}active{% endblock %}
+{% block customer_a_active %}active{% endblock %}
+{% block customer_i_active %}active{% endblock %}
+{% block sp_setting_a_active %}active{% endblock %}
+{% block sp_setting_i_active %}active{% endblock %}
+{% block parent_order_a_active %}active{% endblock %}
+{% block parent_order_i_active %}active{% endblock %}
+
+
+{% block content %}
+    <div id="content">
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading" style="font-size: 20px">
+                {% if customer.id %}
+                    Edit Customer
+                {% else %}
+                    Add Customer
+                {% endif %}
+            </header>
+            <div class="panel-body">
+                <form class="form-horizontal"
+                      {% if customer.id %}action="{% url 'customer_edit' customer.id %}"
+                      {% else %}action="{% url 'customer_add' %}"{% endif %}
+                      role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+
+                    <div class="form-group">
+                        <label for="code" class="col-lg-2 col-sm-2 control-label">Customer Code<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-4">
+                            {% if customer.id %}
+                                <input type="text" tabindex="-1" class="form-control" id="code" name="code"
+                                   value="{{ customer.code|default_if_none:"" }}" required>
+                            {% else %}
+                                <input type="text" class="form-control" id="code" name="code"
+                                   value="{{ customer.code|default_if_none:"" }}" required>
+                            {% endif %}
+                        </div>
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Customer Type</label>
+                        <div class="col-lg-2">
+                            {% if customer.id %}
+                                <input type="text" tabindex="-1" class="form-control" id="type" name="type"
+                                   value="{{ customer.customer_type|default_if_none:"" }}">
+                            {% else %}
+                                <input type="text" class="form-control" id="type" name="type"
+                                   value="{{ customer.customer_type|default_if_none:"" }}">
+                            {% endif %}
+
+                        </div>
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">[1:Stockist 2:Service]</label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Customer Name<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="name" name="name"
+                                   value="{{ customer.name|default_if_none:"" }}"
+                                   required>
+                        </div>
+
+                        <label for="country" class="col-lg-2 col-sm-2 control-label">Country</label>
+                        <div class="col-lg-3">
+                                {{ form.country }}
+                        </div>
+                        <div class="col-lg-1">
+                            <button tabindex="-1" id="btnSearchCountry" type="button" class="btn btn-info"
+                                    data-toggle="modal"
+                                    href="#CountryListModal"><i class="fa fa-search"></i></button>
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+                        <label for="address" class="col-lg-2 col-sm-2 control-label">Address</label>
+                        <div class="col-lg-4">
+                            <textarea class="form-control" rows="3" name="address"
+                                      id="address">{{ customer.address|default_if_none:"" }}</textarea>
+                        </div>
+
+                        <label for="currency" class="col-lg-2 col-sm-2 control-label">Currency</label>
+                        <div class="col-lg-3">
+                            {{ form.currency }}
+                        </div>
+                        <div class="col-lg-1">
+                            <button tabindex="-1" id="btnSearchCurrency" type="button" class="btn btn-info"
+                                    data-toggle="modal"
+                                    href="#CurrencyListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact_attention"
+                               class="col-lg-2 col-sm-2 control-label">Attention</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="contact_attention"
+                                   name="contact_attention"
+                                   value="{{ contact_list.attention|default_if_none:"" }}">
+                        </div>
+
+                        <label for="payment_code"
+                               class="col-lg-2 col-sm-2 control-label">Payment Code</label>
+                        <div class="col-lg-3">
+                            {{ form.payment_code }}
+                        </div>
+                        <div class="col-lg-1">
+                            <button tabindex="-1" id="btnSearchPaymentMode" type="button" class="btn btn-info"
+                                    data-toggle="modal"
+                                    href="#PaymentModeListModal"><i class="fa fa-search"></i></button>
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+                        <label for="payment_term" class="col-lg-2 col-sm-2 control-label">Designation</label>
+                            <div class="col-lg-4">
+                                <input type="text" class="form-control" id="contact_designation"
+                                       name="contact_designation"
+                                       value="{{ contact_list.designation|default_if_none:"" }}">
+                            </div>
+
+                        <label  for="payment_term"
+                               class="col-lg-2 col-sm-2 control-label">Payment Term</label>
+                        <div class="col-lg-3" style="margin-bottom: 15px">
+                            {{ form.payment_term }}
+                        </div>
+                        <div class="col-lg-1">
+                            <button tabindex="-1" id="btnSearchPaymentTerm" type="button" class="btn btn-info"
+                                    data-toggle="modal"
+                                    href="#TermsCodeListModal"><i class="fa fa-search"></i></button>
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+                        <label for="contact_phone" class="col-lg-2 col-sm-2 control-label">Telephone</label>
+                        <div class="col-lg-4">
+                            {{ form.phone|default_if_none:"" }}
+                        </div>
+
+                        <label for="credit_limit" class="col-lg-2 col-sm-2 control-label">Credit Limit</label>
+                        <div class="col-lg-4">
+                            <input type="number" step="0.01" class="form-control" id="credit_limit"
+                                   name="credit_limit" value="{{ customer.credit_limit|default_if_none:"" }}">
+                        </div>
+
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contact_fax" class="col-lg-2 col-sm-2 control-label">Fax</label>
+                        <div class="col-lg-4">
+                            {{ form.fax|default_if_none:"" }}
+                        </div>
+
+                        <div class="col-lg-6" style="padding-left: 0px; padding-right: 0px; margin-bottom: 15px;">
+                            {% if request.session.use_inventory %}
+                                <label for="location"
+                                       class="col-lg-4 col-sm-4 control-label">Location
+                                    Stock</label>
+                                <div class="col-lg-6">
+                                    {{ form.location }}
+                                </div>
+                                <div class="col-lg-2">
+                                    <button tabindex="-1" id="btnSearchLocation" type="button" class="btn btn-info"
+                                            data-toggle="modal"
+                                            href="#LocationListModal"><i class="fa fa-search"></i></button>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+
+                        <label for="consignee_name" class="col-lg-2 col-sm-2 control-label">Consignee</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="consignee_name"
+                                   name="consignee_name"
+                                   value="{{ contact_list.company_name|default_if_none:"" }}">
+                        </div>
+
+                        <label for="Pricing_type" class="col-lg-2 col-sm-2 control-label">Pricing Type</label>
+                        <div class="col-lg-4">
+                         {{ form.pricing_type }} 
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+                        <label for="note1" class="col-lg-2 col-sm-2 control-label">Consignee Add</label>
+                        <div class="col-lg-4">
+                                <textarea class="form-control" rows="3" id="consignee_address"
+                                          name="consignee_address">{{ contact_list.address |default_if_none:"" }}</textarea>
+                        </div>
+
+
+                        <label for="tax" class="col-lg-2 col-sm-2 control-label">Tax
+                            Code</label>
+                        <div class="col-lg-3">
+                            {{ form.tax }}
+                        </div>
+                        <div class="col-lg-1">
+                            <button tabindex="-1" id="btnSearchTax" type="button" class="btn btn-info"
+                                    data-toggle="modal"
+                                    href="#TaxListModal"><i class="fa fa-search"></i></button>
+                            </div>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="contact_attention" class="col-lg-2 col-sm-2 control-label">Contact
+                            Person</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="consignee_contact_person"
+                                   name="consignee_contact_person"
+                                   value="{{ contact_list.name|default_if_none:"" }}">
+                        </div>
+                        <label for="comp_int" class="col-lg-2 col-sm-2 control-label">Comp. Int</label>
+                        <div class="col-lg-4">
+                         {{ form.interest_flag }}
+                        </select>
+                        </div>
+
+                    </div>
+
+                    <div class="form-group">
+                        <label for="consignee_phone" class="col-lg-2 col-sm-2 control-label">Consignee Tel</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="consignee_phone" name="consignee_phone"
+                                   value="{{ contact_list.phone|default_if_none:"" }}">
+                        </div>
+
+                        <label for="note1" class="col-lg-2 col-sm-2 control-label">Remark</label>
+                        <div class="col-lg-4">
+                            <textarea class="form-control" rows="3" name="note1" id="note1">{{ contact_list.note|default_if_none:"" }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="statement" class="col-lg-2 col-sm-2 control-label">Statement Fmt
+                        </label>
+                        <div class="col-lg-4">
+                        {% if customer.id %}
+                        <select class="form-control" id="statement" name="statement">
+                            <option value="Nill" {% if customer.statement == 'Nill' %} selected {% endif %}>Nill</option>
+                            <option value="B/F" {% if customer.statement == 'B/F' %} selected {% endif %}>B/F</option>
+                            <option value="Open/Items" {% if customer.statement == 'Open/Items' %} selected {% endif %}>Open/Items</option>
+                        </select>
+                        {% else %}
+                        <select class="form-control" id="statement" name="statement">
+                            <option value="Nill">Nill</option>
+                            <option value="B/F">B/F</option>
+                            <option value="Open/Items">Open/Items</option>
+                        </select>
+                        {% endif %}
+                        </div>
+                        <label for="tax" class="col-lg-2 col-sm-2 control-label">Distribution Code</label>
+                        <div class="col-lg-4 col-sm-4">
+                            {{ form.distribution_code }}
+                        </div>
+                        <div class="col-lg-6">
+                        </div>
+                    </div> 
+
+                    <div class="form-group">
+                      <div class="col-lg-6" style="padding-left: 0px; padding-right: 0px;">
+                          <label class="col-lg-4 col-sm-4 control-label">Last Update</label>
+                          <div class="col-lg-8">
+                              <input type="text" class="form-control" disabled="true"
+                                     value="{{ customer.update_date }}">
+                          </div>
+                      </div>
+
+                    </div> 
+
+
+                    <div class="form-group" style="display: none">
+                        <label for="tax" class="control-label col-lg-6"></label>
+                        <label for="account_set" class="col-lg-2 col-sm-2 control-label">Account Set</label>
+                        <div class="col-lg-4">
+                            <select class="form-control" id="id_account_set" name="account_set">
+                                <option value="0">---Select---</option>
+                                {% for account_set in account_set %}
+                                    <option value="{{ account_set.id }}"
+                                            {% if account_set.id == customer.account_set_id %}selected{% endif %}>
+                                        {{ account_set.name|default_if_none:"" }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="text-center">
+                              <button type="submit" id="btnSave_id" name="btnSave" class="btn btn-success">Save</button>
+                              {% if 'customers.delete_customer' in user.get_all_permissions and customer.id %}
+                                  <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger">Delete</a>
+                              {% endif %}
+                              <a class="btn btn-default" href="{% url 'customer_list' %}">Cancel</a>
+                        </div>
+{#                        <div class="col-lg-3" >#}
+{#                        <br/>#}
+{#                        #}
+{#                        </div>#}
+{#                        <div class="col-lg-4">#}
+{#                                <div class="panel-body">#}
+{#                                    <div class="adv-table">#}
+{#                                        <table class="display table table-bordered table-striped table-condensed"#}
+{#                                               id="custom-table" style="width:100%">#}
+{#                                            <thead>#}
+{#                                            <tr>#}
+{#                                                <th>Age</th>#}
+{#                                                <th>Int. Rate</th>#}
+{#                                            </tr>#}
+{#                                            </thead>#}
+{#                                            <tbody>#}
+{#                                                <tr>#}
+{#                                                    <td>1</td>#}
+{#                                                    <td>{{ OldSystemColumn.interest_1 }}</td>#}
+{#                                                </tr>#}
+{#                                                <tr>#}
+{#                                                    <td>2</td>#}
+{#                                                    <td>{{ OldSystemColumn.interest_2 }}</td>#}
+{#                                                </tr>#}
+{#                                                <tr>#}
+{#                                                <td>3</td>#}
+{#                                                    <td>{{ OldSystemColumn.interest_3 }}</td>#}
+{#                                                </tr>#}
+{#                                                <tr>#}
+{#                                                    <td>4</td>#}
+{#                                                    <td>{{ OldSystemColumn.interest_4 }}</td>#}
+{#                                                </tr>#}
+{#                                                <tr>#}
+{#                                                    <td>5</td>#}
+{#                                                    <td>{{ OldSystemColumn.interest_5 }}</td>#}
+{#                                                </tr> #}
+{#                                            </tbody>#}
+{#                                        </table>#}
+{#                                    </div>#}
+{#                                </div>#}
+{#                            </div>#}
+{#                            <div class="col-lg-5">#}
+{#                                <div class="panel-body">#}
+{#                                    <div class="adv-table">#}
+{#                                        <table class="display table table-bordered table-striped table-condensed"#}
+{#                                               id="custom-table" style="width:100%">#}
+{#                                            <thead>#}
+{#                                            <tr>#}
+{#                                                <th>Type</th>#}
+{#                                                <th>A/C Code</th>#}
+{#                                                <th>Center</th>#}
+{#                                            </tr>#}
+{#                                            </thead>#}
+{#                                             <tbody>#}
+{#                                                <tr>#}
+{#                                                    <td>A/R</td>#}
+{#                                                    <td>{{ OldSystemColumn.accode_ar }}</td>#}
+{#                                                    <td>{{ OldSystemColumn.center_ar }}</td>#}
+{#                                                </tr>#}
+{#                                                <tr>#}
+{#                                                    <td>Sal</td>#}
+{#                                                    <td>{{ OldSystemColumn.accode_sal }}</td>#}
+{#                                                    <td>{{ OldSystemColumn.center_sal }}</td>#}
+{#                                                </tr>#}
+{#                                                <tr>#}
+{#                                                    <td>Exc</td>#}
+{#                                                    <td>{{ OldSystemColumn.accode_exc }}</td>#}
+{#                                                    <td>{{ OldSystemColumn.center_exc }}</td>#}
+{#                                                </tr>#}
+{#                                                <tr>#}
+{#                                                    <td>Int</td>#}
+{#                                                    <td>{{ OldSystemColumn.accode_int }}</td>#}
+{#                                                    <td>{{ OldSystemColumn.center_int }}</td>#}
+{#                                                </tr>#}
+{#                                                <tr>#}
+{#                                                    <td>Bnk</td>#}
+{#                                                    <td>{{ OldSystemColumn.accode_bnk }}</td>#}
+{#                                                    <td>{{ OldSystemColumn.center_bnk }}</td>#}
+{#                                                </tr>#}
+{#                                                <tr>#}
+{#                                                    <td>Chr</td>#}
+{#                                                    <td>{{ OldSystemColumn.accode_chr }}</td>#}
+{#                                                    <td>{{ OldSystemColumn.center_chr }}</td>#}
+{#                                                </tr>#}
+{#                                            </tbody> #}
+{#                                        </table>#}
+{#                                    </div>#}
+{#                                </div>#}
+{#                            </div>#}
+                    </div>
+
+
+                    <div class="form-group">
+                        <label style="display: none" for="contact_name"
+                               class="col-lg-2 col-sm-2 control-label">Name</label>
+                        <div class="col-lg-4" style="display: none">
+                            <input type="text" class="form-control" id="contact_name" name="contact_name"
+                                   value="{{ contact_list.name|default_if_none:"" }}">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+
+    <div class="modal fade" id="CountryListModal" tabindex="-1" role="dialog"
+         aria-labelledby="CountryListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Country</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div id="country_error" class="messages"
+                             style="font-size: 12.5px !important;"></div>
+                    </div>
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="country-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Update Date</th>
+                                                    <th>Country Code</th>
+                                                    <th>Country Name</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button id="btnCountrySelect" class="btn btn-success" type="button">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="CurrencyListModal" tabindex="-1" role="dialog"
+         aria-labelledby="CurrencyListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Currency</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div id="currency_error" class="messages"
+                             style="font-size: 12.5px !important;"></div>
+                    </div>
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="currency-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Update Date</th>
+                                                    <th>Currency Code</th>
+                                                    <th>Currency Name</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button id="btnCurrencySelect" class="btn btn-success" type="button">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="PaymentModeListModal" tabindex="-1" role="dialog"
+         aria-labelledby="PaymentModeListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Payment Mode</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div id="payment_code_error" class="messages"
+                             style="font-size: 12.5px !important;"></div>
+                    </div>
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="payment-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Update Date</th>
+                                                    <th>Payment Code</th>
+                                                    <th>Payment Name</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button id="btnPaymentModeSelect" class="btn btn-success" type="button">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="TaxListModal" tabindex="-1" role="dialog"
+         aria-labelledby="TaxListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Tax</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div id="tax_error" class="messages"
+                             style="font-size: 12.5px !important;"></div>
+                    </div>
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="tax-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Tax Code</th>
+                                                    <th>Tax Name</th>
+                                                    <th>Rate</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button id="btnTaxSelect" class="btn btn-success" type="button">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="TermsCodeListModal" tabindex="-1" role="dialog"
+         aria-labelledby="TermsCodeListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Terms Code</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="terms-code-div">
+                                            <table id="terms-code-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Term Code</th>
+                                                    <th>Description</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for term_code_item in term_list %}
+                                                    <tr class="gradeX">
+                                                        <td class="text-left">{{ term_code_item.0 }}</td>
+                                                        <td class="text-left">{{ term_code_item.1 }}</td>
+                                                        <td>
+                                                            <input type="radio" name="term-code-choices"
+                                                                   id="{{ term_code_item.0 }}" class="call-checkbox"
+                                                                   value="{{ term_code_item.1 }}">
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" id="btnTermCodeSelect">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="LocationListModal" tabindex="-1" role="dialog"
+         aria-labelledby="LocationListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Location Stock</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div id="location_error" class="messages"
+                             style="font-size: 12.5px !important;"></div>
+                    </div>
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="location-stock-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Update Date</th>
+                                                    <th>Location Code</th>
+                                                    <th>Location Name</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button id="btnLocationSelect" class="btn btn-success" type="button">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+         class="modal fade">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                    <h4 class="modal-title">Delete Confirm Dialog</h4>
+                </div>
+                {% if customer.id %}
+                    <div class="modal-body">
+                        <form role="form" action="{% url 'customer_delete' customer.id %}"
+                              method="post">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                            </div>
+                            <button type="submit" class="btn btn-success">OK</button>
+                            <a class="btn btn-default" href="{% url 'customer_list' %}">Cancel</a>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {#    {% endif %}#}
+{% endblock %}
+{% block extrafoot %}
+    {% load staticfiles %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script>
+        let customer_id = '{{ customer.id }}';
+        $(document).ready(function () {
+
+            $(document).on('keyup', '.select2-selection.select2-selection--single', function (e) {
+                var keycode = (e.keyCode ? e.keyCode : e.which);
+                if(keycode == '9'){
+                    $(this).closest(".select2-container").siblings('select:enabled').select2('open');
+                }
+            });
+
+            if (customer_id) {
+                $('#name').focus()
+            } else {
+                $('#code').focus()
+            }
+
+            $('#comp_int').select2({
+                placeholder: "Comp Int",
+            });
+            $('#statement').select2({
+                placeholder: "Statement Fmt",
+            });
+
+            $('#id_country').select2({
+                placeholder: "Select Country Code",
+            });
+
+            $('#id_currency').select2({
+                placeholder: "Select Currency Code",
+            });
+
+            $('#id_payment_code').select2({
+                placeholder: "Select Payment Code",
+            });
+
+            $('#id_tax').select2({
+                placeholder: "Select Tax Code",
+            });
+
+            $('#id_location').select2({
+                placeholder: "Select Location Code",
+            });
+
+            $('#id_payment_term').select2({
+                placeholder: "Select Terms",
+            });
+
+            $('#id_distribution_code').select2({
+                placeholder: "Select Distribution Code",
+            });
+
+            $(document).on('select2:close', '#statement', function (e) {
+              $('#id_distribution_code').focus();
+              $('#id_distribution_code').select2('open');
+            });
+
+            $(document).on('select2:close', '#id_distribution_code', function (e) {
+              $('#btnSave_id').focus();
+            });
+        });
+
+        $(document).ready(function () {
+            $('#id_account_set').on('change', function () {
+                var account_set_id = parseInt($('#id_account_set').val());
+                $.ajax({
+                    method: "POST",
+                    url: '/customers/load_account_set/',
+                    dataType: 'JSON',
+                    data: {
+                        'account_set_id': account_set_id,
+                    },
+                    success: function (json) {
+                        $('#id_currency').val(json.currency_id);
+                        $('#id_currency option:not(:selected)').attr('disabled', true);
+                    }
+                });
+            });
+
+            $('#id_country').on('select2:close', function () {
+                $('#address').select();
+            });
+            $('#id_currency').on('select2:close', function () {
+                $('#contact_attention').select();
+            });
+            $('#id_payment_code').on('select2:close', function () {
+                $('#contact_designation').select();
+            });
+            $('#id_payment_term').on('select2:close', function () {
+                $('#id_phone').select();
+            });
+            $('#id_location').on('select2:close', function () {
+                $('#consignee_name').select();
+            });
+            $('#id_tax').on('select2:close', function () {
+                $('#consignee_contact_person').select();
+            });
+            $('#statemnet').on('select2:close', function () {
+                $('#id_distribution_code').focus();
+            });
+            $('#id_distribution_code').on('select2:close', function () {
+                $('#id_interest_1').select();
+            });
+            $('[name=center_chr]').bind('keydown', function (event) {
+                if (event.which == 13) {
+                    $('.btn-success').focus();
+                    return false;
+                }
+            });
+        });
+        $(document).on('click', 'input[type="text"]', function(){
+            $(this).select();
+        });
+        $(document).on('click', 'input[type="number"]', function(){
+            $(this).select();
+        });
+
+        $('#country-table').on( 'draw.dt', function () {
+            selectTableRow('#country-table', 3);
+            $("input[type='radio']").each(function () {
+                $(this).closest('tr').css('background-color', '#f9f9f9');
+            });
+        });
+
+        $('#btnSearchCountry').on('click', function () {
+            $('#country-table').DataTable().destroy();
+            $('#country-table').dataTable({
+                "iDisplayLength": 5,
+                "bLengthChange": false,
+                "order": [[0, "desc"]],
+                "columnDefs": [
+                    {
+                        className: "hide_column",
+                        targets: [3,]
+                    },
+                ],
+                "serverSide": true,
+                "ajax": {
+                    "url": "/suppliers/country_set_list/"
+                },
+                "columns": [
+                    {"data": "update_date", "sClass": "text-left"},
+                    {"data": "code", "sClass": "text-left"},
+                    {"data": "name", "sClass": "text-left"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            return '<input type="radio" name="country-choices" id="' +
+                                    full.id + '" class="call-checkbox" value="' + meta.row + '">';
+                        }
+                    }
+                ]
+            });
+        });
+
+        $('#btnCountrySelect').on('click', function () {
+            var item_select_id = $("input[name='country-choices']:checked").attr('id');
+            var nRow = $("input[name='country-choices']:checked").parents('tr')[0];
+            var jqInputs = $('td', nRow);
+
+            $('#id_country').find('option:selected').removeAttr('selected');
+            $('#id_country option[value=' + item_select_id + ']').attr('selected', 'selected');
+            $('#id_country').val(item_select_id);
+
+            $('#select2-id_country-container').attr('title', jqInputs[1].innerText);
+            $('#select2-id_country-container').text(jqInputs[1].innerText);
+
+            $(this).attr('data-dismiss', 'modal');
+        });
+
+        $('#currency-table').on( 'draw.dt', function () {
+            selectTableRow('#currency-table', 3);
+            $("input[type='radio']").each(function () {
+                $(this).closest('tr').css('background-color', '#f9f9f9');
+            });
+        });
+
+        $('#btnSearchCurrency').on('click', function () {
+            $('#currency-table').DataTable().destroy();
+            $('#currency-table').dataTable({
+                "iDisplayLength": 5,
+                "bLengthChange": false,
+                "order": [[0, "desc"]],
+                "columnDefs": [
+                    {
+                        className: "hide_column",
+                        targets: [3,]
+                    },
+                ],
+                "serverSide": true,
+                "ajax": {
+                    "url": "/customers/currency_set_list/"
+                },
+                "columns": [
+                    {"data": "update_date", "sClass": "text-left"},
+                    {"data": "code", "sClass": "text-left"},
+                    {"data": "name", "sClass": "text-left"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            return '<input type="radio" name="currency-choices" id="' +
+                                    full.id + '" class="call-checkbox" value="' + meta.row + '">';
+                        }
+                    }
+                ]
+            });
+
+        });
+
+        $('#btnCurrencySelect').on('click', function () {
+            var item_select_id = $("input[name='currency-choices']:checked").attr('id');
+            var nRow = $("input[name='currency-choices']:checked").parents('tr')[0];
+            var jqInputs = $('td', nRow);
+
+            $('#id_currency').find('option:selected').removeAttr('selected');
+            $('#id_currency option[value=' + item_select_id + ']').attr('selected', 'selected');
+            $('#id_currency').val(item_select_id);
+
+            $('#select2-id_currency-container').attr('title', jqInputs[1].innerText);
+            $('#select2-id_currency-container').text(jqInputs[1].innerText);
+
+            $(this).attr('data-dismiss', 'modal');
+        });
+
+        $('#btnSearchPaymentMode').on('click', function () {
+            $('#payment-table').DataTable().destroy();
+            $('#payment-table').dataTable({
+                "iDisplayLength": 5,
+                "bLengthChange": false,
+                "order": [[0, "desc"]],
+                "columnDefs": [
+                    {
+                        className: "hide_column",
+                        targets: [3,]
+                    },
+                ],
+                "serverSide": true,
+                "ajax": {
+                    "url": "/customers/payment_code_set_list/"
+                },
+                "columns": [
+                    {"data": "update_date", "sClass": "text-left"},
+                    {"data": "code", "sClass": "text-left"},
+                    {"data": "name", "sClass": "text-left"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            return '<input type="radio" name="payment-mode-choices" id="' +
+                                    full.id + '" class="call-checkbox" value="' + meta.row + '">';
+                        }
+                    }
+                ]
+            });
+            setTimeout(() => {
+                $('#payment-table').DataTable().columns.adjust();
+            }, 300);
+        });
+
+        $('#btnPaymentModeSelect').on('click', function () {
+            var item_select_id = $("input[name='payment-mode-choices']:checked").attr('id');
+            var nRow = $("input[name='payment-mode-choices']:checked").parents('tr')[0];
+            var jqInputs = $('td', nRow);
+
+            $('#id_payment_code').find('option:selected').removeAttr('selected');
+            $('#id_payment_code option[value=' + item_select_id + ']').attr('selected', 'selected');
+            $('#id_payment_code').val(item_select_id);
+
+            $('#select2-id_payment_code-container').attr('title', jqInputs[1].innerText);
+            $('#select2-id_payment_code-container').text(jqInputs[1].innerText);
+
+            $(this).attr('data-dismiss', 'modal');
+        });
+
+        $('#payment-table').on( 'draw.dt', function () {
+            selectTableRow('#payment-table', 3);
+            $("input[type='radio']").each(function () {
+                $(this).closest('tr').css('background-color', '#f9f9f9');
+            });
+        });
+
+        $('#tax-table').on( 'draw.dt', function () {
+            selectTableRow('#tax-table', 3);
+            $("input[type='radio']").each(function () {
+                $(this).closest('tr').css('background-color', '#f9f9f9');
+            });
+        });
+
+        $('#btnSearchTax').on('click', function () {
+            $('#tax-table').DataTable().destroy();
+            $('#tax-table').dataTable({
+                "iDisplayLength": 5,
+                "bLengthChange": false,
+                "order": [[0, "desc"]],
+                "columnDefs": [
+                    {
+                        className: "hide_column",
+                        targets: [3,]
+                    },
+                ],
+                "serverSide": true,
+                "ajax": {
+                    "url": "/customers/tax_set_list/"
+                },
+                "columns": [
+                    {"data": "code", "sClass": "text-left"},
+                    {"data": "name", "sClass": "text-left"},
+                    {"data": "rate", "sClass": "text-right"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            return '<input type="radio" name="tax-choices" id="' +
+                                    full.id + '" class="call-checkbox" value="' + meta.row + '">';
+                        }
+                    }
+                ]
+            });
+            setTimeout(() => {
+                $('#tax-table').DataTable().columns.adjust();
+            }, 300);
+        });
+
+        $('#btnTaxSelect').on('click', function () {
+            var item_select_id = $("input[name='tax-choices']:checked").attr('id');
+            var nRow = $("input[name='tax-choices']:checked").parents('tr')[0];
+            var jqInputs = $('td', nRow);
+
+            $('#id_tax').find('option:selected').removeAttr('selected');
+            $('#id_tax option[value=' + item_select_id + ']').attr('selected', 'selected');
+            $('#id_tax').val(item_select_id);
+
+            $('#select2-id_tax-container').attr('title', jqInputs[1].innerText);
+            $('#select2-id_tax-container').text(jqInputs[1].innerText);
+
+            $(this).attr('data-dismiss', 'modal');
+        });
+
+        $('#location-stock-table').on( 'draw.dt', function () {
+            selectTableRow('#location-stock-table', 3);
+            $("input[type='radio']").each(function () {
+                $(this).closest('tr').css('background-color', '#f9f9f9');
+            });
+        });
+
+        $('#btnSearchLocation').on('click', function () {
+            $('#location-stock-table').DataTable().destroy();
+            $('#location-stock-table').dataTable({
+                "iDisplayLength": 5,
+                "bLengthChange": false,
+                "order": [[0, "desc"]],
+                "columnDefs": [
+                    {
+                        className: "hide_column",
+                        targets: [3,]
+                    },
+                ],
+                "serverSide": true,
+                "ajax": {
+                    "url": "/customers/location_set_list/"
+                },
+                "columns": [
+                    {"data": "update_date", "sClass": "text-left"},
+                    {"data": "code", "sClass": "text-left"},
+                    {"data": "name", "sClass": "text-left"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            return '<input type="radio" name="location-choices" id="' +
+                                    full.id + '" class="call-checkbox" value="' + meta.row + '">';
+                        }
+                    }
+                ]
+            });
+            setTimeout(() => {
+                $('#location-stock-table').DataTable().columns.adjust();
+            }, 300);
+        });
+
+    $('#btnLocationSelect').on('click', function () {
+            var item_select_id = $("input[name='location-choices']:checked").attr('id');
+            var nRow = $("input[name='location-choices']:checked").parents('tr')[0];
+            var jqInputs = $('td', nRow);
+
+            $('#id_location').find('option:selected').removeAttr('selected');
+            $('#id_location option[value=' + item_select_id + ']').attr('selected', 'selected');
+            $('#id_location').val(item_select_id);
+
+            $('#select2-id_location-container').attr('title', jqInputs[1].innerText);
+            $('#select2-id_location-container').text(jqInputs[1].innerText);
+
+            $(this).attr('data-dismiss', 'modal');
+        });
+
+    $('#btnTermCodeSelect').on('click', function () {
+            var item_select_id = $("input[name='term-code-choices']:checked").attr('id');
+            var nRow = $("input[name='term-code-choices']:checked").parents('tr')[0];
+            var jqInputs = $('td', nRow);
+
+            $('#id_payment_term').find('option:selected').removeAttr('selected');
+            $('#id_payment_term option[value=' + item_select_id + ']').attr('selected', 'selected');
+            $('#id_payment_term').val(item_select_id);
+
+            $('#select2-id_payment_term-container').attr('title', jqInputs[1].innerText);
+            $('#select2-id_payment_term-container').text(jqInputs[1].innerText);
+
+            $(this).attr('data-dismiss', 'modal');
+        });
+    </script>
+{% endblock %}

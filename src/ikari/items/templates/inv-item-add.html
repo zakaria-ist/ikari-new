@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static 'assets/selectable/css/dj.selectable.css' %} " type="text/css" media="all" rel="stylesheet"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Add Item{% endblock %}
+{% block ics_a_active %}active{% endblock %}
+{% block item_active %}active{% endblock %}
+{% block inv_setting_a_active %}active{% endblock %}
+{% block inv_setting_i_active %}active{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                <strong>Add Item</strong>
+            </header>
+            <div class="panel-body">
+                <form class="form-horizontal" action="{% url 'item_add' %}" role="form" method="post" onsubmit="return checkForm(this);"
+                      enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group ">
+                        <label for="code" class="col-lg-2 col-sm-2 control-label">Item Code<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-4">
+                            {{ form.code|default_if_none:"" }}
+                        </div>
+                        <span class="messages">{{ form.errors.customer }}</span>
+                        <label for="category" class="col-lg-2 col-sm-2 control-label">Item Group</label>
+                        <div class="col-lg-4">
+                            {{ form.category|default_if_none:"" }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Description</label>
+                        <div class="col-lg-4">
+                            {{ form.name|default_if_none:"" }}
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+                        <label for="inv_measure" class=" col-lg-2 col-sm-2 control-label">Inv. M'ment</label>
+                        <div class="col-lg-2">{{ form.inv_measure|default_if_none:"" }}</div>
+                        <div class="col-lg-4 col-sm-4">
+                            <label for="purchase_currency" class="col-lg-offset-1 col-lg-5 col-sm-5 control-label">
+                                Currency</label>
+                            <div class="col-lg-6">{{ form.purchase_currency|default_if_none:"" }}</div>
+                        </div>
+                        <div class="col-lg-4 col-sm-4">
+                            <label for="weight" class="col-lg-offset-1 col-lg-5 col-sm-5 control-label">Unit
+                                Weight(Kg)</label>
+                            <div class="col-lg-6">{{ form.weight|default_if_none:"" }}</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="purchase_measure" class="col-lg-2 col-sm-2 control-label">In M'ment</label>
+                        <div class="col-lg-2">{{ form.purchase_measure|default_if_none:"" }}</div>
+                        <div class="col-lg-4 col-sm-4">
+                            <label for="purchase_price" class="col-lg-offset-1 col-lg-5 col-sm-5 control-label">Purchase
+                                Price</label>
+                            <div class="col-lg-6">{{ form.purchase_price|default_if_none:"" }}</div>
+                        </div>
+                        <div class="col-lg-4 col-sm-4">
+                            <label for="par_value" class="col-lg-offset-1 col-lg-5 col-sm-5 control-label">Unit Par
+                                Value</label>
+                            <div class="col-lg-6">{{ form.par_value|default_if_none:"" }}</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="sales_measure" class="col-lg-2 col-sm-2 control-label">Out M'ment</label>
+                        <div class="col-lg-2">{{ form.sales_measure|default_if_none:"" }}</div>
+                        <div class="col-lg-offset-4 col-lg-4 col-sm-4">
+                            <label for="book_value" class="col-lg-offset-1 col-lg-5 col-sm-5 control-label">Unit Book
+                                Value</label>
+                            <div class="col-lg-6">{{ form.book_value|default_if_none:"" }}</div>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-left: 10px; margin-right: 10px;">
+                        <header class="col-lg-12 panel-heading">
+                        </header>
+                    </div>
+                    <div class="row">
+                        <div class="form-group" style="margin-left: 20px; margin-right: 20px;">
+                            <label class="col-lg-2 col-sm-2 control-label" style="font-weight: bold;">No.</label>
+                            <label class="col-lg-4 col-sm-4 control-label" style="font-weight: bold;">Pricing
+                                Type</label>
+                            <label class="col-lg-3 col-sm-3 control-label" style="font-weight: bold;">Stockist
+                                Price</label>
+                            <label class="col-lg-3 col-sm-3 control-label" style="font-weight: bold;">Retail
+                                Price</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group" style="margin-left: 20px; margin-right: 20px;">
+                            <label for="sale_currency" class=" col-lg-2 col-sm-2 control-label">1.
+                            </label>
+                            <label for="sale_currency" class=" col-lg-4 col-sm-4 control-label">SIN$
+                            </label>
+                            <div class="col-lg-2">{{ form.stockist_price|default_if_none:"" }}</div>
+                            <div class="col-lg-2 col-lg-offset-1">{{ form.sale_price|default_if_none:"" }}</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group" style="margin-left: 20px; margin-right: 20px;">
+                            <label for="sale_currency" class=" col-lg-2 col-sm-2 control-label">2.
+                            </label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group" style="margin-left: 20px; margin-right: 20px;">
+                            <label for="sale_currency" class=" col-lg-2 col-sm-2 control-label">3.
+                            </label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group" style="margin-left: 20px; margin-right: 20px;">
+                            <label for="sale_currency" class=" col-lg-2 col-sm-2 control-label">4.
+                            </label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group" style="margin-left: 20px; margin-right: 20px;">
+                            <label for="sale_currency" class=" col-lg-2 col-sm-2 control-label">5.
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <header class="col-lg-12 panel-heading">
+                            <strong>System Info</strong>
+                        </header>
+                    </div>
+                    <div class="form-group">
+                        <label for="default_location" class="col-lg-2 col-sm-2 control-label">Default
+                            Location<span class="span-required">(*)</span></label>
+                        <div class="col-lg-4">
+                            {{ form.default_location|default_if_none:"" }}
+                        </div>
+                    </div>
+                    {% comment %} <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label"><i>Last
+                            Purchase Price</i></label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control text-right" id="name" name="name"
+                                   disabled="true"
+                                   value="0.000000">
+                        </div>
+                        <label for="name" class="col-lg-2 col-sm-2 control-label"><i>Cost Price (Ave.)</i></label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control text-right" id="name" name="name"
+                                   disabled="true"
+                                   value="0.000000">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label"><i>Last
+                            Purchase Doc#</i></label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="name" name="name"
+                                   disabled="true"
+                                   value="">
+                        </div>
+                        <label for="name" class="col-lg-2 col-sm-2 control-label"><i>Last Move Date</i></label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="name" name="name"
+                                   disabled="true"
+                                   value=" / / ">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label"><i>Last
+                            Purchase Date</i></label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="name" name="name"
+                                   disabled="true"
+                                   value=" / / ">
+                        </div>
+                        <label for="name" class="col-lg-2 col-sm-2 control-label"><i>Last Update On</i></label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="name" name="name"
+                                   disabled="true"
+                                   value=" / / ">
+                        </div>
+                    </div> {% endcomment %}
+                    <div class="form-group">
+                        <label for="chkActive" class="col-lg-2 col-sm-2 control-label"></label>
+                        <div class="col-lg-10">
+                            <div class="checkbox checkbox-primary">
+                                <input name="chkActive" id="chkActive" class="styled" type="checkbox" checked/>
+                                <label for="chkActive">
+                                    Active
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" name="btnSave" class="btn btn-success">Save</button>
+                            <a class="btn btn-default" href="{% url 'item_list' %}">Cancel</a>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </section>
+    </div>
+{% endblock %}
+
+{{ form.media.js }}
+{% block extrafoot %}
+    {% load staticfiles %}
+    <!--external js of page-->
+    <script type="text/javascript" src="{% static 'assets/selectable/js/jquery.dj.selectable.js' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+        $(document).on('keyup', '.select2-selection.select2-selection--single', function (e) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if(keycode == '9'){
+                $(this).closest(".select2-container").siblings('select:enabled').select2('open');
+            }
+        });
+        $(document).ready(function () {
+
+            $('#id_code').focus();
+
+            $('#id_inv_measure').select2({
+                placeholder: "Select Inventory UOM",
+            });
+
+            $('#id_purchase_measure').select2({
+                placeholder: "Select In UOM",
+            });
+
+            $('#id_sales_measure').select2({
+                placeholder: "Select Out UOM",
+            });
+
+            $('#id_purchase_currency').select2({
+                placeholder: "Select Currency",
+            });
+
+            $('#id_category').select2({
+                placeholder: "Select Item Group",
+            });
+
+            $('#id_default_location').prop('required', true);
+            $('#id_default_location').select2({
+                placeholder: "Select Default Location",
+            });
+            $('#id_default_location').on('select2:close', function (e)
+            {
+                $('#chkActive').focus();
+            });
+
+            $('#id_category').on('select2:close', function (e)
+            {
+                $('#id_name').focus();
+            });
+
+            $('#id_inv_measure').on('select2:close', function (e)
+            {
+                $('#id_purchase_currency').focus();
+                $('#id_purchase_currency').select2('open');
+            });
+
+            $('#id_purchase_currency').on('select2:close', function (e)
+            {
+                $('#id_weight').focus();
+            });
+
+            $('#id_purchase_measure').on('select2:close', function (e)
+            {
+                $('#id_purchase_price').focus();
+            });
+
+            $('#id_sales_measure').on('select2:close', function (e)
+            {
+                $('#id_book_value').focus();
+            });
+
+            {#$(window).keydown(function (event) {#}
+            {#    if (event.keyCode == 13) {#}
+            {#        event.preventDefault();#}
+            {#        return false;#}
+            {#    }#}
+            {#});#}
+        });
+        $("#id_supplier").blur(function () {
+            var selected_name = this.value;
+            if (selected_name) {
+                $.ajax({
+                    method: "POST",
+                    url: '/items/get_supplier_code_by_name/' + selected_name + '/',
+                    dataType: 'JSON',
+                    data: {
+                        'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val()
+                    },
+                    responseTime: 200,
+                    success: function (json) {
+                        $('input[name="category"]').val(json);
+                    }
+                });
+            }
+        });
+        $("#purchase_code").change(function () {
+            //debugger;
+            var selected_code = this.value;
+            if (selected_code) {
+                $('input[name="code"]').val(selected_code);
+            }
+        });
+
+    </script>
+{% endblock %}

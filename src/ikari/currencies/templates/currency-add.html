@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Add Currency{% endblock %}
+
+{% block currency_active %}
+{% if menu_type == '0' %} {# TRN_CODE_TYPE_DICT['Global'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_system_setting_a_active %}
+{% if menu_type == '0' %} {# TRN_CODE_TYPE_DICT['Global'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_system_setting_i_active %}
+{% if menu_type == '0' %} {# TRN_CODE_TYPE_DICT['Global'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_order_a_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_order_i_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_a_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_i_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block currency_sp_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                Add Currency
+            </header>
+            <div class="panel-body">
+                <form class="form-horizontal" action="{% url 'currency_add' menu_type %}" role="form" method="post"
+                       onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                    {% csrf_token %}
+{#                    <div class="form-group">#}
+{#                        <label for="code" class="col-lg-2 col-sm-2 control-label">Code Type</label>#}
+{#                        <div class="col-lg-8">#}
+{#                           <select id="currency_id" class="form-control" >#}
+{#                           <option>Currency</option>#}
+{#                           </select>#}
+{#                        </div>#}
+{#                    </div>#}
+                    <div class="form-group">
+                        <label for="code" class="col-lg-2 col-sm-2 control-label">Code<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-3">
+                            <input type="text" class="form-control" id="code" name="code" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="symbol" class="col-lg-2 col-sm-2 control-label">Symbol<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-3">
+                            <input type="text" class="form-control" id="symbol" name="symbol" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Description<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-3">
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="chkDecimal" class="col-lg-2 col-sm-2 control-label">Is Decimal</label>
+                        <div class="col-lg-3">
+                            <div class="checkbox checkbox-primary">
+                                <input name="chkDecimal" id="checkbox-03" class="styled" type="checkbox"/>
+                                <label for="checkbox-03">
+                                    Decimal
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group hidden">
+                        <label for="format" class="col-lg-2 col-sm-2 control-label">Format</label>
+                        <div class="col-lg-3">
+                            <input type="text" class="form-control" id="format" name="format">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" name="btnSave" class="btn btn-success">Save</button>
+
+                            {% if menu_type = '0' %} {# TRN_CODE_TYPE_DICT['Global'] #}
+                                <a class="btn btn-default" href="{% url 'currency_list' %}" >Cancel</a>
+                            {% else %}
+                                <a class="btn btn-default" href="{% url 'curr_list' %}" >Cancel</a>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </section>
+    </div>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="application/javascript" src="{% static 'js/ga.js' %}?{% now 'H' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#currency_id').select2();
+            $(document).on('keyup', '.select2-selection.select2-selection--single', function (e) {
+                var keycode = (e.keyCode ? e.keyCode : e.which);
+                if(keycode == '9'){
+                    $(this).closest(".select2-container").siblings('select:enabled').select2('open');
+                }
+            });
+            $('#currency_id').on('select2:close', function () {
+                $('#code').focus();
+            });
+
+            $('#code').focus();
+        });
+    </script>
+{% endblock %}

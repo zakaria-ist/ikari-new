@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static 'assets/selectable/css/dj.selectable.css' %} " type="text/css" media="all" rel="stylesheet"/>
+{% endblock %}
+
+{% block title %}Add Item{% endblock %}
+{% block item_active %}active{% endblock %}
+{% block inv_setting_a_active %}active{% endblock %}
+{% block inv_setting_i_active %}active{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                <strong>Add Item</strong>
+            </header>
+            <div class="panel-body">
+                <form class="form-horizontal" action="{% url 'item_add' %}" role="form" method="post"
+                       onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group ">
+                        <label for="code" class="col-lg-2 col-sm-2 control-label">Part Number<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-4">
+                            {{ form.code|default_if_none:"" }}
+                        </div>
+                        <span class="messages">{{ form.errors.customer }}</span>
+                        <label for="category" class="col-lg-2 col-sm-2 control-label">Part Group</label>
+                        <div class="col-lg-4">
+                            {{ form.category|default_if_none:"" }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Part Name</label>
+                        <div class="col-lg-4">
+                            {{ form.name|default_if_none:"" }}
+                        </div>
+                        <label for="country" class="col-lg-2 col-sm-2 control-label">Country Origin</label>
+                        <div class="col-lg-4">{{ form.country|default_if_none:"" }}</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="measure_list" class="col-lg-2 col-sm-2 control-label">Report Measurement</label>
+                        <div class="col-lg-4">{{ form.report_measure|default_if_none:"" }}</div>
+                        <label for="inv_measure" class=" col-lg-2 col-sm-2 control-label">Inventory Measurement</label>
+                        <div class="col-lg-4">{{ form.inv_measure|default_if_none:"" }}</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="model_qty" class="col-lg-2 col-sm-2 control-label">Qty per Model</label>
+                        <div class="col-lg-4">
+                            {{ form.model_qty|default_if_none:"" }}
+                        </div>
+                        <label for="minimum_order" class="col-lg-2 col-sm-2 control-label">Minimum Order Qty</label>
+                        <div class="col-lg-4">{{ form.minimun_order|default_if_none:"" }}</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="ratio" class="col-lg-2 col-sm-2 control-label">Ratio</label>
+                        <div class="col-lg-4">
+                            {{ form.ratio|default_if_none:"" }}
+                        </div>
+                        <label for="person_incharge" class="col-lg-2 col-sm-2 control-label">Person In Charge</label>
+                        <div class="col-lg-4">
+                            {{ form.person_incharge|default_if_none:"" }}
+                        </div>
+                    </div>
+                     <div class="form-group">
+                        <label for="default_supplier" class="col-lg-2 col-sm-2 control-label">Default Supplier</label>
+                        <div class="col-lg-4">
+                            {{ form.default_supplier|default_if_none:"" }}
+                        </div>
+                        <label for="default_location" class="col-lg-2 col-sm-2 control-label">Default Location</label>
+                        <div class="col-lg-4">
+                            {{ form.default_location|default_if_none:"" }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <header class="col-lg-6 panel-heading">
+                            <strong>Sales Info</strong>
+                        </header>
+                        <header class="col-lg-6 panel-heading">
+                            <strong>Purchase Info</strong>
+                        </header>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group ">
+                                <label for="sales_price" class=" col-lg-4 col-sm-4 control-label">Sales Price</label>
+                                <div class="col-lg-8">{{ form.sale_price|default_if_none:"" }}</div>
+                            </div>
+                            <div class="form-group ">
+                                <label for="sale_currency" class=" col-lg-4 col-sm-4 control-label">Sales Currency</label>
+                                <div class="col-lg-8">{{ form.sale_currency|default_if_none:"" }}</div>
+                            </div>
+                            <div class="form-group ">
+                                <label for="sales_measure" class=" col-lg-4 col-sm-4 control-label">Sales Measurement</label>
+                                <div class="col-lg-8">{{ form.sales_measure|default_if_none:"" }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group ">
+                                <label for="purchase_price" class=" col-lg-4 col-sm-4 control-label">Purchase Price</label>
+                                <div class="col-lg-8">{{ form.purchase_price|default_if_none:"" }}</div>
+                            </div>
+                            <div class="form-group ">
+                                <label for="purchase_currency" class=" col-lg-4 col-sm-4 control-label">Purchase Currency</label>
+                                <div class="col-lg-8">{{ form.purchase_currency|default_if_none:"" }}</div>
+                            </div>
+
+                            <div class="form-group ">
+                                <label for="purchase_measure" class=" col-lg-4 col-sm-4 control-label">Purchase Measurement</label>
+                                <div class="col-lg-8">{{ form.purchase_measure|default_if_none:"" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="short_desc" class="col-lg-2 col-sm-2 control-label">Short Descriton</label>
+                        <div class="col-lg-10">{{ form.short_description|default_if_none:"" }}</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="long_desc" class="col-lg-2 col-sm-2 control-label">Long Descriton</label>
+                        <div class="col-lg-10">{{ form.name|default_if_none:"" }}</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="chkActive" class="col-lg-2 col-sm-2 control-label"></label>
+                        <div class="col-lg-10">
+                            <div class="checkbox checkbox-primary">
+                                <input name="chkActive" id="chkActive" class="styled" type="checkbox" checked/>
+                                <label for="chkActive">
+                                    Active
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" name="btnSave" class="btn btn-success">Save</button>
+                            <a class="btn btn-default" href="{% url 'item_list' %}">Cancel</a>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </section>
+    </div>
+{% endblock %}
+
+{{ form.media.js }}
+{% block extrafoot %}
+    {% load staticfiles %}
+    <!--external js of page-->
+    <script type="text/javascript" src="{% static 'assets/selectable/js/jquery.dj.selectable.js' %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $(window).keydown(function (event) {
+                if (event.keyCode == 13) {
+                    event.preventDefault();
+                    return false;
+                }
+            });
+        });
+        $("#id_supplier").blur(function () {
+            //debugger;
+            var selected_name = this.value;
+            if (selected_name) {
+                $.ajax({
+                    method: "POST",
+                    url: '/items/get_supplier_code_by_name/' + selected_name + '/',
+                    dataType: 'JSON',
+                    data: {
+                        'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val()
+                    },
+                    responseTime: 200,
+                    success: function (json) {
+                        $('input[name="category"]').val(json);
+                    }
+                });
+            }
+        });
+        $("#purchase_code").change(function () {
+            //debugger;
+            var selected_code = this.value;
+            if (selected_code) {
+                $('input[name="code"]').val(selected_code);
+            }
+        });
+
+    </script>
+{% endblock %}

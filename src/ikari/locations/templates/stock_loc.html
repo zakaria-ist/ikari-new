@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block extrahead %}
+    {% load staticfiles %}
+    <!-- Datatables -->
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <style>
+      .col_tb_1 {
+          width: 90px !important;
+      }
+
+      .col_tb_2 {
+          width: 150px !important;
+      }
+
+      .col_tb_8 {
+          width: 30px !important;
+      }
+    </style>
+{% endblock %}
+
+{% block title %}Item List{% endblock %}
+{% block ics_a_active %}active  {% endblock %}
+{% block stock_location_active %}active{% endblock %}
+{% block inv_setting_a_active %}active{% endblock %}
+{% block inv_setting_i_active %}active{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    Location stock file Setup
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table">
+                        <div style="display:inline-block;min-width:30%;">
+                            <label>Location : </label>
+                            <select id="is_loc">
+                                {% for loc in location %}
+                                <option value="{{ loc.id }}">{{ loc.name}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div id="defaul_item">
+                            <table class="display table table-bordered table-striped table-condensed"
+                                   id="custom-table" style="width:100%">
+                                <thead>
+                                <tr>
+                                    <th>Update Date</th>
+                                    <th>Item Code</th>
+                                    <th>Minimum Qty</th>
+                                    <th>Maximum Qty</th>
+                                    <th>Re-Order Qty</th>
+                                    <th>Available Qty</th>
+                                    <th>Inv. Measure</th>
+                                    {% comment %} <th>Location     </th>
+                                    {% if 'items.change_item' in user.get_all_permissions %}
+                                        <th class="text-center">Edit</th>
+                                    {% endif %} {% endcomment %}
+                                </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    
+{% endblock %}
+{% block js %}
+    <!-- Datatables -->
+    <!-- <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script> -->
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var def_location_id = "{{location_id}}";
+            if (def_location_id > 0) {
+                $('#is_loc').val(def_location_id);
+            }
+            var location_id = $('#is_loc').val();
+            reload_tabel(location_id)
+            $('#is_loc').on('change', function () {
+                var location_id = $('#is_loc').val();
+                reload_tabel(location_id)
+            });
+            $('#is_loc').select2({
+                placeholder: "Select Location",
+            });
+        });
+        function reload_tabel(location_id) {
+            var datatbl = $('#custom-table').DataTable();
+            datatbl.destroy();
+            $('#custom-table').DataTable({
+                "order": [[ 1, "asc" ]],
+                "pageLength" : 10,
+                "serverSide": true,
+                "processing": true,
+                "ajax": {
+                    "url": "{% url 'ItemList_by_location__asJson' %}",
+                    "data": {
+                        "id_loc": location_id ,
+                    }
+                },
+                "columnDefs": [
+                  {className: "text-right", "targets": [2,3,4,5]},
+                  {className: "col_tb_1", "targets": [0,6]},
+                  {className: "col_tb_2", "targets": [1]},
+                  //{className: "col_tb_8", "targets": [8]},
+                ],
+                "columns": [
+                    {"data": "update_date"},
+                    {"data": "item_code"},
+                    {"data": "minimun_qty"},
+                    {"data": "maximum_qty"},
+                    {"data": "reorder_qty"},
+                    {"data": "quantity", "orderable": false},
+                    {"data": "inv_measure", "orderable": false},
+                    //{"data": "location", "orderable": false},
+                    //{% if 'items.change_item' in user.get_all_permissions %}
+                        //{
+                            //"className": "text-center",
+                            //"orderable": false,
+                            //"data": null,
+                            //"render": function (data, type, full, meta) {
+                                //var loc = '0';
+                                //var button_edit = ''
+                                //if (full.location_id > 0){
+                                    //loc = full.location_id
+                                 //button_edit = '<a href="/locations/edit_loc_item/' +loc+'/'+ full.item_id + '//" class="fa fa-pencil fa-lg btn btn-primary btn-sm"></a>'
+                                //}
+                                //return button_edit;
+                            //}
+                        //}
+                    //{% endif %}
+                ]
+            });
+        }
+    </script>
+{% endblock %}
+
+

@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Stock Transaction List{% endblock %}
+{% block inv_setting_a_active %}active{% endblock %}
+{% block inv_setting_i_active %}active{% endblock %}
+{% block inv_document_entry_a_active %}active{% endblock %}
+{% block inv_document_entry_i_active %}active{% endblock %}
+{% block inv_stock_transaction_active %}active{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    Stock Transaction List
+                    <span class="tools pull-right">
+                         {% if 'inventory.add_stocktransaction' in user.get_all_permissions %}
+                             <a class="btn btn-success start" href="{% url 'stock_transaction_add' 0 %}"> {# is_send #}
+                                 <i class="glyphicon glyphicon-plus"></i>
+                                 <span>Add new</span>
+                             </a>
+                         {% endif %}
+                    </span>
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table">
+                        <table class="display table table-bordered table-striped"
+                               id="stock-trans-table" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th></th>
+                                <th>Update Date</th>
+                                <th>Document Date</th>
+                                <th>Document Number</th>
+                                <th>Trans. Code</th>
+                                <th>Stock I/O Flag</th>
+                                <th>Pricing Flag</th>
+                                <th>In Location</th>
+                                <th>Out Location</th>
+                                <th>Status</th>
+                                {% if 'inventory.change_stocktransaction' in user.get_all_permissions %}
+                                    <th class="text-center">Edit</th>
+                                {% endif %}
+                            </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <!--dynamic table initialization -->
+    <script src="{% static 'js/common/dynamic_table_init.js' %}?{% now 'H' %}"></script>
+    <script>
+        $(document).ready(function () {
+            var campreto = $('#stock-trans-table').DataTable({
+                "order": [[1, "desc"]],
+                "serverSide": true,
+                "scrollX": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'load_stock_transaction_list' %}",
+                },
+                "columns": [
+                    {
+                        "className": 'details-control',
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, row, meta) 
+                        {
+                            var btn = '<a class="btn btn-white fa fa-plus-circle"></a';
+                            return btn;
+                        }
+                    },
+                    {"data": "update_date"},
+                    {"data": "document_date"},
+                    {"data": "document_number"},
+                    {"data": "transaction_code"},
+                    {"data": "io_flag"},
+                    {"data": "price_flag"},
+                    {"data": "in_location"},
+                    {"data": "out_location"},
+                    {
+                        "data": null,
+                        "className": "text-center",
+                        "render": function (data, type, row, meta) {
+                            if (row.status == '1') { /* ORDER_STATUS['Open'] */
+                                return '<span class="badge badge-sm label-inverse">Draft</span>'
+                            } else if (row.status == '2') { /* ORDER_STATUS['Send'] */
+                                return '<span class="badge badge-sm label-success">Send</span>'
+                            } else {
+                                return '<span class="badge badge-sm label-danger hide">Undefined</span>'
+                            }
+                        }
+                    },
+                    {% if 'inventory.change_stocktransaction' in user.get_all_permissions %}
+                        {
+                            "className": "text-center",
+                            "orderable": false,
+                            "data": null,
+                            "render": function (data, type, full, meta) {
+                                var button_edit = '';
+                                if (full.order_id != '') {
+                                    button_edit += '<a onclick="prevent()" class="fa fa-pencil fa-lg btn btn-primary btn-sm"></a>' /* is_send */
+                                } else {
+                                    button_edit += '<a href="../stock_transaction_edit/' + full.id + '/0/" class="fa fa-pencil fa-lg btn btn-primary btn-sm"></a>' /* is_send */
+                                }
+                                return button_edit;
+                            }
+                        }
+                    {% endif %}
+                ],
+                "columnDefs": [
+                    { className: "text-center",targets: [0, 1, 2, 3, 4, 5, 6, 7, 8] },
+                ]
+            });
+            $('#stock-trans-table tbody').on('click', 'td.details-control a', function () {
+                var tr = $(this).closest('tr');
+                var row = campreto.row( tr );
+                if (row.data()){
+                    if ( row.child.isShown() ) {
+                        row.child.hide();
+                        tr.removeClass('shown');
+                        $(this).addClass('fa-plus-circle');
+                        $(this).removeClass('fa-minus-circle');
+                    }
+                    else {
+                        addrow(row.child, row.data());
+                        tr.addClass('shown');
+                        $(this).removeClass('fa-plus-circle');
+                        $(this).addClass('fa-minus-circle');
+                    }
+                }
+            });
+        })
+
+        function prevent() {
+            $.confirm({
+                title: 'Not allowed',
+                content: 'Editing is not allowd. Please update the Order',
+                buttons: {
+                    Ok: {
+                        btnClass: 'btn-success, Ok',
+                        action: function(){}
+                        }
+                },
+                onOpen: function() {
+                    $('.Ok').focus();
+                }
+            });
+        }
+
+        function addrow(callback,stock_trans) {
+            var is_inventory = "True";
+            $.ajax({
+                url: '/inventory/detail_stocktransaction/'+ stock_trans.id+'/'+ 2+'/', /* loc_id */
+                dataType: "json",
+                complete: function (response) {
+                    var da = JSON.parse(response.responseText);
+                    var data = da.data;
+                    if (data.length > 0){
+                        var thead = '',  tbody = '';
+                        thead += '<th>Items Code</th>';
+                        thead += '<th>Qty</th>';
+                        thead += '<th>Unit Price</th>';
+                        thead += '<th>Amount</th>';
+                        thead += '<th>Remark</th>';
+                        for (var i = 0; i < data.length; i++) {
+                            var remark =''
+                            if (data[i].remark) {
+                                remark = data[i].remark
+                            };
+                            tbody += '<tr>';
+                            tbody += '<td>' + data[i].item_code + '</td>';
+                            tbody += '<td style="width:120px">' + data[i].quantity + '</td>';
+                            tbody += '<td style="width:120px">' + data[i].unit_price + '</td>';
+                            tbody += '<td style="width:120px">' + data[i].amount + '</td>';
+                            tbody += '<td style="width:240px">' +
+                            remark
+                             + '</td></tr>';
+                        }
+
+                        callback($('<table class="display table table-bordered table-striped table-condensed">' + thead + tbody + '</table>')).show();
+                    } else {
+                        showErrorMessage();
+                    }
+                }
+            }) 
+        }
+    </script>
+{% endblock %}
+
+

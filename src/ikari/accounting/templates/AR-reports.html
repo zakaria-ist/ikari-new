@@ -1,0 +1,939 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <style>
+        .hide_column {
+            display : none;
+        }
+    </style>
+{% endblock %}
+{% block title %}Report View{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block parent_AR_a_active %}active{% endblock %}
+{% block parent_AR_i_active %}active{% endblock %}
+{% block ar_report_active %}active{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-3">
+            <section class="panel" id="secReportList">
+                <header class="panel-heading">
+                    AR Reports
+                </header>
+                <div class="panel-body form-horizontal" id="divAgedTrial">
+                    <form class="form-horizontal" action="" role="form" method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <input type="hidden" id="hdReportId">
+                            <label class="control-label col-md-12">A/R Aged Trial Report</label>
+                            <div class="col-md-12">
+                                <select class="form-control" id="report_list" name="report_list">
+                                    {% for report in ar_report_list %}
+                                        <option value="{{ report.0 }}">
+                                            {{ report.1 }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </section>
+            <section class="panel" id="secFilterCondition">
+                <header class="panel-heading">
+                    Filter Conditions
+                </header>
+                <div class="panel-body form-horizontal">
+                    <div id="divDateFromTo" class="form-group filter divAR1 divAR2">
+
+                        <label class="control-label col-md-12">Age As Of</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                       id="age_of_date" size="16"
+                                       type="text" value="{{session_date}}" required/>
+                        </div>
+
+                        <label class="control-label col-md-12">Cutoff By</label>
+                        <div class="col-md-11">
+                            <select class="form-control" id="date_list" name="date_list">
+                                {% for date in date_type %}
+                                    <option value="{{ date.0 }}">
+                                        {{ date.0 }} - {{ date.1 }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <label class="control-label col-md-12">Cutoff Date</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                       id="cutoff_date" size="16"
+                                       type="text" value="{{session_date}}" required/>
+                        </div>
+                        <label class="control-label col-md-12">Customer From:</label>
+                        <div class="col-md-8">
+                            <input type="text" name="id_cust_from" id="id_cust_from" class="hidden">
+                            <select class="form-control" id="lbSR7405Customer" name="lbSR7405Customer">
+                                <option value="">Select Customer</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                           <button id="btnSearchCustomer" tabindex="-1" type="button" class="btn btn-info sended" data-toggle="modal"
+                                href="#myCustomerListModal"><i class="fa fa-search"></i></button>
+                        </div>
+
+                        <label class="control-label col-md-12">Customer To:</label>
+                        <div class="col-md-8">
+                            <input type="text" name="id_cust_to" id="id_cust_to" class="hidden">
+                            <select class="form-control" id="lbSR7405Customer_to" name="lbSR7405Customer_to">
+                                <option value="">Select Customer</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                           <button id="btnSearchCustomer_to" tabindex="-1" type="button" class="btn btn-info sended" data-toggle="modal"
+                                href="#myCustomer_to"><i class="fa fa-search"></i></button>
+                        </div>
+
+                        <label class="control-label col-md-12">---Use Aging Periods---</label>
+                        <div class="col-md-12" style="font-size: 12px">
+                           <label class="control-label col-md-8">Current</label> <input name="per_curr" id="per_curr" class="styled col-md-4" type="number" value="0">
+                           <label class="control-label col-md-8">1st</label> <input name="per_1st" id="per_1st" class="styled col-md-4" type="number" value="{{ age.0 }}">
+                           <label class="control-label col-md-8">2nd</label> <input name="per_2nd" id="per_2nd" class="styled col-md-4" type="number" value="{{ age.1 }}">
+                           <label class="control-label col-md-8">3rd</label> <input name="per_3rd" id="per_3rd" class="styled col-md-4" type="number" value="{{ age.2 }}">
+                           <label class="control-label col-md-8">Over</label> <input name="per_over" id="per_over" class="styled col-md-4" type="number" value="{{ age.2 }}" disabled>
+                        </div>
+                        <label class="control-label col-md-12">Transaction Type</label>
+                        <div class="col-md-11" style="font-size: 12px">
+                                <input name="inv" id="inv" class="styled" type="checkbox">
+                                    <label for="inv">
+                                     &nbsp;Invoice
+                                </label><br>
+                                <input name="debit" id="debit" class="styled" type="checkbox">
+                                    <label for="debit">
+                                     &nbsp;Debit Note
+                                </label><br>
+                                <input name="credit" id="credit" class="styled" type="checkbox">
+                                    <label for="credit">
+                                     &nbsp;Credit Note
+                                </label><br>
+                                <input name="interest" id="interest" class="styled" type="checkbox">
+                                    <label for="interest">
+                                     &nbsp;Interest
+                                </label><br>
+                                <input name="un-cash" id="un-cash" class="styled" type="checkbox">
+                                    <label for="un-cash">
+                                     &nbsp;Unapplied Cash
+                                </label><br>
+                                <input name="p-payment" id="p-payment" class="styled" type="checkbox">
+                                    <label for="p-payment">
+                                     &nbsp;Prepayment
+                                </label><br>
+                                <input name="receipt" id="receipt" class="styled" type="checkbox">
+                                    <label for="receipt">
+                                     &nbsp;Receipt
+                                </label><br>
+                                <input name="refund" id="refund" class="styled" type="checkbox">
+                                    <label for="refund">
+                                     &nbsp;Refund
+                                </label><br>
+                                <input name="refund" id="adjustment" class="styled" type="checkbox">
+                                    <label for="adjustment">
+                                     &nbsp;Adjustment
+                                </label><br>
+                        </div>
+                        <label class="control-label col-md-12">Currency</label>
+                        <div class="col-md-11">
+                            <select class="form-control" id="curr_list" name="curr_list">
+                                {% for cur in cur_type %}
+                                    <option value="{{ cur.0 }}">
+                                        {{ cur.0 }} - {{ cur.1 }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <label class="control-label col-md-12"></label>
+                        <div class="col-md-12" id="app_detail_div" style="font-size: 12px">
+                                    <input name="app_detail" id="app_detail" class="styled" type="checkbox">
+                                    <label for="app_detail">&nbsp;Applied Details</label>
+                        </div>
+                        <div class="col-md-12" id="full_paid_div" style="font-size: 12px">
+                                    <input name="full_paid" id="full_paid" class="styled" type="checkbox">
+                                    <label for="full_paid">&nbsp;Fully Paid Trans.</label>
+                        </div>
+                    </div>
+                    <div id="divPrntDbtNt" class="form-group filter" style="display: none">
+                        <div class="radios" style="padding-left: 18px;">
+                            <label class="label_radio" for="radio-01">
+                                <input name="group-print-header" id="radio-01" value="1" type="radio" checked/> Print with header
+                            </label>
+                            <label class="label_radio" for="radio-02">
+                                <input name="group-print-header" id="radio-02" value="2" type="radio" /> Print no header
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <div id="divButton" class="form-group">
+                <div class="col-md-5">
+                    <a id="btnReview" tabindex="1" class="btn btn-success" style="">Review</a>
+                </div>
+                <div class="col-md-7">
+                    <a id="btnXLS" tabindex="1" class="btn btn-success" style="">Excel Report</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <section class="panel">
+                <div class="panel-body" style="height: 100%; min-height: 500px;">
+                    <div id="divViewPDF" class="adv-table">
+                        <iframe id="frViewPDF" width="100%" height="100%" style="height: 100%; min-height: 510px;"
+                                src=""></iframe>
+                    </div>
+                    <div id="loadpage"
+                         style="position:absolute; left:0px; top:0px; background-color:white; layer-background-color:white; width: 100%; height: 100%;">
+                        <p align="center" style="font-size: large;">
+                            <img src="/static/img/loading1.gif">
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <div class="modal fade" id="myCustomer_to" tabindex="-1" role="dialog"
+         aria-labelledby="myCustomer_to"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Customer</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div id="customer_error" class="messages"
+                             style="font-size: 12.5px !important;"></div>
+                    </div>
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+
+                                            <table id="customer_to-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th id="cus-id" class="hidden">ID</th>
+                                                    <th id="cus-code">Customer Code</th>
+                                                    <th id="cus-name">Customer Name</th>
+                                                    <th id="cus-payment_term">Payment Term</th>
+                                                    <th id="cus-currency_code">Currency Code</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" onclick="changeCustomer_to()">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="myCustomerListModal" tabindex="-1" role="dialog"
+         aria-labelledby="myCustomerListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Customer</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div id="customer_error" class="messages"
+                             style="font-size: 12.5px !important;"></div>
+                    </div>
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+
+                                            <table id="customer-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th id="cus-id_to" class="hidden">ID</th>
+                                                    <th id="cus-code">Customer Code</th>
+                                                    <th id="cus-name">Customer Name</th>
+                                                    <th id="cus-payment_term">Payment Term</th>
+                                                    <th id="cus-currency_code">Currency Code</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" onclick="changeCustomer()">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+        $(document).on('keyup', '.select2-selection.select2-selection--single', function (e) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if(keycode == '9'){
+                $(this).closest(".select2-container").siblings('select:enabled').select2('open');
+            }
+        });
+        $(document).ready(function () {
+            $('#report_list').select2({});
+            $('#date_list').select2({});
+            $('#curr_list').select2({});
+
+            $('#report_list').on('select2:close', function (e)
+            {
+                $('#age_of_date').focus();
+            });
+
+            $('#date_list').on('select2:close', function (e)
+            {
+                $('#cutoff_date').focus();
+            });
+
+            $('#curr_list').on('select2:close', function (e)
+            {
+                $('#btnReview').focus();
+            });
+
+            $('#btnReview').bind('keydown', function (event) {
+                if (event.which == 13) {
+                    $(this).click()
+                }
+            });
+
+            $('#excel_file').bind('keydown', function (event) {
+                if (event.which == 13) {
+                    $(this).click()
+                }
+            });
+
+            get_customer_data();
+        });
+        function get_customer_data() {
+            $.ajax({
+                type: "GET",
+                url: "/customers/get_customer_code_list/",
+                success: function (data) {
+                    cust_code_list = data.customer_list;
+                    $.each(cust_code_list, function (i, item) {
+                        $('#lbSR7405Customer').append($('<option>', {
+                            value: item[0],
+                            text : item[1]
+                        }));
+                    });
+                    $.each(cust_code_list, function (i, item) {
+                        $('#lbSR7405Customer_to').append($('<option>', {
+                            value: item[0],
+                            text : item[1]
+                        }));
+                    });
+                    $('#lbSR7405Customer').select2({
+                        placeholder: "Select Customer",
+                        allowClear: true
+                    });
+                    $('#lbSR7405Customer_to').select2({
+                        placeholder: "Select Customer",
+                        allowClear: true
+                    });
+
+                    $('#lbSR7405Customer').on('select2:close', function (e)
+                    {
+                        $('#lbSR7405Customer_to').focus();
+                        $('#lbSR7405Customer_to').select2('open');
+                    });
+
+                    $('#lbSR7405Customer_to').on('select2:close', function (e)
+                    {
+                        $('#per_curr').focus();
+                    });
+                }
+            });
+        }
+        $("#lbSR7405Customer").on('change', function(){
+            var selected_to = $("#lbSR7405Customer").val();
+            $("#id_cust_from").val(selected_to).trigger('change');
+        });
+        $("#lbSR7405Customer_to").on('change', function(){
+            var selected_to = $("#lbSR7405Customer_to").val();
+            $("#id_cust_to").val(selected_to).trigger('change');
+        });
+        $('#customer-table').on( 'draw.dt', function () {
+            selectTableRow('#customer-table', 5);
+            $("input[type='radio']").each(function () {
+                $(this).closest('tr').css('background-color', '#f9f9f9');
+            });
+        });
+        $('#btnSearchCustomer').on('click', function () {
+            $("#customer_error").text(""); // Delete error message
+            $('#customer-table').DataTable().destroy();
+            $('#customer-table').dataTable({
+                "iDisplayLength": 10,
+                "bLengthChange": false,
+                "order": [[0, "asc"]],
+                "serverSide": true,
+                "ajax": {
+                    "url": "/accounting/customer_list/"
+                },
+                "columns": [
+                    {"data": "id", "sClass": "hidden"},
+                    {"data": "code", "sClass": "text-left"},
+                    {"data": "name", "sClass": "text-left"},
+                    {"data": "payment_term", "sClass": "text-left"},
+                    {"data": "currency_code", "sClass": "text-left"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "sClass": "hide_column",
+                        "render": function (data, type, full, meta) {
+                            return '<input type="radio" name="customer-choices" id="' +
+                                full.id + '" class="call-checkbox" value="' + meta.row + '">';
+                        }
+                    }
+                ]
+            });
+            setTimeout(() => {
+                $('#customer-table').DataTable().columns.adjust();
+            }, 300);
+        });
+        $('#customer_to-table').on( 'draw.dt', function () {
+            selectTableRow('#customer_to-table', 5);
+            $("input[type='radio']").each(function () {
+                $(this).closest('tr').css('background-color', '#f9f9f9');
+            });
+        });
+        $('#btnSearchCustomer_to').on('click', function () {
+            $("#customer_error").text(""); // Delete error message
+            $('#customer_to-table').DataTable().destroy();
+            $('#customer_to-table').dataTable({
+                "iDisplayLength": 10,
+                "bLengthChange": false,
+                "order": [[0, "asc"]],
+                "serverSide": true,
+                "ajax": {
+                    "url": "/accounting/customer_list/"
+                },
+                "columns": [
+                    {"data": "id", "sClass": "hidden"},
+                    {"data": "code", "sClass": "text-left"},
+                    {"data": "name", "sClass": "text-left"},
+                    {"data": "payment_term", "sClass": "text-left"},
+                    {"data": "currency_code", "sClass": "text-left"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "sClass": "hide_column",
+                        "render": function (data, type, full, meta) {
+                            return '<input type="radio" name="customer_to-choices" id="' +
+                                full.id + '" class="call-checkbox" value="' + meta.row + '">';
+                        }
+                    }
+                ]
+            });
+            setTimeout(() => {
+                $('#customer_to-table').DataTable().columns.adjust();
+            }, 300);
+        });
+        $('#sandbox-container input').datepicker({
+            format: "mm-yyyy",
+            startView: 1,
+            minViewMode: 1,
+            autoclose: true
+        });
+        var age_of_date, cutoff_date;
+        // $('#age_of_date').keyup(function(event){
+        //      if (event.which != 13) {
+        //         adjust_input_date(this);
+        //         age_of_date = $(this).val();
+        //      } else {
+        //          if(moment(age_of_date, "DD-MM-YYYY", true).isValid()) {
+        //             $(this).datepicker('setDate', age_of_date);
+        //             $('#cutoff_date').focus();
+        //             $('#cutoff_date').select();
+        //         } else {
+        //             $(this).datepicker('setDate', new Date());
+        //             $('#cutoff_date').select();
+        //             $('#cutoff_date').select();
+        //         }
+        //      }
+        // });
+
+        // $('#cutoff_date').keyup(function(event){
+        //      if (event.which != 13) {
+        //         adjust_input_date(this);
+        //         cutoff_date = $(this).val();
+        //      } else {
+        //          if(moment(cutoff_date, "DD-MM-YYYY", true).isValid()) {
+        //             $(this).datepicker('setDate', cutoff_date);
+        //         } else {
+        //             $(this).datepicker('setDate', new Date());
+        //         }
+        //      }
+        // });
+
+        function validateDate(inputId) {
+          // press enter
+          $(inputId).on('keyup', function(event) {
+            if (event.which != 13) {
+              adjust_input_date(this);
+              date = $(this).val();
+            } else {
+               if (date && moment(date, "DD-MM-YYYY", true).isValid()) {
+                 $(this).val(date);
+               } else {
+                   $(this).datepicker('setDate', new Date());
+               }
+               $('#cutoff_date').select();
+             }
+          });
+
+          // blur
+          $(inputId).on('blur', function() {
+            date = $(this).val();
+            if (date && moment(date, "DD-MM-YYYY", true).isValid()) {
+                return;
+            } else {
+                $(this).datepicker('setDate', new Date());
+            }
+          });
+        }
+
+        validateDate($('#age_of_date'));
+        validateDate($('#cutoff_date'));
+
+        function changeCustomer() {
+            var row = $("input[name='customer-choices']:checked").val();
+            if (row) {
+                var table = $('#customer-table').DataTable();
+                var customer_id = table.cell(row, $("#cus-code").index()).data();
+                var cust_id = table.cell(row, $("#cus-id").index()).data();
+                $("#lbSR7405Customer").val(cust_id).trigger('change');
+                $("#myCustomerListModal").modal("hide");
+                $("#id_cust_from").val(cust_id).trigger('change');
+            }
+        }
+        function changeCustomer_to() {
+            var row = $("input[name='customer_to-choices']:checked").val();
+            if (row) {
+                var table = $('#customer_to-table').DataTable();
+                var customer_id = table.cell(row, $("#cus-code").index()).data();
+                var cust_id_to = table.cell(row, $("#cus-id_to").index()).data();
+                $("#lbSR7405Customer_to").val(cust_id_to).trigger('change');
+                $("#myCustomer_to").modal("hide");
+                $("#id_cust_to").val(cust_id_to).trigger('change');
+            }
+        }
+
+        var frViewPDF = $('#frViewPDF')[0];
+        var divViewPDF = $('#divViewPDF');
+        $(document).ready(function () {
+            document.getElementById("inv").checked = true;
+            document.getElementById("debit").checked = true;
+            document.getElementById("credit").checked = true;
+            document.getElementById("interest").checked = true;
+            document.getElementById("un-cash").checked = true;
+            document.getElementById("p-payment").checked = true;
+            document.getElementById("receipt").checked = true;
+            document.getElementById("refund").checked = true;
+            document.getElementById("adjustment").checked = true;
+            $("#loadpage").hide();
+            $("#report_list").trigger('change');
+            //Set height of report view
+            var header = $('.header');
+            var height = $(this).height() - header.height() * 2;
+            divViewPDF.height(height);
+            var window = $(window).on('resize', function () {
+                divViewPDF.height(height);
+            }).trigger('resize'); //on page load
+
+            var print_note = "{{print_note}}";
+            if (print_note == 'True') {
+                $('#divDateFromTo').css('display', 'none');
+                $('#divAgedTrial').css('display', 'none');
+                $('#btnXLS').css('display', 'none');
+                $('#divPrntDbtNt').css('display', 'block');
+                $('#btnReview').trigger('click');
+            }
+        });
+
+        $("#report_list").change(function () {
+            var ord_code = "";
+
+            $("#report_list option:selected").each(function () {
+                ord_code = $(this).val();
+                $('#hdReportId').val(ord_code);
+            });
+
+            {% comment %} $('.filter').css("display", "none");
+            $('.divAR' + ord_code).removeAttr("style");
+            frViewPDF.setAttribute("src", "");
+            divViewPDF.innerHTML = frViewPDF.outerHTML;
+
+            if (ord_code == '0') {
+                $('.divButton').css("display", "none");
+            }
+            else {
+                $('#divButton').removeAttr("style");
+                if (ord_code == '1') {
+                    $('#full_paid_div').css("display", "none");
+                    $('#app_detail_div').css("display", "none");
+                } else {
+                    $('#full_paid_div').css("display", "block");
+                    $('#app_detail_div').css("display", "block");
+                }
+            } {% endcomment %}
+        });
+
+        $('#full_paid').on('change', function(){
+            if ($(this).prop('checked')) {
+                $('#app_detail').prop('checked', true);
+            } else {
+                $('#app_detail').prop('checked', false);
+            }
+        })
+        $('#app_detail').on('change', function(){
+            if ($(this).prop('checked')) {
+                $('#full_paid').prop('checked', true);
+            } else {
+                $('#full_paid').prop('checked', false);
+            }
+        })
+        
+        $('#btnReview').on('click', function () {
+            var d_name = [];
+            var periods = [];
+            var hdReportId = $('#hdReportId').val();
+            var divFilter = $('.divAR' + hdReportId)[0];
+            var url = "";
+            var doc_name = $('#date_list').val();
+            var document_type = '1'; /* DOCUMENT_TYPE_DICT['Invoice'] */
+            var full_paid = $('#full_paid:checked').val();
+            var app_detail = $('#app_detail:checked').val();
+            var curr_list = $('#curr_list').val();
+            var id_cust_start = $('#id_cust_from').val();
+            var id_cust_end = $('#id_cust_to').val();
+            var start = 0
+            if (id_cust_start > 0){
+                start = id_cust_start;
+            }
+            var ending = 0
+            if (id_cust_end > 0){
+                ending = id_cust_end;
+            }
+            var range_cust = '0';
+            if (start == '0'  ||  ending == '0') {
+                range_cust = '0';
+            }else{
+                range_cust = start+','+ending;
+            }
+
+            if ($('#lbSR7405Customer').val()== '' || $('#lbSR7405Customer_to').val() == ''){
+                parse_cust = '0';
+
+            }else{
+                parse_cust = range_cust.toString();
+            }
+
+            $("#loadpage").show();
+            if (document.getElementById("inv").checked){
+                d_name.push(1);
+            }
+            if (document.getElementById("debit").checked){
+                d_name.push(2);
+            }
+            if (document.getElementById("credit").checked){
+                d_name.push(3);
+            }
+            if (document.getElementById("interest").checked){
+                d_name.push(4);
+            }
+            if (document.getElementById("un-cash").checked){
+                d_name.push(5);
+            }
+            if (document.getElementById("p-payment").checked){
+                d_name.push(6);
+            }
+            if (document.getElementById("receipt").checked){
+                d_name.push(7);
+            }
+            if (document.getElementById("refund").checked){
+                d_name.push(8);
+            }
+            if (document.getElementById("adjustment").checked){
+                d_name.push(10);
+            }
+            parse_macam_doc = d_name.toString();
+
+            //period array
+            if(parseInt($('#per_1st').val()) > 0 && parseInt($('#per_2nd').val()) > 0 && parseInt($('#per_3rd').val()) > 0) {
+                if(parseInt($('#per_curr').val()) < parseInt($('#per_1st').val()) &&
+                    parseInt($('#per_1st').val()) < parseInt($('#per_2nd').val()) &&
+                    parseInt($('#per_2nd').val()) < parseInt($('#per_3rd').val()) ) {
+                        periods.push($('#per_curr').val());
+                        periods.push($('#per_1st').val());
+                        periods.push($('#per_2nd').val());
+                        periods.push($('#per_3rd').val());
+                        periods_str = periods.toString();
+                } else {
+                    pop_ok_dialog("Invalid aging periods",
+                                "Please input valid & sequential aging period.",
+                                function () { return; });
+                    hdReportId = '0';
+                }
+            } else {
+                pop_ok_dialog("Invalid aging periods",
+                                "Please input valid & sequential aging period.",
+                                function () { return; });
+                hdReportId = '0';
+            }
+
+            var paid_full = 0;
+            if (full_paid) {
+                paid_full = 1;
+            }
+            var appl_detail = 0;
+            if (app_detail) {
+                appl_detail = 1;
+            }
+            data_trala = divFilter.getElementsByTagName("input");
+            var print_note = "{{print_note}}";
+            if(print_note == 'True') {
+                hdReportId = '3';
+            }
+            switch (hdReportId) {
+                case '1':
+                case '2':
+                    inputData = divFilter.getElementsByTagName("input");
+                    if (inputData.length > 0) {
+                        ageAsOfDate = inputData[0].value.split("-").reverse().join("-");
+                        cutOffDate = inputData[1].value.split("-").reverse().join("-");
+                        customerCode = inputData[2].value
+                        customerCode_to = inputData[3].value
+
+                        if (ageAsOfDate.length == 0 || cutOffDate.length == 0) {
+                            alert("Please select a valid date!");
+                            $("#loadpage").hide();
+                            break;
+                        }
+                        if (ageAsOfDate.length == 0)
+                            ageAsOfDate = '0'
+                        if (cutOffDate.length == 0)
+                            cutOffDate = '0'
+                        if (customerCode.length == 0)
+                            customerCode = '0'
+                        if (customerCode_to.length == 0)
+                            customerCode_to = '0'
+                        url = '/reports/print_AR' + hdReportId + '/' + ageAsOfDate + '/' + cutOffDate + '/'
+                                + parse_cust + '/' + doc_name + '/' + parse_macam_doc + '/' + curr_list + '/' + paid_full + '/' + periods_str + '/' + appl_detail + '/';
+                        frViewPDF.setAttribute("src", url);
+                        divViewPDF.innerHTML = frViewPDF.outerHTML;
+                    }
+                    break;
+                case '3':
+                    var print_header = $('input[name=group-print-header]:checked').val();
+                    url = '/reports/print_AR_note/' + "{{journal.id}}" + '/' + print_header + '/';
+                    frViewPDF.setAttribute("src", url);
+                    divViewPDF.innerHTML = frViewPDF.outerHTML;
+                    break;
+                default:
+                    frViewPDF.setAttribute("src", "");
+                    divViewPDF.innerHTML = frViewPDF.outerHTML;
+                    break;
+            }
+            document.getElementById("frViewPDF").onload = function () {
+                $("#loadpage").hide();
+            }
+        });
+        $('#btnXLS').on('click', function () {
+            var d_name = [];
+            var periods = [];
+            var hdReportId = $('#hdReportId').val();
+            var divFilter = $('.divAR' + hdReportId)[0];
+            var url = "";
+            var doc_name = $('#date_list').val();
+            var document_type = '1'; /* DOCUMENT_TYPE_DICT['Invoice'] */
+            var full_paid = $('#full_paid:checked').val();
+            var app_detail = $('#app_detail:checked').val();
+            var curr_list = $('#curr_list').val();
+            var id_cust_start = $('#id_cust_from').val();
+            var id_cust_end = $('#id_cust_to').val();
+            var start = 0
+            if (id_cust_start > 0){
+                start = id_cust_start;
+            }
+            var ending = 0
+            if (id_cust_end > 0){
+                ending = id_cust_end;
+            }
+            var range_cust = '0';
+            if (start == '0'  ||  ending == '0') {
+                range_cust = '0';
+            }else{
+                range_cust = start+','+ending;
+            }
+
+            if ($('#lbSR7405Customer').val()== '' || $('#lbSR7405Customer_to').val() == ''){
+                parse_cust = '0';
+
+            }else{
+                parse_cust = range_cust.toString();
+            }
+
+            if (document.getElementById("inv").checked){
+                d_name.push(1);
+            }
+            if (document.getElementById("debit").checked){
+                d_name.push(2);
+            }
+            if (document.getElementById("credit").checked){
+                d_name.push(3);
+            }
+            if (document.getElementById("interest").checked){
+                d_name.push(4);
+            }
+            if (document.getElementById("un-cash").checked){
+                d_name.push(5);
+            }
+            if (document.getElementById("p-payment").checked){
+                d_name.push(6);
+            }
+            if (document.getElementById("receipt").checked){
+                d_name.push(7);
+            }
+            if (document.getElementById("refund").checked){
+                d_name.push(8);
+            }
+            if (document.getElementById("adjustment").checked){
+                d_name.push(10);
+            }
+            parse_macam_doc = d_name.toString();
+
+            //period array
+            if(parseInt($('#per_1st').val()) > 0 && parseInt($('#per_2nd').val()) > 0 && parseInt($('#per_3rd').val()) > 0) {
+                if(parseInt($('#per_curr').val()) < parseInt($('#per_1st').val()) &&
+                    parseInt($('#per_1st').val()) < parseInt($('#per_2nd').val()) &&
+                    parseInt($('#per_2nd').val()) < parseInt($('#per_3rd').val()) ) {
+                        periods.push($('#per_curr').val());
+                        periods.push($('#per_1st').val());
+                        periods.push($('#per_2nd').val());
+                        periods.push($('#per_3rd').val());
+                        periods_str = periods.toString();
+                } else {
+                    pop_ok_dialog("Invalid aging periods",
+                                "Please input valid & sequential aging period.",
+                                function () { return; });
+                    hdReportId = '0';
+                }
+            } else {
+                pop_ok_dialog("Invalid aging periods",
+                                "Please input valid & sequential aging period.",
+                                function () { return; });
+                hdReportId = '0';
+            }
+
+            var paid_full = 0;
+            if (full_paid) {
+                paid_full = 1;
+            }
+            var appl_detail = 0;
+            if (app_detail) {
+                appl_detail = 1;
+            }
+            data_trala = divFilter.getElementsByTagName("input");
+            var print_note = "{{print_note}}";
+            if(print_note == 'True') {
+                hdReportId = '3';
+            }
+            switch (hdReportId) {
+                case '1':
+                case '2':
+                    inputData = divFilter.getElementsByTagName("input");
+                    if (inputData.length > 0) {
+                        ageAsOfDate = inputData[0].value.split("-").reverse().join("-");
+                        cutOffDate = inputData[1].value.split("-").reverse().join("-");
+                        customerCode = inputData[2].value
+                        customerCode_to = inputData[3].value
+
+                        if (ageAsOfDate.length == 0 || cutOffDate.length == 0) {
+                            alert("Please select a valid date!");
+                            break;
+                        }
+                        if (ageAsOfDate.length == 0)
+                            ageAsOfDate = '0'
+                        if (cutOffDate.length == 0)
+                            cutOffDate = '0'
+                        if (customerCode.length == 0)
+                            customerCode = '0'
+                        if (customerCode_to.length == 0)
+                            customerCode_to = '0'
+                        url = '/reports/print_AR_XLS' + hdReportId + '/' + ageAsOfDate + '/' + cutOffDate + '/'
+                                + parse_cust + '/' + doc_name + '/' + parse_macam_doc + '/' + curr_list + '/' + paid_full + '/' + periods_str + '/' + appl_detail + '/';
+                        frViewPDF.setAttribute("src", url);
+                        //divViewPDF.innerHTML = frViewPDF.outerHTML;
+                    }
+                    break;
+                {% comment %} case '3':
+                    var print_header = $('input[name=group-print-header]:checked').val();
+                    url = '/reports/print_AR_note/' + "{{journal.id}}" + '/' + print_header + '/';
+                    frViewPDF.setAttribute("src", url);
+                    divViewPDF.innerHTML = frViewPDF.outerHTML;
+                    break; {% endcomment %}
+                default:
+                    frViewPDF.setAttribute("src", "");
+                    divViewPDF.innerHTML = frViewPDF.outerHTML;
+                    break;
+            }
+
+        });
+
+        $('#per_3rd').on('change', function(e){
+            let t_val = $('#per_3rd').val();
+            $('#per_over').val(parseInt(t_val));
+        });
+
+    </script>
+
+{% endblock %}

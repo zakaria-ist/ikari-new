@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+{% endblock %}
+
+{% block title %}
+    Company Profile
+{% endblock %}
+
+{% block company_profile_active %}
+{% if menu_type == '0' %} {# TRN_CODE_TYPE_DICT['Global'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_company_a_active %}
+{% if menu_type == '0' %} {# TRN_CODE_TYPE_DICT['Global'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_company_i_active %}
+{% if menu_type == '0' %} {# TRN_CODE_TYPE_DICT['Global'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block control_file_active %}
+{% if menu_type == '2' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_a_active %}
+{% if menu_type == '2' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_i_active %}
+{% if menu_type == '2' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_order_i_active %}
+{% if menu_type == '2' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_order_a_active %}
+{% if menu_type == '2' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                Company Profile
+            </header>
+            <div class="panel-body">
+                <form action="{% url 'company_profile' %}" class="form-horizontal" role="form" method="post"
+                      enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <div class="col-lg-4">
+                            <div>
+                                <img src="{{ media_url }}{{ company.logo }}" alt=""
+                                     style="width: 100%; margin-top: 15px"/>
+                            </div>
+                        </div>
+                        <div class="col-lg-8">
+                            <div class="col-lg-12 col-sm-12">
+                                <label for="name" class="col-lg-2 col-sm-4 control-label">Name</label>
+                                <div class="col-lg-10 col-sm-4">
+                                    <label class="control-label">{{ company.name }}</label>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 col-sm-12">
+                                <label for="company_no" class="col-lg-2 col-sm-4 control-label">GST Reg No</label>
+                                <div class="col-lg-10 col-sm-4">
+                                    <label class="control-label">{{ company.company_number }}</label>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 col-sm-12">
+                                <label for="postal_code" class="col-lg-2 col-sm-4 control-label">Postal Code</label>
+                                <div class="col-lg-10 col-sm-4">
+                                    <label class="control-label">{{ company.postal_code }}</label>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 col-sm-12">
+                                <label for="country" class="col-lg-2 col-sm-4 control-label">Country</label>
+                                <div class="col-lg-10 col-sm-4">
+                                    <label class="control-label">{{ country.name }}</label>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 col-sm-12">
+                                <label for="currency" class="col-lg-2 col-sm-4 control-label">Currency</label>
+                                <div class="col-lg-10 col-sm-4">
+                                    <label class="control-label">{{ currency.name }}</label>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 col-sm-12">
+                                <label for="email" class="col-lg-2 col-sm-4 control-label">Email</label>
+                                <div class="col-lg-10 col-sm-4">
+                                    <label class="control-label">{{ company.email }}</label>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 col-sm-12">
+                                <label for="web" class="col-lg-2 col-sm-4 control-label">Web</label>
+                                <div class="col-lg-10 col-sm-4">
+                                    <label class="control-label">{{ company.web }}</label>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 col-sm-12">
+                                <label for="phone" class="col-lg-2 col-sm-4 control-label">Phone</label>
+                                <div class="col-lg-10 col-sm-4">
+                                    <label class="control-label">{{ company.phone }}</label>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 col-sm-12">
+                                <label for="fax" class="col-lg-2 col-sm-4 control-label">Fax</label>
+                                <div class="col-lg-10 col-sm-4">
+                                    <label class="control-label">{{ company.fax }}</label>
+                                </div>
+                            </div>
+                            {% comment %} <div class="col-lg-12 col-sm-12">
+                                <label for="fax" class="col-lg-2 col-sm-4 control-label">Fiscal</label>
+                                <div class="col-lg-10 col-sm-4">
+                                    <label class="control-label">{{ company.fiscal_period }}</label>
+                                </div>
+                            </div> {% endcomment %}
+                            <div class="col-lg-12 col-sm-12">
+                                {% comment %} <label for="fax" class="col-lg-2 col-sm-4 control-label">Current</label> {% endcomment %}
+                                <label for="fax" class="col-lg-2 col-sm-4 control-label">Fiscal</label>
+                                <div class="col-lg-10 col-sm-4">
+                                    <label class="control-label">{{ company.current_period_month }} - {{company.current_period_year}}</label>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 col-sm-12">
+                                <label for="sample-checkbox" class="col-lg-2 col-sm-4 control-label">Activation</label>
+                                <div class="col-lg-10 col-sm-4">
+                                    <div class="checkbox checkbox-primary" style="margin-top: -5px">
+                                        <input name="sample-checkbox" id="checkbox-03" class="styled" type="checkbox"
+                                               {% if company.is_active %}checked{% endif %} disabled/>
+                                        <label for="checkbox-03">
+                                            Active
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            {% if request.session.staff_admin or user.is_supperuser %}
+                                <div class="col-lg-12 col-sm-12">
+                                    <p style="margin-left: 15px">
+                                        <a class="btn btn-round btn-success" href="{% url 'company_edit' company.id 'true' menu_type %}"><i
+                                                class="fa fa-info"></i> Change Information
+                                        </a>
+                                    </p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+        </section>
+    </div>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+{% endblock %}

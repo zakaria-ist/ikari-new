@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+{% endblock %}
+
+{% block title %}
+    Add Country
+{% endblock %}
+
+{% block country_active %}
+{% if menu_type == '0' %} {# TRN_CODE_TYPE_DICT['Global'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_system_setting_a_active %}
+{% if menu_type == '0' %} {# TRN_CODE_TYPE_DICT['Global'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_system_setting_i_active %}
+{% if menu_type == '0' %} {# TRN_CODE_TYPE_DICT['Global'] #}
+    active
+{% endif %}
+{% endblock %}
+
+
+{% block parent_order_a_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_order_i_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_a_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_i_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block country_sp_active %}
+{% if menu_type == '2'%} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                Add Country
+            </header>
+            <div class="panel-body">
+                <form class="form-horizontal" action="{% url 'country_add' menu_type %}" role="form" method="post"
+                       onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    
+{#                    <div class="form-group">#}
+{#                        <label for="code" class="col-lg-2 col-sm-2 control-label">Code Type</label>#}
+{#                        <div class="col-lg-3">#}
+{#                           <select class="form-control" >#}
+{#                           <option>Country</option>#}
+{#                           </select>#}
+{#                        </div>#}
+{#                    </div>#}
+                    <div class="form-group">
+                        <label for="code" class="col-lg-2 col-sm-2 control-label">Country Code<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-3">
+                            <input type="text" class="form-control" id="code" name="code" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Description<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-3">
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                    </div>
+                    
+                    <!-- <div class="form-group">
+                        <label for="currency" class="col-lg-2 col-sm-2 control-label">Currency</label>
+                        <div class="col-sm-4">
+                            <select class="form-control" id="currency" name="currency">
+                                {% for currency in currency_list %}
+                                    <option value="{{ currency.id }}">{{ currency.name }}</option>{% endfor %}
+                            </select>
+                            {% if not currency_list %}
+                                <span class="messages">Currency is empty. Please input currency!</span>
+                            {% endif %}
+                        </div>
+                        <label for="tax" class="col-lg-1 col-sm-1 control-label">Tax</label>
+                        <div class="col-sm-3">
+                            <select class="form-control" id="tax" name="tax">
+                                <option value="0">---Select---</option>
+                                {% for tax in tax_list %}
+                                    <option value="{{ tax.id }}">{{ tax.name }}</option>{% endfor %}
+                            </select>
+                        </div>
+                    </div> -->
+                    <input type="hidden" name="tax" value="1">
+                    <input type="hidden" name="currency" value="1">
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" name="btnSave" class="btn btn-success" {% if not currency_list %}
+                                    disabled {% endif %}>Save
+                            </button>
+                            {% if menu_type = '0' %} {# TRN_CODE_TYPE_DICT['Global'] #}
+                                <a class="btn btn-default" href="{% url 'country_list' %}" >Cancel</a>
+                            {% else %}
+                                <a class="btn btn-default" href="{% url 'list_country' %}" >Cancel</a>
+                            {% endif%}
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </section>
+    </div>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="application/javascript" src="{% static 'js/ga.js' %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#code').focus();
+        });
+    </script>
+{% endblock %}

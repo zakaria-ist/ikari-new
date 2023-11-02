@@ -1,0 +1,619 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static 'assets/selectable/css/dj.selectable.css' %} " type="text/css" media="all" rel="stylesheet"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Edit Item{% endblock %}
+
+{% block item_active %}active{% endblock %}
+{% block ics_a_active %}active{% endblock %}
+{% block inv_setting_a_active %}active{% endblock %}
+{% block inv_setting_i_active %}active{% endblock %}
+
+{% block content %}
+    <form class="form-horizontal" action="{% url 'item_edit' item.id 2 %}" role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data"> {# ITEM_TABS['Item'] #}
+        {% csrf_token %}
+        <div id="content">
+            <ul id="tabs" class="nav nav-tabs" data-tabs="tabs"
+                style="padding-left: 20px; margin-left: 18px; margin-right: 24px;">
+                <li class="active">
+                    <a href="#item_tab" id="item_tab_a" data-toggle="tab">Item</a>
+                </li>
+                <li>
+                    <a href="#customer_tab" id="customer_tab_a" data-toggle="tab">Customers</a>
+                </li>
+                <li>
+                    <a href="#supplier_tab" id="supplier_tab_a" data-toggle="tab">Suppliers</a>
+                </li>
+                <li>
+                    <a href="#items_location" id="items_location_a" data-toggle="tab">Items Locations</a>
+                </li>
+            </ul>
+
+            <div id="my-tab-content" class="tab-content">
+                <div id="item_tab" 
+                     class="tab-pane active">
+                    <div class="col-lg-12">
+                        <section class="panel">
+                            <header class="panel-heading">
+                                <strong>Edit Item</strong>
+                            </header>
+                            <div class="panel-body">
+                                <div class="form-group ">
+                                    <label for="code" class="col-lg-2 col-sm-2 control-label">Item Code<span
+                                            class="span-required">(*)</span></label>
+                                    <div class="col-lg-4">
+                                        {{ form.code|default_if_none:"" }}
+                                    </div>
+                                    <span class="messages">{{ form.errors.customer }}</span>
+                                    <label for="category" class="col-lg-2 col-sm-2 control-label">Item Group</label>
+                                    <div class="col-lg-4">
+                                        {{ form.category|default_if_none:"" }}
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="name" class="col-lg-2 col-sm-2 control-label">Description</label>
+                                    <div class="col-lg-4">
+                                        {{ form.name|default_if_none:"" }}
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inv_measure" class=" col-lg-2 col-sm-2 control-label">Inv.
+                                        M'ment</label>
+                                    <div class="col-lg-2">{{ form.inv_measure|default_if_none:"" }}</div>
+                                    <div class="col-lg-4 col-sm-4">
+                                        <label for="purchase_currency"
+                                               class="col-lg-offset-1 col-lg-5 col-sm-5 control-label">
+                                            Currency</label>
+                                        <div class="col-lg-6">{{ form.purchase_currency|default_if_none:"" }}</div>
+                                    </div>
+                                    <div class="col-lg-4 col-sm-4">
+                                        <label for="weight" class="col-lg-offset-1 col-lg-5 col-sm-5 control-label">Unit
+                                            Weight(Kg)</label>
+                                        <div class="col-lg-6">{{ form.weight|default_if_none:"" }}</div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="purchase_measure" class="col-lg-2 col-sm-2 control-label">In
+                                        M'ment</label>
+                                    <div class="col-lg-2">{{ form.purchase_measure|default_if_none:"" }}</div>
+                                    <div class="col-lg-4 col-sm-4">
+                                        <label for="purchase_price"
+                                               class="col-lg-offset-1 col-lg-5 col-sm-5 control-label">Purchase
+                                            Price</label>
+                                        <div class="col-lg-6">{{ form.purchase_price|default_if_none:"" }}</div>
+                                    </div>
+                                    <div class="col-lg-4 col-sm-4">
+                                        <label for="par_value" class="col-lg-offset-1 col-lg-5 col-sm-5 control-label">Unit
+                                            Par Value</label>
+                                        <div class="col-lg-6">{{ form.par_value|default_if_none:"" }}</div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="sales_measure" class="col-lg-2 col-sm-2 control-label">Out
+                                        M'ment</label>
+                                    <div class="col-lg-2">{{ form.sales_measure|default_if_none:"" }}</div>
+                                    <div class="col-lg-offset-4 col-lg-4 col-sm-4">
+                                        <label for="book_value" class="col-lg-offset-1 col-lg-5 col-sm-5 control-label">Unit
+                                            Book Value</label>
+                                        <div class="col-lg-6">{{ form.book_value|default_if_none:"" }}</div>
+                                    </div>
+                                </div>
+                                <div class="form-group" style="margin-left: 10px; margin-right: 10px;">
+                                    <header class="col-lg-12 panel-heading">
+                                    </header>
+                                </div>
+                                <div class="row">
+                                    <div class="form-group" style="margin-left: 20px; margin-right: 20px;">
+                                        <label class="col-lg-2 col-sm-2 control-label"
+                                               style="font-weight: bold;">No.</label>
+                                        <label class="col-lg-4 col-sm-4 control-label" style="font-weight: bold;">Pricing
+                                            Type</label>
+                                        <label class="col-lg-3 col-sm-3 control-label" style="font-weight: bold;">Stockist
+                                            Price</label>
+                                        <label class="col-lg-3 col-sm-3 control-label" style="font-weight: bold;">Retail
+                                            Price</label>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="form-group" style="margin-left: 20px; margin-right: 20px;">
+                                        <label for="sale_currency" class=" col-lg-2 col-sm-2 control-label">1.
+                                        </label>
+                                        <label for="sale_currency" class=" col-lg-4 col-sm-4 control-label">SIN$
+                                        </label>
+                                        <div class="col-lg-2">{{ form.stockist_price|default_if_none:"" }}</div>
+                                        <div class="col-lg-2 col-lg-offset-1">{{ form.sale_price|default_if_none:"" }}</div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="form-group" style="margin-left: 20px; margin-right: 20px;">
+                                        <label for="sale_currency" class=" col-lg-2 col-sm-2 control-label">2.
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="form-group" style="margin-left: 20px; margin-right: 20px;">
+                                        <label for="sale_currency" class=" col-lg-2 col-sm-2 control-label">3.
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="form-group" style="margin-left: 20px; margin-right: 20px;">
+                                        <label for="sale_currency" class=" col-lg-2 col-sm-2 control-label">4.
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="form-group" style="margin-left: 20px; margin-right: 20px;">
+                                        <label for="sale_currency" class=" col-lg-2 col-sm-2 control-label">5.
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <header class="col-lg-6 panel-heading">
+                                        <strong>System Info</strong>
+                                    </header>
+                                </div>
+                                <div class="form-group">
+                                    <label for="default_location" class="col-lg-2 col-sm-2 control-label">Default
+                                        Location<span class="span-required">(*)</span></label>
+                                    <div class="col-lg-4">
+                                        {{ form.default_location|default_if_none:"" }}
+                                    </div>
+                                </div>
+                                {% if item.id %}
+                                    <div class="form-group">
+                                        <label for="name" class="col-lg-2 col-sm-2 control-label"><i>Last
+                                            Purchase Price</i></label>
+                                        <div class="col-lg-4">
+                                            <input type="text" class="form-control text-right" id="name" name="name"
+                                                   disabled="true"
+                                                   value="{{ item.last_purchase_price|default_if_none:0 }}">
+                                        </div>
+                                        <label for="name" class="col-lg-2 col-sm-2 control-label"><i>Cost Price
+                                            (Ave.)</i></label>
+                                        <div class="col-lg-4">
+                                            <input type="text" class="form-control text-right" id="name" name="name"
+                                                   disabled="true"
+                                                   value="{{ item.cost_price|default_if_none:0 }}">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="name" class="col-lg-2 col-sm-2 control-label"><i>Last
+                                            Purchase Doc#</i></label>
+                                        <div class="col-lg-4">
+                                            <input type="text" class="form-control" id="name" name="name"
+                                                   disabled="true"
+                                                   value="{{ item.last_purchase_doc|default_if_none:'' }}">
+                                        </div>
+                                        <label for="name" class="col-lg-2 col-sm-2 control-label"><i>Last Move Date</i></label>
+                                        <div class="col-lg-4">
+                                            <input type="text" class="form-control" id="name" name="name"
+                                                   disabled="true"
+                                                   value="{{ item.last_purchase_date|default_if_none:'' }}">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="name" class="col-lg-2 col-sm-2 control-label"><i>Last
+                                            Purchase Date</i></label>
+                                        <div class="col-lg-4">
+                                            <input type="text" class="form-control" id="name" name="name"
+                                                   disabled="true"
+                                                   value="{{ item.last_purchase_date|default_if_none:'' }}">
+                                        </div>
+                                        <label for="name" class="col-lg-2 col-sm-2 control-label"><i>Last Update On</i></label>
+                                        <div class="col-lg-4">
+                                            <input type="text" class="form-control" id="name" name="name"
+                                                   disabled="true"
+                                                   value="{{ item.update_date|default_if_none:'' }}">
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                <div class="form-group">
+                                    <label for="chkActive" class="col-lg-2 col-sm-2 control-label"></label>
+                                    <div class="col-lg-10">
+                                        <div class="checkbox checkbox-primary">
+                                            <input name="chkActive" id="chkActive" class="styled" type="checkbox"
+                                                   {% if item.is_active %}checked{% endif %}/>
+                                            <label for="chkActive">
+                                                Active
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-lg-offset-2 col-lg-10">
+                                        <button type="submit" name="btnSave" id="btnSave" class="btn btn-success">Save</button>
+                                        <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger">Delete</a>
+                                        {% comment %} {% if active_tab_index == '1' %}
+                                        <a class="btn btn-default" href="{% url 'load_stock_list' %}">Cancel</a>
+                                        {% else %} {% endcomment %}
+                                        <a class="btn btn-default" href="{% url 'item_list' %}">Cancel</a>
+                                        {% comment %} {% endif %} {% endcomment %}
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+                <div id="customer_tab" class="tab-pane">
+                    <div class="col-sm-12">
+                        <section class="panel">
+                            <input type="hidden" name="hdIdJson" id="hdIdJson" value={{ item.id }}>
+                            <div class="panel-body">
+                                <div class="adv-table">
+                                    <table class="display table table-bordered table-striped table-condensed"
+                                           id="customer_table" style="width: 100%">
+                                        <thead>
+                                        <tr>
+                                            <th>Update Date</th>
+                                            <th>Customer Code</th>
+                                            <th>Customer Name</th>
+                                            <th>Sales Price</th>
+                                            <th>Effective Date</th>
+                                            <th>Lead Time</th>
+                                            <th class="text-center">Active</th>
+                                            {% if 'customers.change_customeritem' in user.get_all_permissions %}
+                                                <th class="text-center">Edit</th>
+                                            {% endif %}
+                                        </tr>
+                                        </thead>
+                                    </table>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+                <div id="supplier_tab" class="tab-pane">
+                    <div class="col-sm-12">
+                        <section class="panel">
+                            <input type="hidden" name="hdIdJson_sup" id="hdIdJson_sup" value={{ item.id }}>
+                            <div class="panel-body">
+                                <div class="adv-table">
+                                    <table class="display table table-bordered table-striped table-condensed"
+                                           id="supplier_table" style="width: 100%">
+                                        <thead>
+                                        <tr>
+                                            <th>Update Date</th>
+                                            <th>Supplier Code</th>
+                                            <th>Supplier Name</th>
+                                            <th>Purchase Price</th>
+                                            <th>Effective Date</th>
+                                            <th>Lead Time</th>
+                                            <th class="text-center">Active</th>
+                                            {% if 'suppliers.change_supplieritem' in user.get_all_permissions %}
+                                                <th class="text-center">Edit</th>
+                                            {% endif %}
+                                        </tr>
+                                        </thead>
+                                    </table>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+                <div id="items_location" class="tab-pane">
+                    <div class="col-sm-12">
+                        <section class="panel">
+                            <input type="hidden" name="hdIdJson_sup" id="hdIdJson_sup" value={{ item.id }}>
+                            <div class="panel-body">
+                                <div class="adv-table">
+                                    <table class="display table table-bordered table-striped table-condensed"
+                                           id="items_loc_table" style="width: 100%">
+                                        <thead>
+                                        <tr>
+                                            <th>Loc.Name</th>
+                                            <th>Loc. Code</th>
+                                            <th>Available Qty</th>
+                                            <th>Booked Qty</th>
+                                            <th>Available Qty</th>
+                                            <th>Min Qty</th>
+                                            <th>Max Qty</th>
+                                            <th class="text-center">Edit</th>
+                                        </tr>
+                                        </thead>
+                                    </table>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </form>
+    <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+         class="modal fade">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                    <h4 class="modal-title">Delete Confirm Dialog</h4>
+                </div>
+                <div class="modal-body">
+                    <form role="form" action="{% url 'item_delete' item.id %}" method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                        </div>
+                        <button type="submit" class="btn btn-success">OK</button>
+                        <a class="btn btn-default" href="{% url 'item_edit' item.id 2 %}">Cancel</a> {# ITEM_TABS['Item'] #}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <!--dynamic table initialization -->
+    <script type="text/javascript">
+        var tab_index = "";
+        $(document).on('keyup', '.select2-selection.select2-selection--single', function (e) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if(keycode == '9'){
+                $(this).closest(".select2-container").siblings('select:enabled').select2('open');
+            }
+        });
+        $(document).ready(function () {
+            tab_index = "{{active_tab_index}}";
+            if (tab_index == '3') {
+                $('#items_location_a').trigger('click');
+            }
+            {% comment %} else if (tab_index == '2') {
+                $('#supplier_tab_a').trigger('click');
+            }
+            else if (tab_index == '1') {
+                $('#customer_tab_a').trigger('click');
+            }
+            else if (tab_index == '0') {
+                $('#item_tab_a').trigger('click');
+            } {% endcomment %}
+            var hdIdJson = $('#hdIdJson_sup').val();
+            $('#items_loc_table').dataTable({
+                "order": [[0, "desc"]],
+                "serverSide": true,
+                "ajax": {
+                    url: '/items/item_loc/' + hdIdJson + '/pagination',
+                },
+                "columns": [
+                    {"data": "location_name"},
+                    {"data": "location_code"},
+                    {"data": "onhand_qty"},
+                    {"data": "booked_qty"},
+                    {"data": "ready_for_sales_qty"},
+                    {"data": "min_qty"},
+                    {"data": "max_qty"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            var button_edit = '<a href="/locations/edit_loc_item/' + full.location_id + '/' + full.item_id + '/item/" class="fa fa-pencil fa-lg btn btn-primary btn-sm"></a> ';
+                            return button_edit;
+                        }
+                    }
+                ],
+                "aoColumnDefs" : [
+                    {className : "hide", aTargets : [4]},
+                    {className : "text-center", aTargets : [7]},
+                ],
+            });
+            $('#items_loc_table').append("<tfoot>" +
+                    '<tr>' + "<td colspan='12' style='text-align: left;'>" +
+                    "<a href='{% url 'add_loc_item' item.id %}' class='btn btn-white fa fa-plus'></a>" +
+                    "</td>" + "</tr>" + "</tfoot>");
+
+        });
+        $(document).ready(function () {
+            var hdIdJson = $('#hdIdJson').val();
+            $('#customer_table').dataTable({
+                "order": [[0, "desc"]],
+                "serverSide": true,
+                "ajax": {
+                    url: '/items/edit_customer/' + hdIdJson + '/pagination',
+                },
+                "columns": [
+                    {"data": "update_date"},
+                    {"data": "code"},
+                    {"data": "name"},
+                    {"data": "sale_price"},
+                    {"data": "effective_date"},
+                    {"data": "leading_days"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            if (full.is_active == 'True') {
+                                var mSpan = '<span class="label label-success label-mini">True</span>'
+                                return mSpan
+                            }
+                            else {
+                                var mSpan = '<span class="label label-danger label-mini">False</span>'
+                                return mSpan
+                            }
+                        }
+                    },
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            var button_edit = '<a href="/items/customeritem_edit/' + full.id + '/" class="fa fa-pencil fa-lg btn btn-primary btn-sm"></a> ';
+                            return button_edit;
+                        }
+                    }
+                ],
+                "aoColumnDefs" : [
+                    {className : "text-center", aTargets : [7]},
+                    {className: "text-right", "targets": [3]},
+                    {className: "text-center", "targets": [6]},
+                ],
+            });
+
+            $('#customer_table').append("<tfoot>" +
+                    '<tr>' + "<td colspan='12' style='text-align: left;'>" +
+                    "<a data-toggle='modal' href='{% url 'customeritem_add' item.id %}' class='btn btn-white fa fa-plus'></a>" +
+                    "</td>" + "</tr>" + "</tfoot>");
+
+        });
+
+        $(document).ready(function () {
+            var hdIdJson = $('#hdIdJson_sup').val();
+            $('#supplier_table').dataTable({
+                "order": [[0, "desc"]],
+                "serverSide": true,
+                "ajax": {
+                    url: '/items/edit_supplier/' + hdIdJson + '/pagination',
+                },
+                "columns": [
+                    {"data": "update_date"},
+                    {"data": "supplier_code"},
+                    {"data": "supplier_name"},
+                    {"data": "purchase_price"},
+                    {"data": "effective_date"},
+                    {"data": "leading_days"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            if (full.is_active == 'True') {
+                                var mSpan = '<span class="label label-success label-mini">True</span>'
+                                return mSpan
+                            }
+                            else {
+                                var mSpan = '<span class="label label-danger label-mini">False</span>'
+                                return mSpan
+                            }
+                        }
+                    },
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            var button_edit = '<a href="/items/supplieritem_edit/' + full.id + '/" class="fa fa-pencil fa-lg btn btn-primary btn-sm"></a> ';
+                            return button_edit;
+                        }
+                    }
+                ],
+                "aoColumnDefs" : [
+                    {className : "text-center", aTargets : [7]},
+                    {className: "text-right", "targets": [3]},
+                    {className: "text-center", "targets": [6]},
+                ],
+            });
+
+            $('#supplier_table').append("<tfoot>" +
+                    '<tr>' + "<td colspan='12' style='text-align: left;'>" +
+                    "<a data-toggle='modal' href='{% url 'supplieritem_add' item.id %}' class='btn btn-white fa fa-plus'></a>" +
+                    "</td>" + "</tr>" + "</tfoot>");
+
+        });
+
+        $(document).ready(function () {
+
+            $('#id_code').focus();
+
+            $('#id_inv_measure').select2({
+                placeholder: "Select Inventory UOM",
+            });
+
+            $('#id_purchase_measure').select2({
+                placeholder: "Select In UOM",
+            });
+
+            $('#id_sales_measure').select2({
+                placeholder: "Select Out UOM",
+            });
+
+            $('#id_purchase_currency').select2({
+                placeholder: "Select Currency",
+            });
+
+            $('#id_category').select2({
+                placeholder: "Select Item Group",
+            });
+
+            $('#id_default_location').prop('required', true);
+            $('#id_default_location').select2({
+                placeholder: "Select Default Location",
+            });
+
+            if (tab_index != '3') {
+                $('#id_category').select2('open');
+            }
+
+
+
+            {#$(window).keydown(function (event) {#}
+            {#    if (event.keyCode == 13) {#}
+            {#        event.preventDefault();#}
+            {#        return false;#}
+            {#    }#}
+            {#});#}
+        });
+
+
+        $('#id_category').on('select2:close', function (e)
+        {
+            $('#id_name').focus();
+        });
+
+        $('#id_inv_measure').on('select2:close', function (e)
+        {
+            $('#id_purchase_currency').focus();
+            $('#id_purchase_currency').select2('open');
+        });
+
+        $('#id_purchase_currency').on('select2:close', function (e)
+        {
+            $('#id_weight').focus();
+        });
+
+        $('#id_purchase_measure').on('select2:close', function (e)
+        {
+            $('#id_purchase_price').focus();
+        });
+
+        $('#id_sales_measure').on('select2:close', function (e)
+        {
+            $('#id_book_value').focus();
+        });
+
+        $('#id_default_location').on('select2:close', function (e)
+        {
+            $('#btnSave').focus();
+        });
+
+        $("#id_supplier").blur(function () {
+            var selected_name = this.value;
+            if (selected_name) {
+                $.ajax({
+                    method: "POST",
+                    url: '/items/get_supplier_code_by_name/' + selected_name + '/',
+                    dataType: 'JSON',
+                    data: {
+                        'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val()
+                    },
+                    responseTime: 200,
+                    success: function (json) {
+                        $('input[name="category"]').val(json);
+                    }
+                });
+            }
+        });
+        $("#purchase_code").change(function () {
+            //debugger;
+            var selected_code = this.value;
+            if (selected_code) {
+                $('input[name="code"]').val(selected_code);
+            }
+        });
+
+    </script>
+{% endblock %}

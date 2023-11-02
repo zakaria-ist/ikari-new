@@ -1,0 +1,563 @@
+{% extends "base.html" %}
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <link href="{% static "css/table.css" %}" rel="stylesheet">
+    <style type="text/css">
+      #header {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .dataTableFilter input {
+      }
+
+      .not-use {
+        pointer-events: none;
+      }
+      .tunjukin {
+        cursor: pointer;
+      }
+
+      .badge {
+        margin-left: auto;
+        margin-right: auto
+      }
+    </style>
+{% endblock %}
+
+{% block title %}
+{% if batch_type == '1' %} {# TRANSACTION_TYPES['AR Invoice'] #}
+    A/R Invoice Batch List
+{% elif batch_type == '2' %} {# TRANSACTION_TYPES['AP Invoice'] #}
+    A/P Invoice Batch List
+{% elif batch_type == '3' %} {# TRANSACTION_TYPES['AR Receipt'] #}
+    A/R Receipt Batch List
+{% elif batch_type == '4' %} {# TRANSACTION_TYPES['AP Payment'] #}
+    A/P Payment Batch List
+{% else %}
+    G/L Batch List
+{% endif %}
+{% endblock %}
+
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+
+{% block parent_com_a_active %}
+    active
+{% endblock %}
+
+{% block rec_ap_batch_active %}
+{% if batch_type == '2' %}
+    active
+{% endif %}
+{% endblock %}
+
+{% block rec_ap_payment_batch_active %}
+{% if batch_type == '4' %}
+    active
+{% endif %}
+{% endblock %}
+
+{% block rec_ar_batch_active %}
+{% if batch_type == '1' %}
+    active
+{% endif %}
+{% endblock %}
+
+{% block rec_ar_receipt_batch_active %}
+{% if batch_type == '3' %}
+    active
+{% endif %}
+{% endblock %}
+
+{% block rec_gl_batch_active %}
+{% if batch_type == '5' %}
+    active
+{% endif %}
+{% endblock %}
+
+{% block content %}
+    <br/>
+    <input id="hdJournalType" type="hidden" value="{{ batch_type }}">
+    <div class="row">
+        <div class="col-sm-12">
+
+            <section class="panel">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="panel-body">
+                            <header class="panel-heading" id="header" style="font-size: 20px">
+                                <div id="headerTitle">
+                                  {% if batch_type == '1' %} {# TRANSACTION_TYPES['AR Invoice'] #}
+                                      Recurring A/R Invoice Batch List
+                                  {% elif batch_type == '2' %} {# TRANSACTION_TYPES['AP Invoice'] #}
+                                      Recurring A/P Invoice Batch List
+                                  {% elif batch_type == '3' %} {# TRANSACTION_TYPES['AR Receipt'] #}
+                                      Recurring A/R Receipt Batch List
+                                  {% elif batch_type == '4' %} {# TRANSACTION_TYPES['AP Payment'] #}
+                                      Recurring A/P Payment Batch List
+                                  {% else %}
+                                      Recurring G/L Batch List
+                                  {% endif %}
+                                  {% csrf_token %}
+                                </div>
+                                <div id="headerButtons">
+                                  <span class="tools pull-right">
+                                      {% if batch_type == "1" %} {# TRANSACTION_TYPES['AR Invoice'] #}
+                                          <a class="btn btn-success start" href="/accounting/add/AR-RE/0/">
+                                              <i class="glyphicon glyphicon-plus"></i>
+                                              <span>Add Recurring</span>
+                                          </a>
+                                      {% elif batch_type == "2" %} {# TRANSACTION_TYPES['AP Invoice'] #}
+                                          <a class="btn btn-success start" href="/accounting/add/AP-RE/0/">
+                                              <i class="glyphicon glyphicon-plus"></i>
+                                              <span>Add Recurring</span>
+                                          </a>
+                                      {% elif batch_type == "3" %} {# TRANSACTION_TYPES['AR Receipt'] #}
+                                          <a class="btn btn-success start" href="/accounting/add/ARReceipt-RE/0/">
+                                              <i class="glyphicon glyphicon-plus"></i>
+                                              <span>Add Recurring</span>
+                                          </a>
+                                      {% elif batch_type == "4" %} {# TRANSACTION_TYPES['AP Payment'] #}
+                                          <a class="btn btn-success start" href="/accounting/add/APPayment-RE/0/">
+                                              <i class="glyphicon glyphicon-plus"></i>
+                                              <span>Add Recurring</span>
+                                          </a>
+                                      {% elif batch_type == "5" %} {# TRANSACTION_TYPES['GL'] #}
+                                          <a class="btn btn-success start" href="/accounting/add/RE/0/">
+                                              <i class="glyphicon glyphicon-plus"></i>
+                                              <span>Add Recurring</span>
+                                          </a>
+                                      {% endif %}
+                                   </span>
+                                </div>
+                            </header>
+                            <div class="adv-table table-responsive">
+                                <table class="display table table-bordered table-striped table-hover"
+                                       id="dynamic-table">
+                                    <thead>
+                                    <tr>
+                                        <th class="hidden"></th>
+                                        <th></th>
+                                        <th>Update Date</th>
+                                        <th>Batch Number</th>
+                                        <th>Batch Date</th>
+                                        <th>Batch Description</th>
+                                        {% if batch_type == "5" %} {# TRANSACTION_TYPES['GL'] #}
+                                        <th>Source Ledger</th>
+                                        <th>Posting Seq</th>
+                                        {% endif %}
+                                        <th>No. of Entries</th>
+                                        <th>Total Amount</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th class="text-center" style="min-width:60px!important;">Options</th>
+                                    </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    {% comment %} {% include 'print_batch_modal.html' %} {% endcomment %}
+    {#Comfirm Delete journal#}
+    <div class="modal fade" id="comfirmDeleteJournalModal" tabindex="-1" role="dialog"
+         aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <form id="comfirmDeleteJournalForm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-hidden="true">&times;</button>
+                        <h4 class="modal-title"><strong>Delete Confirm Dialog</strong></h4>
+                    </div>
+                    <div class="modal-body" style="padding-bottom: 0px!important;">
+                        <div class="form-group">
+                            <label>Are you sure want to delete?</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="text-align: center">
+                        <button class="btn btn-default" type="button" data-dismiss="modal">No
+                        </button>
+                        <a id="comfirm-yes">
+                            <button class="btn btn-success" type="submit">Yes</button>
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    {#End Comfirm delete journal#}
+
+    {#notification#}
+    <div class="modal fade" id="notificationModal" tabindex="-1" role="dialog"
+         aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title"><strong><span id='notificationModal_title'>Notification Title</span></strong></h4>
+                </div>
+                <div class="modal-body" style="padding-bottom: 0px!important;">
+                    <div class="form-group">
+                        <div id="notificationModal_text1" class="text-left">Notification #1</div>
+                        <div id="notificationModal_text2" class="text-left">Notification #2</div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="text-align: center">
+                    <button id="notification_ok" class="btn btn-primary" type="button" data-dismiss="modal">Ok</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {#End notification#}
+{% endblock %}
+
+{% block js %}
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    {% comment %} <script src="{% static "js/accounting/print_batch_numbe.js" %}?{% now 'H' %}"></script> {% endcomment %}
+
+    <script type="text/javascript">
+        var batchNumberList;
+
+        var is_sidebar_visible = $("#sidebar").is(":visible");
+        if(!is_sidebar_visible) {
+          $('.adv-table').attr("style", "display: flex; jusity-content: center");
+        }
+
+        $('.adv-table').attr('style', "justify-content: end !important; overflow: scroll");
+        $(document).ready(function () {
+          var table_width_adjustment = function() {
+            $(document).on('click', '.tooltips', function() {
+              var is_sidebar_visible = $("#sidebar").is(":visible");
+              if(!is_sidebar_visible) {
+                $('.adv-table').attr("style", "display: flex; jusity-content: center");
+              } else {
+                $('.adv-table').attr('style', "justify-content: end !important; overflow: scroll");
+              }
+            })
+          }
+          // buggy function, still working on
+          // table_width_adjustment()
+
+            {#$("#PrintOutModalLoading").modal("show");#}
+            $("#id_batch_number_from").select2({
+                placeholder: "Select batch",
+                allowClear: true
+            });
+            $("#id_batch_number_to").select2({
+                placeholder: "Select batch",
+                allowClear: true
+            });
+            $("#id_entry_number_from").select2({
+                placeholder: "Select Entry",
+                allowClear: true
+            });
+            $("#id_entry_number_to").select2({
+                placeholder: "Select Entry",
+                allowClear: true
+            });
+            $("#id_currency_report").select2({});
+
+            // DataTable
+            var dttbl = $('#dynamic-table').DataTable({
+                "processing": true,
+                "order": [[ 3, "desc" ]],
+                "serverSide": true,
+                "scrollX": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'RecBatchList__asJson' batch_type %}"
+                },
+                "columns": [
+                    {"data": "id", "class": "hidden"},
+                    {
+                        "className": 'details-control text-center expand_button_row',
+                        "width": "25px",
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, row, meta) {
+                            var btn = '<a class="expand_button fa fa-plus-circle"></a>';
+                            return btn;
+                        }
+                    },
+                    {"data": "update_date", "class": "update_date",
+                    "width": "55px"},
+                    {"data": "batch_no",
+                     "width": "40px"},
+                    {"data": "batch_date", "class": "batch_date",
+                     "width": "55px"},
+                    {"data": "description", "class": "description", "sClass": "tb_col-5",
+                     "width": "250px"},
+                    {% if batch_type == '5' %} /* TRANSACTION_TYPES['GL'] */
+                    {"data": "source_ledger", "sClass": "tb_col-6", "width": "25px"},
+                    {"data": "posting_sequence", "width": "25px"},
+                    {% endif %}
+                    {"data": "no_entries", "sClass": "tb_col-6",
+                     "width": {% if batch_type == '5' %} "25px" {% else %} "40px" {% endif %}},
+                    {% if batch_type == '5' %} /* TRANSACTION_TYPES['GL'] */
+                    {"data": "functional_amount" , "sClass": "text-right",
+                     "width": "25px"},
+                    {% else %}
+                    {"data": "total_amount" , "sClass": "text-right",
+                     "width": "100px"},
+                    {% endif %}
+                    {"data": "input_type", "class": "type",
+                     "width": "65px"},
+                    {
+                        "sClass": "text-center",
+                        "data": null,
+                        "render": function (data, type, row, meta) {
+                            if (row.status == '1') { /* STATUS_TYPE_DICT['Open'] */
+                                return '<span id="status-batch-'+row.id+'" class="badge badge-sm label-inverse">Open</span>'
+                            }
+                            if (row.status == '2') { /* STATUS_TYPE_DICT['Posted'] */
+                                return '<span id="status-batch-'+row.id+'" class="badge badge-sm label-success">Posted</span>'
+                            }
+                            if (row.status == '3') { /* STATUS_TYPE_DICT['Deleted'] */
+                                return '<span id="status-batch-'+row.id+'" class="badge badge-sm label-default">Deleted</span>'
+                            }
+                            if (row.status == '4') { /* STATUS_TYPE_DICT['Reversed'] */
+                                return '<span id="status-batch-'+row.id+'" class="badge badge-sm label-warning">Reversed</span>'
+                            }
+                            if (row.status == '5') { /* STATUS_TYPE_DICT['ERROR'] */
+                                return '<span id="status-batch-'+row.id+'" class="badge badge-sm label-danger">Error</span>'
+                            }
+                            if (row.status == '7') { /* STATUS_TYPE_DICT['Prov. Posted'] */
+                                return '<span id="status-batch-'+row.id+'" class="badge badge-sm label-inverse">Prov. Posted</span>'
+                            }
+                            if (row.status == '8') { /* STATUS_TYPE_DICT['Draft'] */
+                                return '<span id="status-batch-'+row.id+'" class="badge badge-sm label-warning">Draft</span>'
+                            }
+                            if (row.status == '0') { /* STATUS_TYPE_DICT['Undefined'] */
+                                return '<span id="status-batch-'+row.id+'" class="badge badge-sm label-default">Undefined</span>'
+                            }
+                            if (row.status == '9'){ /* STATUS_TYPE_DICT['Removed'] */
+                                return '<span id="status-batch-'+row.id+'" class="badge badge-sm label-default">Removed</span>'
+                            }
+                        }
+                    },
+                    {
+                        "sClass": "text-center tb_col-12",
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, row, meta) {
+                            var btn =
+                                    '<div class="btn-group dropdown">' +
+                                    '<button type="button"' +
+                                    'class="btn btn-primary btn-sm dropdown-toggle"' +
+                                    'data-toggle="dropdown" aria-haspopup="true"' +
+                                    'aria-expanded="false"' +
+                                    'style="min-width: 30px!important;">Action' +
+                                    '<span class="caret" style="margin-left:3px;"></span>' +
+                                    '<span class="sr-only">Toggle Dropdown</span>' +
+                                    '</button>' +
+                                    '<ul class="dropdown-menu dropdown-menu-right">' +
+                                    '<li>';
+                            var btn_blank =
+                                    '<div class="btn-group dropdown">' +
+                                    '<button type="button"' +
+                                    'class="btn btn-default btn-sm dropdown-toggle not-use"' +
+                                    'data-toggle="dropdown" aria-haspopup="true"' +
+                                    'aria-expanded="false"' +
+                                    'style="min-width: 30px!important;">' +
+                                    '<span class="caret" style="margin-left:3px;"></span>' +
+                                    '<span class="sr-only">Toggle Dropdown</span>' +
+                                    '</button>' +
+                                    '<ul class="dropdown-menu dropdown-menu-right">' +
+                                    '<li>';
+
+                            if ((row.status == '1') || (row.status == '7') || (row.status == '2') || row.status == '3' || row.status == '8') { /* STATUS_TYPE_DICT['Open'] or STATUS_TYPE_DICT['Prov. Posted'] or STATUS_TYPE_DICT['Draft']*/
+                                btn += '<a href="/accounting/list-RE/' + row.batch_type + '/' + row.id + '/">View</a>';
+                                btn += '<a class="tunjukin" onclick="deleteRecurringBatch(' + row.id + ')">Delete</a>';
+
+                                
+                            } else if ((row.status == '3') /* STATUS_TYPE_DICT['Deleted'] */
+                                    && (row.status == '4') /* STATUS_TYPE_DICT['Reversed'] */
+                                    && (row.status == '5') /* STATUS_TYPE_DICT['ERROR'] */
+                                    && (row.status == '6')){ /* STATUS_TYPE_DICT['Auto Reverse Entry'] */
+                              btn = btn_blank;
+                            }
+                            btn += '</li></ul/div>';
+
+
+
+                            return btn;
+                        }
+                    }
+                ]
+            });
+            batchNumberList = dttbl;
+            $('th').parents().eq(3).attr('style', 'margin-left: auto !important; margin-right: auto !important;');
+            $.each($('.th'), function() {
+              $(this).removeAttr('tabindex')
+            })
+
+            $('#dynamic-table tbody').on('click', 'td.details-control a', function () {
+                var tr = $(this).closest('tr');
+                console.log(tr)
+                var row = dttbl.row( tr );
+                if (row.data().status!='3'){ /* STATUS_TYPE_DICT['Deleted'] */
+                    if ( row.child.isShown() ) {
+                        row.child.hide();
+                        tr.removeClass('shown');
+                        $(this).addClass('fa-plus-circle');
+                        $(this).removeClass('fa-minus-circle');
+                    }
+                    else {
+                        format(row.child, row.data());
+                        tr.addClass('shown');
+                        $(this).removeClass('fa-plus-circle');
+                        $(this).addClass('fa-minus-circle');
+                    }
+                }
+            });
+
+            function printSingle() {
+                var batch_id = $($(this)[0]).data('batch_id')
+                var batch_type = $($(this)[0]).data('batch_type')
+                if (batch_type == 5) {
+                  $('#id_batch_number_from').val(batch_id).trigger('change')
+                  $('#id_batch_number_to').val(batch_id).trigger('change')
+                  showModalPrintBatch(batch_type, batch_id)
+                } else {
+                  loadIframe(batch_type, batch_id, 0, 0)
+                }
+            }
+
+            dttbl.on( 'draw', function () {
+                for (var i =0 ; i <  $(".printOnRow").length; i++) {
+                    $(".printOnRow")[i].addEventListener("click", printSingle);
+                }
+            });
+        });
+
+
+        function deleteRecurringBatch(id) {
+            var url = '/accounting/delete/batch_recurring/' + id + '/'
+
+            $("#comfirmDeleteJournalModal").modal("show");
+            $("#comfirmDeleteJournalForm").attr("action", url);
+        };
+
+        
+
+        function showBusy() {
+            $('#loading').show();
+        }
+
+        function format (callback,btch) {
+            $.ajax({
+                url: '/accounting/rec_batchDetail__asJson/'+ btch.id +'/',
+                dataType: "json",
+                complete: function (response) {
+                    var data = JSON.parse(response.responseText);
+                    if (data[0].success){
+                        var thead = '',  tbody = '';
+                        thead += '<th class="col-lg-2 col-md-2">Entry Number</th>';
+                        thead += '<th class="col-lg-4 col-md-4">Description</th>';
+                        thead += '<th class="col-lg-2 col-md-2">Total Amount</th>';
+                        thead += '<th class="col-lg-2 col-md-2">Document Type</th>';
+                        for (var i = 0; i < data[0].journals.length; i++) {
+                            var doc_type = '';
+
+                            if (parseInt(data[0].journals[i].journal_type)!=5){
+                                doc_type = data[0].journals[i].document_type
+                            } else {
+                                doc_type = data[0].journals[i].source_type;
+                            }
+
+                            tbody += '<tr>';
+                            tbody += '<td class="text-right">' + data[0].journals[i].code + '</td>';
+                            tbody += '<td>' + data[0].journals[i].name + '</td>';
+                            tbody += '<td class="text-right">' + data[0].journals[i].total_amount + '</td>';
+                            tbody += '<td>' + doc_type + '</td>';
+                            tbody += '</tr>';
+                        }
+                        callback($('<table class="display table table-bordered table-striped table-condensed table-hover" id="expanded_table">' + thead + tbody + '</table>')).show();
+                    } else {
+                        showErrorMessage();
+                    }
+                },
+                error: function () {
+                    showErrorMessage();
+                }
+            })
+        }
+
+        function showErrorMessage(){
+            $('#notificationModal_title').text('Error');
+            $('#notificationModal_text1').text('Failed to get batch detail data !');
+            $('#notificationModal_text2').text('Please refresh and try again or contact administrator for support.');
+            $("#notificationModal").modal("show");
+        }
+
+        function checkBatch(id){
+            $.ajax({
+                method: "POST",
+                url: '/accounting/check_batch/',
+                data: {
+                    'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val(),
+                    'batch_id': id
+                },
+                success: function (data) {
+                    var span_id = "status-batch-"+id;
+                    var link_id = "check-uncheck-batch-"+id;
+                    if (data['result'] = '1'){
+                        $('#'+span_id).text(data['status']);
+                        $('#'+span_id).removeClass('label-warning');
+                        $('#'+span_id).addClass('label-inverse');
+                        $("#"+link_id).attr("onclick","uncheckBatch("+id+")");
+                        $("#"+link_id).text("Set to Uncheck");
+                    } else {
+                        pop_info_dialog("Failed", "Please refresh and try again or contact administrator for support.", "Failed");
+                    }
+                },
+                error: function () {
+                    pop_info_dialog("Failed", "Please refresh and try again or contact administrator for support.", "Failed");
+                }
+            });
+        }
+
+        function uncheckBatch(id){
+            $.ajax({
+                method: "POST",
+                url: '/accounting/uncheck_batch/',
+                data: {
+                    'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val(),
+                    'batch_id': id
+                },
+                success: function (data) {
+                    var span_id = "status-batch-"+id;
+                    var link_id = "check-uncheck-batch-"+id;
+                    if (data['result'] = '1'){
+                        $('#'+span_id).text(data['status']);
+                        $('#'+span_id).removeClass('label-inverse');
+                        $('#'+span_id).addClass('label-warning');
+                        $("#"+link_id).attr("onclick","checkBatch("+id+")");
+                        $("#"+link_id).text("Set to Check");
+                    } else {
+                        pop_info_dialog("Failed", "Please refresh and try again or contact administrator for support.", "Failed");
+                    }
+                },
+                error: function () {
+                    pop_info_dialog("Failed", "Please refresh and try again or contact administrator for support.", "Failed");
+                }
+            });
+        }
+
+
+        $(document).click(function (event) {
+            //hide al‘l our dropdowns
+            $('.dropdown-menu[data-parent]').hide();
+        });
+    </script>
+{% endblock %}

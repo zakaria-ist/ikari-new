@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+{% endblock %}
+
+{% block title %}
+    {% if contact.id %}
+        Edit Contact
+    {% else %}
+        Add Contact
+    {% endif %}
+{% endblock %}
+{% block contact_active %}active{% endblock %}
+{% block sp_setting_a_active %}active{% endblock %}
+{% block sp_setting_i_active %}active{% endblock %}
+{% block parent_order_a_active %}active{% endblock %}
+{% block parent_order_i_active %}active{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                {% if contact.id %}
+                    Edit Contact
+                {% else %}
+                    Add Contact
+                {% endif %}
+            </header>
+            <div class="panel-body">
+                <form class="form-horizontal"
+                        {% if contact.id %}
+                      action="{% url 'contact_edit' contact.id %}"
+                        {% else %}
+                      action="{% url 'contact_add' %}"
+                        {% endif %}
+                      role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="rate" class="col-lg-2 col-sm-2 control-label">Contact Type</label>
+                        <div class="col-lg-4">
+                            <input id="hdContactType" type="hidden" value="{{ contact.contact_type }}">
+                            <select class="form-control" id="assignee" name="assignee">
+                                <option value="1">Customer</option>
+                                <option value="2">Supplier</option>
+                                <option value="3">Location</option>
+                                <option value="4">Delivery</option>
+                                <option value="5">Consignee</option>
+                            </select>
+                        </div>
+
+                        <div id="divCustomer">
+                            <label for="number" class="col-lg-1 col-sm-1 control-label text-right">Customer</label>
+                            <div class="col-lg-5">
+                                {{ form.customer }}
+                                <input id="hdCustomerID" type="hidden" value="{{ form.customer.value }}">
+                            </div>
+                        </div>
+                        <div id="divSupplier" style="display: none;">
+                            <label for="number" class="col-lg-1 col-sm-1 control-label text-right">Supplier</label>
+                            <div class="col-lg-5">
+                                {{ form.supplier }}
+                                <input id="hdSupplierID" type="hidden" value="{{ form.supplier.value }}">
+                            </div>
+                        </div>
+                        <div id="divLocation" style="display: none;">
+                            <label for="number" class="col-lg-1 col-sm-1 control-label text-right">Location</label>
+                            <div class="col-lg-5">
+                                {{ form.location }}
+                                <input id="hdLocationID" type="hidden" value="{{ form.location.value }}">
+                            </div>
+                        </div>
+                        <div id="divDelivery" style="display: none;">
+                            <label for="number" class="col-lg-1 col-sm-1 control-label text-right">Delivery</label>
+                            <div class="col-lg-5">
+                                {{ form.delivery }}
+                                <input id="hdDeliveryID" type="hidden" value="{{ form.delivery.value }}">
+                            </div>
+                        </div>
+                        <div id="divConsignee" style="display: none;">
+                            <label for="number" class="col-lg-1 col-sm-1 control-label text-right">Consignee</label>
+                            <div class="col-lg-5">
+                                {{ form.consignee }}
+                                <input id="hdConsigneeID" type="hidden" value="{{ form.consignee.value }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Name<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-4">
+                            {{ form.name|default_if_none:"" }}
+                            <span class="messages">{{ form.errors.name }}</span>
+                        </div>
+                        <label for="rate" class="col-lg-1 col-sm-1 control-label">Attention</label>
+                        <div class="col-lg-5">
+                            {{ form.attention|default_if_none:"" }}
+                            <span class="messages">{{ form.errors.attention }}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone" class="col-lg-2 col-sm-2 control-label">Company Name</label>
+                        <div class="col-lg-4">
+                            {{ form.company_name|default_if_none:"" }}
+                        </div>
+                        <label for="fax" class="col-lg-1 col-sm-1 control-label">Designation</label>
+                        <div class="col-lg-5">
+                            {{ form.designation|default_if_none:"" }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone" class="col-lg-2 col-sm-2 control-label">Phone</label>
+                        <div class="col-lg-4">
+                            {{ form.phone|default_if_none:"" }}
+                        </div>
+                        <label for="fax" class="col-lg-1 col-sm-1 control-label">Fax</label>
+                        <div class="col-lg-5">
+                            {{ form.fax|default_if_none:"" }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email" class="col-lg-2 col-sm-2 control-label">Email</label>
+                        <div class="col-lg-4">
+                            {{ form.email|default_if_none:"" }}
+                        </div>
+                        <label for="web" class="col-lg-1 col-sm-1 control-label">Web</label>
+                        <div class="col-lg-5">
+                            {{ form.web|default_if_none:"" }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="address" class="col-lg-2 col-sm-2 control-label">Address</label>
+                        <div class="col-lg-10">
+                            {{ form.address|default_if_none:"" }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="note1" class="col-lg-2 col-sm-2 control-label">Remark</label>
+                        <div class="col-lg-10">
+                            {{ form.note|default_if_none:"" }}
+                        </div>
+                    </div>
+                    {% if contact.id %}
+                    <div class="form-group">
+                        <label for="email" class="col-lg-2 col-sm-2 control-label">Last Update</label>
+                        <div class="col-lg-4">
+                            <input type="text" value="{{contact.update_date}}" disabled="true" class="form-control">
+                        </div>
+                    </div>
+                    {% endif %}
+                    <!-- <div class="form-group">
+                        <label for="label_check" class="col-lg-2 col-sm-2 control-label"></label>
+                        <div class="col-lg-10">
+                            <div class="checkbox checkbox-primary">
+                                {{ form.is_active }}
+                                <label for="id_is_active">
+                                    Active
+                                </label>
+                            </div>
+                        </div>
+                    </div> -->
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" name="btnSave" class="btn btn-success">Save</button>
+                            {% if 'contacts.delete_contact' in user.get_all_permissions and contact.id %}
+                                <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger">Delete</a>
+                            {% endif %}
+                            <a class="btn btn-default" href="{% url 'contact_list' %}">Cancel</a>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            {% if contact.id %}
+                <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+                     class="modal fade">
+                    <div class="modal-dialog modal-sm">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                                <h4 class="modal-title">Delete Confirm Dialog</h4>
+                            </div>
+                            <div class="modal-body">
+                                <form role="form" action="{% url 'contact_delete' contact.id %}" method="post">
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-success">OK</button>
+                                    <a class="btn btn-default" href="{% url 'contact_edit' contact.id %}">Cancel</a>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </section>
+    </div>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="application/javascript" src="{% static 'js/ga.js' %}?{% now 'H' %}"></script>
+    <script>
+        jQuery(document).ready(function () {
+            var hdCustomerId = $('#hdCustomerID').val();
+            var hdSupplierId = $('#hdSupplierID').val();
+            var hdLocationId = $('#hdLocationID').val();
+            var hdDeliveryId = $('#hdDeliveryID').val();
+            var hdConsigneeId = $('#hdConsigneeID').val();
+            var hdContactType = $('#hdContactType').val();
+
+            $('#assignee option[value=' + hdContactType + ']').attr('selected','selected');
+
+            if (hdContactType=='1') {
+                $('#assignee option[value="1"]').attr('selected', 'selected');
+                $('#divCustomer').css('display', 'block');
+                $('#divSupplier').css('display', 'none');
+                $('#divLocation').css('display', 'none');
+                $('#divDelivery').css('display', 'none');
+                $('#divConsignee').css('display', 'none');
+            }
+            if (hdContactType=='2') {
+                $('#assignee option[value="2"]').attr('selected', 'selected');
+                $('#divCustomer').css('display', 'none');
+                $('#divSupplier').css('display', 'block');
+                $('#divLocation').css('display', 'none');
+                $('#divDelivery').css('display', 'none');
+                $('#divConsignee').css('display', 'none');
+            }
+            if (hdContactType=='3') {
+                $('#assignee option[value="3"]').attr('selected', 'selected');
+                $('#divCustomer').css('display', 'none');
+                $('#divSupplier').css('display', 'none');
+                $('#divLocation').css('display', 'block');
+                $('#divDelivery').css('display', 'none');
+                $('#divConsignee').css('display', 'none');
+            }
+            if (hdContactType=='4') {
+                $('#assignee option[value="4"]').attr('selected', 'selected');
+                $('#divCustomer').css('display', 'none');
+                $('#divSupplier').css('display', 'none');
+                $('#divLocation').css('display', 'none');
+                $('#divDelivery').css('display', 'block');
+                $('#divConsignee').css('display', 'none');
+            }
+            if (hdContactType=='5') {
+                $('#assignee option[value="5"]').attr('selected', 'selected');
+                $('#divCustomer').css('display', 'none');
+                $('#divSupplier').css('display', 'none');
+                $('#divLocation').css('display', 'none');
+                $('#divDelivery').css('display', 'none');
+                $('#divConsignee').css('display', 'block');
+            }
+
+        });
+        $('#assignee').on('change', function (e) {
+            var optionSelected = $("option:selected", this);
+            var valueSelected = this.value;
+
+            switch (valueSelected) {
+                case '1':
+                    $('#divCustomer').css('display', 'block');
+                    $('#divSupplier').css('display', 'none');
+                    $('#divLocation').css('display', 'none');
+                    $('#divDelivery').css('display', 'none');
+                    $('#divConsignee').css('display', 'none');
+                    break;
+                case '2':
+                    $('#divCustomer').css('display', 'none');
+                    $('#divSupplier').css('display', 'block');
+                    $('#divLocation').css('display', 'none');
+                    $('#divDelivery').css('display', 'none');
+                    $('#divConsignee').css('display', 'none');
+                    break;
+                case '3':
+                    $('#divCustomer').css('display', 'none');
+                    $('#divSupplier').css('display', 'none');
+                    $('#divLocation').css('display', 'block');
+                    $('#divDelivery').css('display', 'none');
+                    $('#divConsignee').css('display', 'none');
+                    break;
+                case '4':
+                    $('#divCustomer').css('display', 'none');
+                    $('#divSupplier').css('display', 'none');
+                    $('#divLocation').css('display', 'none');
+                    $('#divDelivery').css('display', 'block');
+                    $('#divConsignee').css('display', 'none');
+                    break;
+                case '5':
+                    $('#divCustomer').css('display', 'none');
+                    $('#divSupplier').css('display', 'none');
+                    $('#divLocation').css('display', 'none');
+                    $('#divDelivery').css('display', 'none');
+                    $('#divConsignee').css('display', 'block');
+                    break;
+            }
+
+        });
+
+    </script>
+{% endblock %}

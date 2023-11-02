@@ -1,0 +1,764 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    {% load humanize %}
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <style>
+        .hide_column {
+            display : none;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}
+    Account Set
+{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block ar_account_set_active %}{% if account_set_type == '1' %}active{% endif %}{% endblock %}
+{% block ap_account_set_active %}{% if account_set_type == '2' %}active{% endif %}{% endblock %}
+{% block parent_AR_a_active %}{% if account_set_type == '1' %}active{% endif %}{% endblock %}
+{% block parent_AR_i_active %}{% if account_set_type == '1' %}active{% endif %}{% endblock %}
+{% block parent_AP_a_active %}{% if account_set_type == '2' %}active{% endif %}{% endblock %}
+{% block parent_AP_i_active %}{% if account_set_type == '2' %}active{% endif %}{% endblock %}
+
+
+{% block content %}
+    <div id="content">
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading" style="font-size: 20px">
+                {% if account_set.id %}
+                    Edit Account Set
+                {% else %}
+                    Add Account Set
+                {% endif %}
+            </header>
+            <div class="panel-body">
+                <form class="form-horizontal"
+                      {% if account_set.id %}action="{% url 'account_set_edit' account_set.id %}"
+                      {% else %}action="{% url 'account_set_add' account_set_type %}"{% endif %}
+                      role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="code" class="col-lg-3 col-sm-3 control-label">Account Set Code
+                            <span class="span-required">(*)</span></label>
+                        <div class="col-lg-4">
+                            {{ form.code }}
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-3 col-sm-3 control-label">Description
+                            <span class="span-required">(*)</span></label>
+                        <div class="col-lg-9">
+                            {{ form.name }}
+                        </div>
+                    </div>
+                    <div class="form-group divAccount">
+                        <label for="id_control_account" class="col-lg-3 col-sm-3 control-label">
+                            {% if account_set_type == '1' %}Receivables Control{% endif %}
+                            {% if account_set_type == '2' %}Payables Control{% endif %}
+                            <span class="span-required">(*)</span>
+                        </label>
+                        <div class="col-lg-2 col-sm-2">
+                            {{ form.control_account }}
+                        </div>
+                        <div class="col-lg-1 col-sm-1">
+                            <button id="btnSearchAccountSet" type="button" class="btn btn-info searchAccountModal" data-toggle="modal"
+                                    href="#RevaluationAccountListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                        <div class="col-lg-6 col-md-6">
+                            {{ form.control_account_name }}
+                        </div>
+                    </div>
+                    <div class="form-group divAccount">
+                        <label for="id_control_account" class="col-lg-3 col-sm-3 control-label">
+                            {% if account_set_type == '1' %}Receipt Discount{% endif %}
+                            {% if account_set_type == '2' %}Purchase Discounts{% endif %}
+                            <span class="span-required">(*)</span>
+                        </label>
+                        <div class="col-lg-2 col-sm-2">
+                            {{ form.discount_account }}
+                        </div>
+                        <div class="col-lg-1 col-sm-1">
+                            <button id="btnSearchAccountSet" type="button" class="btn btn-info searchAccountModal" data-toggle="modal"
+                                    href="#RevaluationAccountListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                        <div class="col-lg-6 col-md-6">
+                            {{ form.discount_account_name }}
+                        </div>
+                    </div>
+                    <div class="form-group divAccount">
+                        <label for="id_control_account" class="col-lg-3 col-sm-3 control-label">
+                            {% if account_set_type == '1' %}Prepayment Liability{% endif %}
+                            {% if account_set_type == '2' %}Prepayment{% endif %}
+                            <span class="span-required">(*)</span>
+                        </label>
+                        <div class="col-lg-2 col-sm-2">
+                            {{ form.prepayment_account }}
+                        </div>
+                        <div class="col-lg-1 col-sm-1">
+                            <button id="btnSearchAccountSet" type="button" class="btn btn-info searchAccountModal" data-toggle="modal"
+                                    href="#RevaluationAccountListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                        <div class="col-lg-6 col-md-6">
+                            {{ form.prepayment_account_name }}
+                        </div>
+                    </div>
+                    {% if account_set_type == '1' %}
+                    <div class="form-group divAccount">
+                        <label for="id_control_account" class="col-lg-3 col-sm-3 control-label">
+                            Write-offs
+                            <span class="span-required">(*)</span>
+                        </label>
+                        <div class="col-lg-2 col-sm-2">
+                            {{ form.writeoff_account }}
+                        </div>
+                        <div class="col-lg-1 col-sm-1">
+                            <button id="btnSearchAccountSet" type="button" class="btn btn-info searchAccountModal" data-toggle="modal"
+                                    href="#RevaluationAccountListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                        <div class="col-lg-6 col-md-6">
+                            {{ form.writeoff_account_name }}
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="form-group">
+                        <label for="id_currency" class="col-lg-3 col-sm-3 control-label">Currency Code</label>
+                        <div class="col-lg-2 col-sm-2">
+                            {{ form.currency }}
+                        </div>
+                        <div class="col-lg-1 col-sm-1">
+                            <button id="btnSearchCurrencyCode" type="button" class="btn btn-info" data-toggle="modal"
+                                    href="#CurrencyCodeListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                        <div class="col-lg-6 col-md-6">
+                            {{ form.currency_name }}
+                        </div>
+                    </div>
+                    <!--
+                    <div class="form-group divRevaluationAccount" style="display: none">
+                        <label for="id_revaluation_account" class="col-lg-3 col-sm-3 control-label">Revaluation
+                            Account</label>
+                        <div class="col-lg-2 col-sm-2">
+                            {{ form.revaluation_account }}
+                        </div>
+                        <div class="col-lg-1 col-sm-1">
+                            <button id="btnSearchRevaluationAccount" type="button" class="btn btn-info"
+                                    data-toggle="modal"
+                                    href="#RevaluationAccountListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                        <div class="col-lg-6 col-md-6">
+                            {{ form.revaluation_account_name }}
+                        </div>
+                    </div>
+                    -->
+                    <div class="form-group divRevaluationAccount">
+                        <div class="col-sm-12">
+                            Revaluation Account
+                        </div>
+                    </div>
+                    <div class="form-group divRevaluationAccount" style="display: none">
+                        <label for="id_revaluation_unrealized_gain" class="col-lg-3 col-sm-3 control-label">
+                            Unrealized Exchange Gain
+                        </label>
+                        <div class="col-lg-2 col-sm-2">
+                            {{ form.revaluation_unrealized_gain }}
+                        </div>
+                        <div class="col-lg-1 col-sm-1">
+                            <button id="btnSearchAccountModal" type="button" class="btn btn-info searchAccountModal"
+                                    data-toggle="modal"
+                                    href="#RevaluationAccountListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                        <div class="col-lg-6 col-md-6">
+                            {{ form.revaluation_unrealized_gain_name }}
+                        </div>
+                    </div>
+                    <div class="form-group divRevaluationAccount" style="display: none">
+                        <label for="id_revaluation_unrealized_loss" class="col-lg-3 col-sm-3 control-label">
+                            Unrealized Exchange Loss
+                        </label>
+                        <div class="col-lg-2 col-sm-2">
+                            {{ form.revaluation_unrealized_loss }}
+                        </div>
+                        <div class="col-lg-1 col-sm-1">
+                            <button id="btnSearchAccountModal" type="button" class="btn btn-info searchAccountModal"
+                                    data-toggle="modal"
+                                    href="#RevaluationAccountListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                        <div class="col-lg-6 col-md-6">
+                            {{ form.revaluation_unrealized_loss_name }}
+                        </div>
+                    </div>
+                    <div class="form-group divRevaluationAccount" style="display: none">
+                        <label for="id_revaluation_realized_gain" class="col-lg-3 col-sm-3 control-label">
+                            Realized Exchange Gain
+                        </label>
+                        <div class="col-lg-2 col-sm-2">
+                            {{ form.revaluation_realized_gain }}
+                        </div>
+                        <div class="col-lg-1 col-sm-1">
+                            <button id="btnSearchAccountModal" type="button" class="btn btn-info searchAccountModal"
+                                    data-toggle="modal"
+                                    href="#RevaluationAccountListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                        <div class="col-lg-6 col-md-6">
+                            {{ form.revaluation_realized_gain_name }}
+                        </div>
+                    </div>
+                    <div class="form-group divRevaluationAccount" style="display: none">
+                        <label for="id_revaluation_realized_loss" class="col-lg-3 col-sm-3 control-label">
+                            Realized Exchange Loss
+                        </label>
+                        <div class="col-lg-2 col-sm-2">
+                            {{ form.revaluation_realized_loss }}
+                        </div>
+                        <div class="col-lg-1 col-sm-1">
+                            <button id="btnSearchAccountModal" type="button" class="btn btn-info searchAccountModal"
+                                    data-toggle="modal"
+                                    href="#RevaluationAccountListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                        <div class="col-lg-6 col-md-6">
+                            {{ form.revaluation_realized_loss_name }}
+                        </div>
+                    </div>
+                    <div class="form-group divRevaluationAccount" style="display: none">
+                        <label for="id_revaluation_rounding" class="col-lg-3 col-sm-3 control-label">
+                            Exchange Rounding
+                        </label>
+                        <div class="col-lg-2 col-sm-2">
+                            {{ form.revaluation_rounding }}
+                        </div>
+                        <div class="col-lg-1 col-sm-1">
+                            <button id="btnSearchAccountModal" type="button" class="btn btn-info searchAccountModal"
+                                    data-toggle="modal"
+                                    href="#RevaluationAccountListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                        <div class="col-lg-6 col-md-6">
+                            {{ form.revaluation_rounding_name }}
+                        </div>
+                    </div>
+                    {% if account_set.id %}
+                        <div class="form-group">
+                            <label class="col-lg-3 col-sm-3 control-label">Last Update</label>
+                            <div class="col-lg-4">
+                                <input type="text" class="form-control" disabled="true"
+                                       value="{{ account_set.update_date }}">
+                            </div>
+                        </div>
+                    {% endif %}
+                    <div class="form-group">
+                        <div class="col-lg-offset-3 col-lg-9">
+                            <button type="submit" name="btnSave" class="btn btn-success">Save</button>
+                            {% if 'accounts.delete_accountset' in user.get_all_permissions and account_set.id %}
+                                <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger">Delete</a>
+                            {% endif %}
+                            <a class="btn btn-default" href="{% url 'account_set_list' account_set_type %}">Cancel</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+    <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+         class="modal fade">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                    <h4 class="modal-title">Delete Confirm Dialog</h4>
+                </div>
+                {% if account_set.id %}
+                    <div class="modal-body">
+                        <form role="form" action="{% url 'account_set_delete' account_set.id %}"
+                              method="post">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                            </div>
+                            <button type="submit" class="btn btn-success">OK</button>
+                            <a data-dismiss="modal" class="btn btn-default" type="button">Cancel</a>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="AccountListModal" tabindex="-1" role="dialog"
+         aria-labelledby="AccountListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Account</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="account-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Account Code</th>
+                                                    <th>Account Name</th>
+                                                    <th>Account Type</th>
+                                                    <th>Balance Type</th>
+                                                    <th>Account Group</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" id="btnAccountSelect">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="RevaluationAccountListModal" tabindex="-1" role="dialog"
+         aria-labelledby="RevaluationAccountListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Account</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="revaluation-account-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Account Code</th>
+                                                    <th>Account Name</th>
+                                                    <th>Account Type</th>
+                                                    <th>Balance Type</th>
+                                                    <th>Account Group</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" id="btnRevaluationAccountSelect">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="CurrencyCodeListModal" tabindex="-1" role="dialog"
+         aria-labelledby="CurrencyCodeListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Currency Code</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="currency-code-div">
+                                            <table id="currency-code-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Code</th>
+                                                    <th>Name</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" id="btnCurrencyCodeSelect">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+
+    <script>
+        $(document).ready(function () {
+            var currency_id = parseInt($('#id_currency').val());
+            if (currency_id != {{ company_currency_id }}) {
+                $('.divRevaluationAccount').show();
+            }
+            else {
+                $('.divRevaluationAccount').hide();
+            }
+            // Init of DataTable
+            //$('#account-table').DataTable({
+                //iDisplayLength: 10,
+                //bFilter: false,
+                //bLengthChange: false
+            //});
+            //$('#revaluation-account-table').DataTable({
+                //iDisplayLength: 10,
+                //bFilter: false,
+                //bLengthChange: false
+            //});
+            //$('#currency-code-table').DataTable({
+                //iDisplayLength: 10,
+                //bFilter: false,
+                //bLengthChange: false
+            //});
+
+            //Init of select
+            $('#id_revaluation_account').select2({
+                placeholder: "Select Account",
+            });
+
+            $('.revaluation-account-select, .account-select').select2({
+                placeholder: "Select Account",
+            });
+
+            $('#id_currency').select2({
+                placeholder: "Select Currency Code",
+            });
+        });
+        $('#id_control_account').on('change', function () {
+            var control_account_id = parseInt($('#id_control_account').val());
+            $.ajax({
+                method: "POST",
+                url: '/accounts/load_account/',
+                dataType: 'JSON',
+                data: {
+                    'account_id': control_account_id,
+                },
+                success: function (json) {
+                    $('#id_control_account_name').val('');
+                    $('#id_control_account_name').val(json.name);
+                }
+            });
+        });
+
+        $('#id_revaluation_account').on('change', function () {
+            var revaluation_account_id = parseInt($('#id_revaluation_account').val());
+            $.ajax({
+                method: "POST",
+                url: '/accounts/load_account/',
+                dataType: 'JSON',
+                data: {
+                    'account_id': revaluation_account_id,
+                },
+                success: function (json) {
+                    $('#id_revaluation_account_name').val('');
+                    $('#id_revaluation_account_name').val(json.name);
+                }
+            });
+        });
+
+        $('.revaluation-account-select, .account-select').on('change', function () {
+            var revaluation_account_id = parseInt($(this).val());
+            var $textAccount = $(this).closest('.divRevaluationAccount, .divAccount').find('input[type="text"]');
+
+            $.ajax({
+                method: "POST",
+                url: '/accounts/load_account/',
+                dataType: 'JSON',
+                data: {
+                    'account_id': revaluation_account_id,
+                },
+                success: function (json) {
+                    $textAccount.val(json.name);
+                }
+            });
+        });
+
+
+        $('#id_currency').on('change', function () {
+            var currency_id = parseInt($('#id_currency').val());
+            $('#id_currency').find('option:selected').removeAttr('selected');
+            $('#id_currency option[value=' + currency_id + ']').attr('selected', 'selected');
+            $('#id_currency').val(currency_id);
+
+            $.ajax({
+                method: "POST",
+                url: '/customers/load_currency_code/',
+                dataType: 'JSON',
+                data: {
+                    'currency_id': currency_id,
+                },
+                success: function (json) {
+                    $('#id_currency_name').val('');
+                    $('#id_currency_name').val(json.name);
+                    if (currency_id != {{ company_currency_id }}) {
+                        $('#divRevaluationAccount').removeAttr("style")
+                    }
+                    else {
+                        $('#divRevaluationAccount').css("display", "none");
+                    }
+                }
+            });
+        });
+        /* Search currency button*/
+        $('#btnSearchCurrencyCode').on('click', function () {
+            $('#currency-code-table').DataTable().destroy();
+            $('#currency-code-table').dataTable({
+                "iDisplayLength": 10,
+                //"bLengthChange": false,
+                "order": [[0, "desc"]],
+                "serverSide": true,
+                "ajax": {
+                    "url": "/currencies/list/pagination/"
+                },
+                "columns": [
+                    {"data": "code", "sClass": "text-left"},
+                    {"data": "name", "sClass": "text-left"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "sClass": "hide_column",
+                        "render": function (data, type, full, meta) {
+                            return '<input type="radio" name="currency-code-choices" id="' +
+                                    full.id + '" class="call-checkbox" value="' + meta.row + '">';
+                        }
+                    }
+                ]
+            });
+            setTimeout(() => {
+                $('#currency-code-table').DataTable().columns.adjust();
+            }, 300);
+        });
+
+        $('#currency-code-table').on( 'draw.dt', function () {
+            selectTableRow('#currency-code-table', 2);
+            $("input[type='radio']").each(function () {
+                $(this).closest('tr').css('background-color', '#f9f9f9');
+            });
+        });
+
+
+        /* Search Account button*/
+        $('#btnSearchAccountSet').on('click', function () {
+            $('#account-table').DataTable().destroy();
+            $('#account-table').dataTable({
+                "iDisplayLength": 10,
+                //"bLengthChange": false,
+                "order": [[0, "desc"]],
+                "serverSide": true,
+                "ajax": {
+                    "url": "/customers/account_list/"
+                },
+                "columns": [
+                    {"data": "code", "sClass": "text-left"},
+                    {"data": "name", "sClass": "text-left"},
+                    {"data": "account_type", "sClass": "text-left"},
+                    {"data": "balance_type", "sClass": "text-left"},
+                    {"data": "account_group", "sClass": "text-left hide_column"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "sClass": "hide_column",
+                        "render": function (data, type, full, meta) {
+                            return '<input type="radio" name="account-choices" id="' +
+                                    full.id + '" class="call-checkbox" value="' + meta.row + '">';
+                        }
+                    }
+                ]
+            });
+        });
+
+        $('#account-table').on( 'draw.dt', function () {
+            selectTableRow('#account-table', 5);
+            $("input[type='radio']").each(function () {
+                $(this).closest('tr').css('background-color', '#f9f9f9');
+            });
+        });
+
+        /* Search Account button*/
+        $('#btnSearchRevaluationAccount').on('click', function () {
+            $('#revaluation-account-table').DataTable().destroy();
+            $('#revaluation-account-table').dataTable({
+                "iDisplayLength": 10,
+                //"bLengthChange": false,
+                "order": [[0, "desc"]],
+                "serverSide": true,
+                "ajax": {
+                    "url": "/customers/account_list/"
+                },
+                "columns": [
+                    {"data": "code", "sClass": "text-left"},
+                    {"data": "name", "sClass": "text-left"},
+                    {"data": "account_type", "sClass": "text-left"},
+                    {"data": "balance_type", "sClass": "text-left"},
+                    {"data": "account_group", "sClass": "text-left hide_column"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "sClass": "hide_column",
+                        "render": function (data, type, full, meta) {
+                            return '<input type="radio" name="revaluation-account-choices" id="' +
+                                    full.id + '" class="call-checkbox" value="' + meta.row + '">';
+                        }
+                    }
+                ]
+            });
+        });
+
+        $('#revaluation-account-table').on( 'draw.dt', function () {
+            selectTableRow('#revaluation-account-table', 5);
+            $("input[type='radio']").each(function () {
+                $(this).closest('tr').css('background-color', '#f9f9f9');
+            });
+        });
+
+        /* Search Account button*/
+        $('.searchAccountModal').on('click', function () {
+            var datatbl = $('#revaluation-account-table').DataTable();
+            var $selectAccount = $(this).closest('.divRevaluationAccount, .divAccount').find('select');
+            var $textAccount = $(this).closest('.divRevaluationAccount, .divAccount').find('input');
+
+            var $modalTarget = !$(this).data('target') ? $($(this).attr('href')) : $($(this).data('target'));
+            var $modalBtnSelect = $modalTarget.find('#btnRevaluationAccountSelect');
+
+            $modalBtnSelect.attr('data-select', $selectAccount.attr('id'));
+            $modalBtnSelect.attr('data-text', $textAccount.attr('id'));
+
+            datatbl.destroy();
+            $('#revaluation-account-table').dataTable({
+                "iDisplayLength": 10,
+                //"bLengthChange": false,
+                "order": [[0, "desc"]],
+                "serverSide": true,
+                "ajax": {
+                    "url": "/customers/account_list/"
+                },
+                "columns": [
+                    {"data": "code", "sClass": "text-left"},
+                    {"data": "name", "sClass": "text-left"},
+                    {"data": "account_type", "sClass": "text-left"},
+                    {"data": "balance_type", "sClass": "text-left"},
+                    {"data": "account_group", "sClass": "text-left hide_column"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "sClass": "hide_column",
+                        "render": function (data, type, full, meta) {
+                            return '<input type="radio" name="revaluation-account-choices" id="' +
+                                    full.id + '" class="call-checkbox" value="' + meta.row + '">';
+                        }
+                    }
+                ],
+                "initComplete": function( settings, json ) {
+                    if ($selectAccount.val() != '') {
+                        $('#revaluation-account-table input[id="' + $selectAccount.val() + '"]').attr('checked', 'checked');
+                    }
+
+                }
+            });
+
+
+            $('#btnRevaluationAccountSelect').off('click').on('click', function () {
+
+                var item_select_id = $("input[name='revaluation-account-choices']:checked").attr('id');
+                var nRow = $("input[name='revaluation-account-choices']:checked").parents('tr')[0];
+                var jqInputs = $('td', nRow);
+
+                $selectAccount.find('option:selected').removeAttr('selected');
+                $selectAccount.find('option[value=' + item_select_id + ']').attr('selected', 'selected');
+                $selectAccount.val(item_select_id);
+
+                $selectAccount.trigger('change');
+
+                $textAccount.val(jqInputs[1].innerText);
+
+                $(this).attr('data-dismiss', 'modal');
+            });
+
+        });
+
+        $('#btnAccountSelect').on('click', function () {
+
+            var item_select_id = $("input[name='account-choices']:checked").attr('id');
+            var nRow = $("input[name='account-choices']:checked").parents('tr')[0];
+            var jqInputs = $('td', nRow);
+
+
+            $('#id_control_account').find('option:selected').removeAttr('selected');
+            $('#id_control_account option[value=' + item_select_id + ']').attr('selected', 'selected');
+            $('#id_control_account').val(item_select_id);
+
+            $('#select2-id_control_account-container').attr('title', jqInputs[0].innerText);
+            $('#select2-id_control_account-container').text(jqInputs[0].innerText);
+
+            $('#id_control_account_name').val('');
+            $('#id_control_account_name').val(jqInputs[1].innerText);
+
+            $(this).attr('data-dismiss', 'modal');
+        });
+
+
+        $('#btnCurrencyCodeSelect').on('click', function () {
+
+            var item_select_id = $("input[name='currency-code-choices']:checked").attr('id');
+            var nRow = $("input[name='currency-code-choices']:checked").parents('tr')[0];
+            var jqInputs = $('td', nRow);
+
+            $('#id_currency').find('option:selected').removeAttr('selected');
+            $('#id_currency option[value=' + item_select_id + ']').attr('selected', 'selected');
+            $('#id_currency').val(item_select_id);
+
+            $('#select2-id_currency-container').attr('title', jqInputs[0].innerText);
+            $('#select2-id_currency-container').text(jqInputs[0].innerText);
+
+            $('#id_currency_name').val('');
+            $('#id_currency_name').val(jqInputs[1].innerText);
+
+            $(this).attr('data-dismiss', 'modal');
+        });
+
+    </script>
+{% endblock %}

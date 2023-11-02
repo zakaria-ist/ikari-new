@@ -1,0 +1,381 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <style>
+      .hide_column {
+        display: none;
+      }
+    </style>
+{% endblock %}
+
+{% block title %}{% if tax.id == None %}
+    Add Tax {% else %} Edit Tax
+{% endif %}{% endblock %}
+{% block parent_order_a_active %}active{% endblock %}
+{% block parent_order_i_active %}active{% endblock %}
+{% block sp_setting_a_active %}active{% endblock %}
+{% block sp_setting_i_active %}active{% endblock %}
+{% block tax_master_active %}active{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                {% if tax.id == None %}
+                    Add Tax {% else %} Edit Tax
+                {% endif %}
+            </header>
+            <div class="panel-body">
+                <form class="form-horizontal"
+                    {% if tax.id == None %}
+                        action="{% url 'tax_add' 1 %}"
+                    {% else %}
+                        action="{% url 'tax_edit' tax.id 1 %}"
+                    {% endif %}
+                    role="form" method="POST" onsubmit="return checkForm(this);" enctype="multipart/form-data"> {# PAGE_TYPE['S&P']#}
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label for="code" class="col-lg-2 col-sm-2 control-label">Tax Code</label>
+                        <div class="col-lg-3">
+                            {{ form.code }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Tax Short-Name</label>
+                        <div class="col-lg-3">
+                            {{ form.shortname }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="description" class="col-lg-2 col-sm-2 control-label">Description<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-3">
+                            {{ form.name }}
+                            <span class="messages">{{ form.errors.name }}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="number" class="col-lg-2 col-sm-2 control-label">Tax Group</label>
+                        <div class="col-lg-3">
+                            {{form.tax_group}}
+                            <span class="messages">{{ form.errors.tax_group }}</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rate" class="col-lg-2 col-sm-2 control-label">Tax Rate<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-3">
+                            {{ form.rate }}
+                            <span class="messages">{{ form.errors.rate }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- addtional fields from the old system -->
+                     <div class="form-group ">
+                        <label for="number" class="col-lg-2 col-sm-2 control-label">Tax Account Code</label>
+                        <div class="col-lg-2">
+                            {{ form.tax_account_code }}
+                        </div>
+                        <div class="col-lg-1 col-sm-2">
+                            <button id="btnSearchAccount" type="button" class="btn btn-info" data-toggle="modal"
+                                    href="#AccountListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                        <div class="col-lg-3 col-sm-2">
+                            <input id="id_account_name" name="account_name" class="form-control"
+                                    {% if tax.id %} value="{{ tax.tax_account_code.name }}" {% endif %} disabled>
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="tax_authority" class="col-lg-2 col-sm-2 control-label">Tax Authority</label>
+                        <div class="col-lg-2">
+                            <select id="tax_authority" class="form-control" name="tax_authority">
+                                <option value=""></option>
+                                {% for tx_auth in tax_authority_list %}
+                                    {% if tax.tax_authority_id == tx_auth.id %}
+                                        <option value="{{tx_auth.id}}" data-txauth_name="{{tx_auth.name}}" selected="selected">{{tx_auth.code}}</option>
+                                    {% else %}
+                                        <option value="{{tx_auth.id}}" data-txauth_name="{{tx_auth.name}}">{{tx_auth.code}}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% comment %} <label for="tax_group" class="col-lg-2 col-sm-2 control-label">Tax Group</label>
+                        <div class="col-lg-2">
+                            <select id="tax_group" class="form-control" name="tax_group">
+                                <option value=""></option>
+                                {% for tx_group in tax_group_list %}
+                                    {% if tax.tax_group_id == tx_group.id %}
+                                        <option value="{{tx_group.id}}" data-txgrp_name="{{tx_group.name}}" selected="selected">{{tx_group.name}}</option>
+                                    {% else %}
+                                        <option value="{{tx_group.id}}" data-txgrp_name="{{tx_group.name}}">{{tx_group.name}}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div> {% endcomment %}
+                    </div>
+{#                    <div class="form-group">#}
+{#                        <label for="number" class="col-lg-2 col-sm-2 control-label">Mth-to-Date (G/L)</label>#}
+{#                        <div class="col-lg-8">#}
+{#                            {{ form.mtd }}#}
+{#                        </div>#}
+{#                    </div>#}
+{##}
+{#                    <div class="form-group">#}
+{#                        <label for="number" class="col-lg-2 col-sm-2 control-label">Yer-to-Date (G/L)</label>#}
+{#                        <div class="col-lg-8">#}
+{#                            {{ form.ytd }}#}
+{#                        </div>#}
+{#                    </div>#}
+{##}
+{#                    <div class="form-group">#}
+{#                        <label for="number" class="col-lg-2 col-sm-2 control-label">Mth-to-Date (Doc)</label>#}
+{#                        <div class="col-lg-8">#}
+{#                            {{ form.mtdoc }}#}
+{#                        </div>#}
+{#                    </div>#}
+{##}
+{#                    <div class="form-group">#}
+{#                        <label for="number" class="col-lg-2 col-sm-2 control-label">Yer-to-Date (Doc)</label>#}
+{#                        <div class="col-lg-8">#}
+{#                            {{ form.ytdoc }}#}
+{#                        </div>#}
+{#                    </div>#}
+                    <div class="form-group">
+                        <label for="number" class="col-lg-2 col-sm-2 control-label">Last Update</label>
+                        <div class="col-lg-3">
+                            {{ form.update_date }}
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" name="btnSave" id="btnSave" class="btn btn-success">Save</button>
+                            {% if 'taxes.delete_tax' in user.get_all_permissions %}
+                                <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger"
+                                   {% if tax.id == None %}style="display: none"{% endif %}>Delete</a>
+                            {% endif %}
+                            <a class="btn btn-default" href="{% url 'tax_list' %}">Cancel</a>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+                 class="modal fade">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                            <h4 class="modal-title">Delete Confirm Dialog</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form role="form" action="{% url 'tax_delete' tax.id 1 %}" method="post"> {# PAGE_TYPE['S&P']#}
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                                </div>
+                                <button type="submit" class="btn btn-success">OK</button>
+                                <a class="btn btn-default" href="{% url 'tax_edit' tax.id 1 %}">Cancel</a> {# PAGE_TYPE['S&P']#}
+                            </form>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    <div class="modal fade" id="AccountListModal" tabindex="-1" role="dialog"
+         aria-labelledby="AccountListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Account</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div id="account_error" class="messages"
+                             style="font-size: 12.5px !important;"></div>
+                    </div>
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="account-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Account Code</th>
+                                                    <th>Account Name</th>
+                                                    <th>Account Type</th>
+                                                    <th>Balance Type</th>
+                                                    <th>Account Group</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button id="btnAccountSelect" class="btn btn-success" type="button">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="application/javascript" src="{% static 'js/ga.js' %}"></script>
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+
+    <script>
+
+        $(document).on('keyup', '.select2-selection.select2-selection--single', function (e) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if(keycode == '9'){
+                $(this).closest(".select2-container").siblings('select:enabled').select2('open');
+            }
+        });
+
+        $(document).ready(function () {
+            $('#tax_code').focus();
+
+            $('#id_tax_account_code').select2({
+                placeholder: "Select Account Code ",
+            });
+            $('#tax_group').select2({
+                placeholder: "Select Tax Group ",
+            });
+            $('#id_tax_group').select2({
+                placeholder: "Select Tax Group ",
+            });
+
+            $('#tax_authority').select2({
+                placeholder: "Select Tax Authority ",
+            });
+
+            $('#id_tax_group').on('select2:close', function () {
+                $('#id_rate').focus();
+            });
+            $('#id_tax_account_code').on('select2:close', function () {
+                $('#tax_authority').focus();
+            });
+
+            $('#id_code').bind('keydown', function (event) {
+                if (event.which == 13) {
+                    $('#id_shortname').select();
+                    return false;
+                }
+            });
+            $('#id_ytdoc').bind('keydown', function (event) {
+                if (event.which == 13) {
+                    $('.btn-success').focus();
+                    return false;
+                }
+            });
+            $('#id_tax_account_code').on('select2:close', function () {
+                $('#id_mtd').select();
+            });
+
+            $('#tax_authority').on('select2:close', function () {
+                $('#btnSave').focus();
+            });
+
+            $('#id_tax_account_code').on('change', function () {
+                var account_id = parseInt($('#id_tax_account_code').val());
+                $.ajax({
+                    method: "POST",
+                    url: '/accounts/load_account/',
+                    dataType: 'JSON',
+                    data: {
+                        'account_id': account_id,
+                    },
+                    success: function (json) {
+                        $('#id_account_name').val('');
+                        $('#id_account_name').val(json.name);
+                    }
+                });
+            });
+
+            $('#account-table').on( 'draw.dt', function () {
+                selectTableRow('#account-table', 5);
+                $("input[type='radio']").each(function () {
+                    $(this).closest('tr').css('background-color', '#f9f9f9');
+                });
+            });
+
+            $('#btnSearchAccount').on('click', function () {
+                $('#account-table').DataTable().destroy();
+                $('#account-table').dataTable({
+                    "iDisplayLength": 10,
+                    //"bLengthChange": false,
+                    "order": [[0, "desc"]],
+                    "serverSide": true,
+                    "stateSave": true,
+                    "columnDefs": [
+                        {
+                            className: "hide_column",
+                            targets: [5,]
+                        },
+                    ],
+                    "ajax": {
+                        "url": "/accounts/list/pagination/"
+                    },
+                    "columns": [
+                        {"data": "code", "sClass": "text-left"},
+                        {"data": "name", "sClass": "text-left"},
+                        {"data": "account_type", "sClass": "text-left"},
+                        {"data": "balance_type", "sClass": "text-left"},
+                        {"data": "account_group", "sClass": "text-left"},
+                        {
+                            "orderable": false,
+                            "data": null,
+                            "render": function (data, type, full, meta) {
+                                return '<input type="radio" name="account-choices" id="' +
+                                        full.id + '" class="call-checkbox" value="' + meta.row + '">';
+                            }
+                        }
+                    ]
+                });
+            });
+
+            $('#btnAccountSelect').on('click', function () {
+                var item_select_id = $("input[name='account-choices']:checked").attr('id');
+                var nRow = $("input[name='account-choices']:checked").parents('tr')[0];
+                var jqInputs = $('td', nRow);
+
+                $('#id_tax_account_code').val(item_select_id).trigger('change');
+
+                $('#id_account_name').val('');
+                $('#id_account_name').val(jqInputs[1].innerText);
+
+                $(this).attr('data-dismiss', 'modal');
+            });
+        });
+        $(document).on('click', 'input[type="text"]', function(){
+            $(this).select();
+        });
+        $(document).on('click', 'input[type="number"]', function(){
+            $(this).select();
+        });
+    </script>
+{% endblock %}

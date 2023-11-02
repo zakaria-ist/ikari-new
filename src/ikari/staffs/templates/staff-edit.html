@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-fileupload/bootstrap-fileupload.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/jquery-multi-select/css/multi-select.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style-responsive.css' %}"/>
+{% endblock %}
+
+{% block title %}Personal Information{% endblock %}
+{% block staff_active %} active {% endblock %}
+{% block parent_company_a_active %}active{% endblock %}
+{% block parent_company_i_active %}active{% endblock %}
+
+{% block content %}
+    <form class="form-horizontal" action="{% url 'staff_edit' staff.id %}" role="form" method="post" onsubmit="return checkForm(this);"
+          enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="col-lg-12">
+            <section class="panel">
+                <header class="panel-heading">
+                    Personal Information
+                </header>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <div class="col-lg-3">
+                            <div class="form-group">
+                                <div class="col-md-12">
+                                    <div class="fileupload fileupload-new" data-provides="fileupload"
+                                         style="text-align: center">
+                                        <div class="fileupload-new thumbnail" style="width: 200px; height: 150px;">
+                                            {% if staff.image %}
+                                                <img src="{{ media_url }}{{ staff.image }}" alt="" name="my_image"
+                                                     id="my_image"/>
+                                            {% else %}
+                                                <img src="{% static 'img/no-image.png' %}" alt="" name="my_image"
+                                                     id="my_image"/>
+                                            {% endif %}
+                                        </div>
+                                        <div class="fileupload-preview fileupload-exists thumbnail"
+                                             style="max-width: 200px; max-height: 150px; line-height: 20px;"></div>
+                                        <div>
+                                            <span class="btn btn-white btn-file">
+                                                <span class="fileupload-new"><i
+                                                        class="fa fa-paper-clip"></i> Select image</span>
+                                                <span class="fileupload-exists"><i class="fa fa-undo"></i> Change</span>
+                                                 <input id="staff_image" name="staff_image" type="file"
+                                                        class="default"/>
+                                            </span>
+                                            <a id="btnRemove" name="btnRemove" href="#"
+                                               class="btn btn-danger fileupload-exists" data-dismiss="fileupload">
+                                                <i class="fa fa-trash"></i> Remove</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-9">
+                            <div class="form-group">
+                                <label for="first_name" class="col-lg-3 col-sm-3 control-label">User Name</label>
+                                <div class="col-lg-9">
+                                    <label class="control-label" name="username">{{ staff.user.username }}</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="email" class="col-lg-3 col-sm-3 control-label">Email</label>
+                                <div class="col-lg-9">
+                                    <input type="email" class="form-control" id="email" name="email"
+                                           value="{{ staff.user.email }}" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="first_name" class="col-lg-3 col-sm-3 control-label">First Name</label>
+                                <div class="col-lg-9">
+                                    <input type="text" class="form-control" id="first_name" name="first_name"
+                                           value="{{ staff.user.first_name }}" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="last_name" class="col-lg-3 col-sm-3 control-label">Last Name</label>
+                                <div class="col-lg-9">
+                                    <input type="text" class="form-control" id="last_name" name="last_name"
+                                           value="{{ staff.user.last_name }}" required>
+                                </div>
+                            </div>
+                            {% if not user.is_superuser %}
+                                <div class="form-group">
+                                    <label for="company" class="col-lg-3 col-sm-3 control-label">Company</label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="company" name="company">
+                                            {% for company in company_list %}
+                                                <option value="{{ company.id }}"
+                                                        {% if company.id == staff.company_id %}selected{% endif %}>{{ company.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                        {% if not company_list %}
+                                            <span class="messages">Company list is empty. Please input Company list!</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <div class="form-group">
+                                <label for="phone" class="col-lg-3 col-sm-3 control-label">Phone</label>
+                                <div class="col-lg-9">
+                                    <input type="text" class="form-control" id="phone" name="phone"
+                                           value="{{ staff.phone }}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="fax" class="col-lg-3 col-sm-3 control-label">Fax</label>
+                                <div class="col-lg-9">
+                                    <input type="text" class="form-control" id="fax" name="fax" value="{{ staff.fax }}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="fax" class="col-lg-3 col-sm-3 control-label">Last Update</label>
+                                <div class="col-lg-9">
+                                    <input type="text" class="form-control" disabled="true" value="{{ staff.update_date }}">
+                                </div>
+                            </div>
+                            {% if user.is_superuser %}
+                                <div class="form-group">
+                                    <label class="control-label col-md-3">Company belongs</label>
+                                    <div class="col-md-9">
+                                        <select multiple="multiple" class="multi-select" id="my_multi_select2"
+                                                name="my_company_list">
+                                            {% for company in company_list %}
+                                                <option value="{{ company.id }}"
+                                                        {% if company.mSelected %}selected{% endif %}>{{ company.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <div class="col-lg-12">
+            <section class="panel">
+                <header class="panel-heading">
+                    Notifications
+                </header>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label class="control-label col-md-3"></label>
+                        <div class="col-md-9" style="border-bottom: 1px solid #eee;">
+                            <div class="checkbox checkbox-primary">
+                                <input name="notifyChangeSP" id="notifyChangeSP" class="styled" type="checkbox" value="1"
+                                       {% if staff.notifyChangeSP %}checked="checked"{% endif %}/>
+                                <label for="notifyChangeSP">
+                                    Sales / Purchase changes notification
+                                </label>
+                                <p class="help">Designates whether this user should be get the email notification when Sales / Purchase is changed.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <div class="col-lg-12">
+            <section class="panel">
+                <header class="panel-heading">
+                    Permissions
+                </header>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label class="control-label col-md-3"></label>
+                        <div class="col-md-9" style="border-bottom: 1px solid #eee;">
+                            <div class="checkbox checkbox-primary">
+                                <input name="chkIsActive" id="chkIsActive" class="styled" type="checkbox"
+                                       {% if staff.user.is_active %}checked{% endif %}/>
+                                <label for="chkIsActive">
+                                    Active
+                                </label>
+                                <p class="help">Designates whether this user should be treated as active. Unselect this
+                                    instead of deleting accounts.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-3"></label>
+                        <div class="col-md-9" style="border-bottom: 1px solid #eee;">
+                            <div class="checkbox checkbox-primary">
+                                <input name="chkIsAdmin" id="chkIsAdmin" class="styled" type="checkbox"
+                                       {% if staff.is_admin %}checked{% endif %}/>
+                                <label for="chkIsAdmin">
+                                    Company Admin
+                                </label>
+                                <p class="help">Designates that this user has all permissions of company.</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% if user.is_superuser %}
+                        <div class="form-group">
+                            <label class="control-label col-md-3"></label>
+                            <div class="col-md-9" style="border-bottom: 1px solid #eee;">
+                                <div class="checkbox checkbox-primary">
+                                    <input name="chkIsSuperAdmin" id="chkIsSuperAdmin" class="styled" type="checkbox"
+                                           {% if staff.user.is_superuser %}checked{% endif %}/>
+                                    <label for="chkIsSuperAdmin">
+                                        Super Admin
+                                    </label>
+                                    <p class="help">Designates that this user has all permissions without explicitly
+                                        assigning them.</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    <div class="form-group">
+                        <label class="control-label col-md-3">Groups</label>
+                        <div class="col-md-9">
+                            <select multiple="multiple" class="multi-select" id="my_multi_select1" name="my_group_list">
+                                {% for group in group_list %}
+                                    <option value="{{ group.id }}"
+                                            {% if group.mSelected %}selected{% endif %}>{{ group.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group last">
+                        <label class="control-label col-md-3">Permissions</label>
+                        <div class="col-md-9">
+                            <select class="multi-select" multiple="" id="my_multi_select3" name="my_permission_list">
+                                {% for per in permission_list %}
+                                    <option value="{{ per.id }}"
+                                            {% if per.mSelected %}selected{% endif %}>{{ per.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" style="border-top: 1px solid #eee; padding-top: 20px;">
+                        <div class="col-lg-offset-3 col-lg-9">
+                            <button id="btnSave" type="submit" name="btnSave" class="btn btn-success"  {% if not company_list %}
+                                    disabled {% endif %}>Save
+                            </button>
+                            {% if 'staffs.delete_staff' in user.get_all_permissions %}
+                                <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger">Delete</a>
+                            {% endif %}
+                            <a class="btn btn-default" href="{% url 'staff_list' %}">Cancel</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+    </form>
+    <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+         class="modal fade">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                    <h4 class="modal-title">Delete Confirm Dialog</h4>
+                </div>
+                <div class="modal-body">
+                    <form role="form" action="{% url 'staff_delete' staff.id %}" method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                        </div>
+                        <button type="submit" class="btn btn-success">OK</button>
+                        <a type="submit" class="btn btn-default" href="{% url 'staff_edit' staff.id %}">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="text/javascript" src="{% static 'assets/bootstrap-fileupload/bootstrap-fileupload.js' %}"></script>
+    <script type="application/javascript" src="{% static 'js/ga.js' %}"></script>
+    <script type="text/javascript" src="{% static 'assets/jquery-multi-select/js/jquery.multi-select.js' %}"></script>
+    <script type="text/javascript" src="{% static 'assets/jquery-multi-select/js/jquery.quicksearch.js' %}"></script>
+    <script src="{% static 'js/advanced-form-multiselect.js' %}"></script>
+
+    <script type="text/javascript">
+
+        $('#chkIsAdmin').bind('click', function () {
+            if ($(this).is(":checked")) {
+                // checkbox is checked
+                $('#my_multi_select3').multiSelect('select_all');
+            } else {
+                // checkbox is not checked
+                $('#my_multi_select3').multiSelect('deselect_all');
+            }
+        });
+
+        $('#btnRemove').click(function (event) {
+            $('#my_image').attr('src', "{% static 'img/no-image.png' %}");
+            $('.fileupload-preview').find('img').attr('src', "{% static 'img/no-image.png' %}");
+            $("#staff_image").val("");
+        });
+    </script>
+{% endblock %}

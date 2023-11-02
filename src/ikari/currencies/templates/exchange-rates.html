@@ -1,0 +1,396 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"
+          xmlns="http://www.w3.org/1999/html"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}
+{% if exchangerate.id == None %}
+    Add Exchange Rate
+{% else %}
+    Edit Exchange Rate
+{% endif %}
+{% endblock %}
+
+{% block sale_exchange_active %}
+{% if menu_type == '2' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block purchase_exchange_active %}
+{% if menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_a_active %}
+{% if menu_type == '2' or menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] or TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_i_active %}
+{% if menu_type == '2' or menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] or TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_order_i_active %}
+{% if menu_type == '2' or menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] or TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_order_a_active %}
+{% if menu_type == '2' or menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] or TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block exchange_rate_active %}
+{% if menu_type == '4' %} {# TRN_CODE_TYPE_DICT['Accounting'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block account_setting_a_active %}
+{% if menu_type == '4' %} {# TRN_CODE_TYPE_DICT['Accounting'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block account_setting_i_active %}
+{% if menu_type == '4' %} {# TRN_CODE_TYPE_DICT['Accounting'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_accounting_a_active %}
+{% if menu_type == '4' %} {# TRN_CODE_TYPE_DICT['Accounting'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_accounting_i_active %}
+{% if menu_type == '4' %} {# TRN_CODE_TYPE_DICT['Accounting'] #}
+    active
+{% endif %}
+{% endblock %}
+
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                {% if exchangerate.id == None %} Add Exchange Rate
+                {% else %} Edit Exchange Rate {% endif %}
+            </header>
+            <div class="panel-body">
+
+                <form class="form-horizontal"
+                        {% if exchangerate.id == None %} action="{% url 'exchange_rate_add' menu_type %}"
+                        {% else %} action="{% url 'exchange_rate_edit' exchangerate.id menu_type %}" {% endif %}
+                      role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label for="from_currency" class="col-lg-2 col-sm-2 control-label">Currency From
+                        <span class="span-required"> (*)</span></label>
+                        <div id="from_currency" class="col-lg-4">
+                            {{ form.from_currency }}
+                        </div>
+                        <span class="messages">{{ form.errors.from_currency }}</span>
+
+                        <label for="to_currency" class="col-lg-2 col-sm-2 control-label"> Currency To<span
+                                class="span-required">(*)</span></label>
+                        <div id="to_currency" class="col-lg-4">
+                            {{ form.to_currency }}
+                        </div>
+                        <span class="messages">{{ form.errors.to_currency }}</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="description" class="col-lg-2 col-sm-2 control-label">Description</label>
+                        <div class="col-lg-4">
+                            {{ form.description }}
+                            {% for message in messages %}
+                                <span class="messages" id="message">{{ message }}</span>
+                            {% endfor %}
+                            <span class="messages" name="messageReplace" id="messageReplace"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="rate" class="col-lg-2 col-sm-2 control-label">Rate
+                            <span class="span-required">(*)</span></label>
+                        <div id="rate" class="col-lg-4" >
+                            {{ form.rate }}
+                            <span class="messages">{{ form.errors.rate }}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="exchange_date" class="control-label col-md-2">Exchange Date</label>
+                        <div id="exchange_date" class="col-md-4">
+                            {{ form.exchange_date }}
+                            <input type="text" name="doc_date_view" id="doc_date_view" class="sended form-control form-control-inline input-medium default-date-picker">
+                            <span class="messages">{{ form.errors.exchange_date }}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="description" class="col-lg-2 col-sm-2 control-label">Last Update</label>
+                        <div class="col-lg-4">
+                          <input type="text" tabindex="-1" value='{{ exchangerate.update_date }}' disabled="true" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" name="btnSave" id="btnSave" class="btn btn-success">Save</button>
+                            {% if 'currencies.delete_exchangerate' in user.get_all_permissions %}
+                                <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger"
+                                   {% if exchangerate.id == None %}style="display: none"{% endif %}>Delete</a>
+                            {% endif %}
+                            <a class="btn btn-default" href="{% url 'exchange_rate_list' menu_type %}">Cancel</a>
+                            <input type="hidden" name="is_exist" id="is_exist" value='0'>
+                            <input type="hidden" name="hdNoReplace" id="hdNoReplace" value='0'>
+                            <input type="hidden" name="hdId" id="hdId" value={{ exchangerate.id }}>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+                 class="modal fade">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content" style="top:33%; margin-left: auto; margin-right: auto;">
+                        <div class="modal-header">
+                            <button aria-hidden="true" data-dismiss="modal" class="close" tabindex="-1" type="button">×</button>
+                            <h4 class="modal-title">Delete Confirm Dialog</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form role="form" action="{% url 'exchange_rate_delete' exchangerate.id  menu_type %}" method="post">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                                </div>
+                                <button type="submit" class="btn btn-success">OK</button>
+                                <a class="btn btn-default"
+                                   href="{% url 'exchange_rate_edit' exchangerate.id  menu_type%}">Cancel</a>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog-replace"
+                 class="modal fade">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content" style="top:33%; width: 45%; margin-left: auto; margin-right: auto;">
+                        <div class="modal-header">
+                            <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                            <h4 class="modal-title"> Confirm
+                                Dialog</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form role="form" id="hdReplaceForm" {% if exchangerate.id == None %}
+                                  action="{% url 'exchange_rate_add' menu_type %}"
+                            {% else %} action="{% url 'exchange_rate_edit' exchangerate.id menu_type %}" {% endif %}
+                                  method="post">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="exampleInputEmail1">The record exists in the selected month.</br>Do you
+                                        want to
+                                        replace?</label>
+                                </div>
+                                <button type="submit" id="btnOk" class="btn btn-success">OK</button>
+                                <a data-dismiss="modal" class="btn btn-default"
+                                   type="button">Cancel</a>
+                                <input type="hidden" name="hdReplaceFromCurrency" id="hdReplaceFromCurrency" value=''>
+                                <input type="hidden" name="hdReplaceToCurrency" id="hdReplaceToCurrency" value=''>
+                                <input type="hidden" name="hdReplaceExchangeDate" id="hdReplaceExchangeDate" value=''>
+                                <input type="hidden" name="hdReplaceIsExist" id="hdReplaceIsExist" value='0'>
+                                <input type="hidden" name="hdIsRate" id="hdIsRate" value=''>
+                                <input type="hidden" name="hdIDescription" id="hdIDescription" value=''>
+
+                            </form>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+    function createDate() {
+        var today = new Date();
+        var dd = today.getDate();
+        var mm = today.getMonth()+1; //January is 0!
+        var yyyy = today.getFullYear();
+
+        if(dd<10) {
+            dd='0'+dd
+        }
+
+        if(mm<10) {
+            mm='0'+mm
+        }
+
+        today = yyyy+'-'+mm+'-'+dd;
+        return today;
+
+    }
+        $('#doc_date_view').bind('keydown', function (event) {
+            if (event.which == 13) {
+                date_key_down(this);
+                return false;
+            } else {
+                adjust_input_date(this);
+            }
+        });
+        $('#doc_date_view').on('change', function() {
+            if ($("#doc_date_view").val()){
+                var goodday = takeday($("#doc_date_view").val());
+                $("#id_exchange_date").val(goodday);
+            }else{
+                var date_view = dateView($("#id_exchange_date").val());
+                $("#doc_date_view").val(date_view);
+            }
+            ToCheckExistEdit();
+        });
+        $(document).on('focus', '.select2-selection.select2-selection--single', function (e) {
+            $(this).closest(".select2-container").siblings('select:enabled').select2('open');
+        });
+        $(document).ready(function () {
+            $('#id_exchange_date').addClass('hide');
+            $("#doc_date_view").addClass("default-date-picker");
+            var date_view = dateView($("#id_exchange_date").val());
+            $("#doc_date_view").datepicker('setDate', date_view);
+
+            $("#id_rate").attr('maxlength', '20');
+            $("#id_rate").attr('data-decimals', '10');
+
+            $('#id_from_currency').select2({
+                placeholder: "Select Currency",
+            });
+            $('#id_to_currency').select2({
+                placeholder: "Select Currency",
+            });
+            $('#id_from_currency').on('select2:close', function (e)
+            {
+                $('#id_to_currency').focus();
+            });
+            $('#id_to_currency').on('select2:close', function (e)
+            {
+                $('#id_description').focus();
+            });
+        });
+        $(document).on("blur", "#from_currency", function () {
+            ToCheckExistEdit();
+        });
+        $(document).on("blur", "#to_currency", function () {
+            ToCheckExistEdit();
+        });
+        var oldexchange = $('#id_rate').val();
+        var oldexchangedate = $('#id_exchange_date').val();
+        $('#id_rate').change(function(event) {
+            rate = parseFloat($('#id_rate').val());
+            $('#id_rate').val(rate.toFixed(10));
+        });
+
+        $('#btnSave').on('click', function (event) {
+            var isMessage = $('#message').val();
+            if (typeof isMessage != 'undefined') {
+                $("#is_exist").val('1');
+                $("#hdReplaceIsExist").val('1');
+            }
+            var is_rate = $('#id_rate').val();
+            var is_exist = $('#hdReplaceIsExist').val();
+
+            if ((is_exist == '1') && (is_rate != "")) {
+
+                $('#hdReplaceFromCurrency').val(parseInt($('#id_from_currency option:selected').val()));
+                $('#hdReplaceToCurrency').val(parseInt($('#id_to_currency option:selected').val()));
+                $('#hdReplaceExchangeDate').val($('#id_exchange_date').val());
+                $('#hdIsRate').val($('#id_rate').val());
+                $('#hdIDescription').val($('#id_description').val());
+                event.preventDefault;
+
+                var hdReplaceFromCurrency = $('#hdReplaceFromCurrency').val();
+                var hdReplaceToCurrency = $('#hdReplaceToCurrency').val();
+                var hdReplaceExchangeDate = $('#hdReplaceExchangeDate').val();
+                var hdIsRate = $('#hdIsRate').val();
+                if (hdReplaceFromCurrency!=""& hdReplaceToCurrency!="" & hdReplaceExchangeDate!="" & hdIsRate!="")
+                {
+                     $('#delete-dialog-replace').modal('show');
+                     return false;
+                }
+            }
+            else {
+                event.stopPropagation();
+
+                $('#hdNoReplace').val('1');
+                return true;
+            }
+        });
+
+        function ToCheckExistEdit() {
+            var hdID = $('#hdId').val();
+            var url;
+            var month=$('#id_exchange_date').val();
+
+            if (typeof hdID != 'undefined' && hdID != '') {
+                url = '/currencies/exchange_rate_edit/' + hdID + '/' + {{ menu_type }} +'/'
+            }
+            else {
+                url = '/currencies/exchange_rate_add/' + {{ menu_type }} + '/';
+            }
+
+            $.ajax({
+                method: "POST",
+                url: url,
+                dataType: 'JSON',
+                data: {
+                    'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val(),
+                    from_currency: parseInt($('#id_from_currency option:selected').val()),
+                    to_currency: parseInt($('#id_to_currency option:selected').val()),
+                    exchange_date: $('#id_exchange_date').val(),
+                    is_exist: '0',
+                    hdNoReplace: '0',
+                    rate: $('#id_rate').val(),
+                    description: $('#id_description').val()
+                },
+                success: function (data) {
+                    data = JSON.parse(data);
+                    $("#is_exist").val(data);
+                    $("#hdReplaceIsExist").val(data);
+                    if (data == '1') {
+                        $("#messageReplace").text("Rate already exist in month  " + ($('#id_exchange_date').val()).substr(5, 2));
+                        $('#id_exchange_date').val(month);
+                    }
+                    else {
+                        $("#messageReplace").text("");
+                    }
+                }
+            });
+        }
+    function dateView(date){
+        var pecahin = date.split('-');
+        var today = pecahin[2]+'-'+pecahin[1]+'-'+pecahin[0];
+        return today
+    }
+    function takeday(date) {
+        var pecahin = date.split('-');
+        var today = pecahin[2]+'-'+pecahin[1]+'-'+pecahin[0];
+        return today
+    }
+
+    </script>
+{% endblock %}

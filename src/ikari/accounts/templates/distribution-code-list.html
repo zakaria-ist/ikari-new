@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Distribution Code List{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+
+{% block ar_distribution_code_active %}
+{% if type == '1' %} {# DIS_CODE_TYPE_DICT['AR Distribution Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block ap_distribution_code_active %}
+{% if type == '2' %} {# DIS_CODE_TYPE_DICT['AP Distribution Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_AR_a_active %}
+{% if type == '1' %} {# DIS_CODE_TYPE_DICT['AR Distribution Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_AR_i_active %}
+{% if type == '1' %} {# DIS_CODE_TYPE_DICT['AR Distribution Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_AP_a_active %}
+{% if type == '2' %} {# DIS_CODE_TYPE_DICT['AP Distribution Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_AP_i_active %}
+{% if type == '2' %} {# DIS_CODE_TYPE_DICT['AP Distribution Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    Distribution Code List
+                    <span class="tools pull-right">
+                          {% if request.session.staff_admin %}
+                              <a class="btn btn-success start" href="{% url 'dist_code_add' type %}">
+                                  <i class="glyphicon glyphicon-plus"></i>
+                                  <span>Add new</span>
+                              </a>
+                          {% endif %}
+                    </span>
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table">
+                        <table class="display table table-bordered table-striped"
+                               id="dynamic-table" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Update Date</th>
+                                <th>Code</th>
+                                <th>Description</th>
+                                <th>G/L Account</th>
+                                <th class="text-center">Active</th>
+                                {% if request.session.staff_admin %}
+                                    <th class="text-center">Edit</th>
+                                {% endif %}
+                            </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#dynamic-table').dataTable({
+                "order": [[1, "desc"]],
+                "serverSide": true,
+                "scrollX": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'DistributionCode__asJson' type %}"
+                },
+                "columns": [
+                    {"data": "update_date"},
+                    {"data": "code"},
+                    {"data": "name"},
+                    {"data": "gl_account"},
+                    {
+                        "className": "text-center",
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            if (full.is_active == 'True') {
+                                var mSpan = '<span class="label label-success label-mini">True</span>'
+                                return mSpan
+                            }
+                            else {
+                                var mSpan = '<span class="label label-danger label-mini">False</span>'
+                                return mSpan
+                            }
+                        }
+                    },
+                    {% if request.session.staff_admin %}
+                        {
+                            "className": "text-center",
+                            "orderable": false,
+                            "data": null,
+                            "render": function (data, type, full, meta) {
+                                var button_edit = '<a href=/accounts/dist-code/edit/' + full.id + ' class="fa fa-pencil fa-lg btn btn-primary btn-sm"></a>'
+                                return button_edit;
+                            }
+                        }
+                    {% endif %}
+                ]
+            });
+        });
+    </script>
+{% endblock %}

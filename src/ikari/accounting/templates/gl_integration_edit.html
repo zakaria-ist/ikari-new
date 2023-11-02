@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/jquery-multi-select/css/multi-select.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style-responsive.css' %}"/>
+    {% comment %} <link href="{% static "css/select2/select2.css" %}" rel="stylesheet"> {% endcomment %}
+{% endblock %}
+
+{% block title %}GL Integration Detail{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+
+{% block parent_AP_a_active %}{% if type == 'AP' %}active{% endif %}{% endblock %}
+{% block parent_AP_i_active %}{% if type == 'AP' %}active{% endif %}{% endblock %}
+{% block ap_settings_active %}{% if type == 'AP' %}active{% endif %}{% endblock %}
+
+{% block parent_AR_a_active %}{% if type == 'AR' %}active{% endif %}{% endblock %}
+{% block parent_AR_i_active %}{% if type == 'AR' %}active{% endif %}{% endblock %}
+{% block ar_settings_active %}{% if type == 'AR' %}active{% endif %}{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                {% if type == 'AP' %}
+                    AP GL Integration Detail
+                {% else %}
+                    AR GL Integration Detail
+                {% endif %}
+            </header>
+            <div class="panel-body">
+                <form id="" class="form-horizontal" action="{% url 'gl_integration_edit' id type %}" role="form" method="post" onsubmit="return checkForm(this);"
+                      enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label for="trans_type" class="col-lg-2 col-sm-2 control-label">Transaction Type</label>
+                        <div class="col-lg-8">
+                            {% comment %} <select class="form-control" id="trans_type" name="trans_type">
+                                {% for type in trans_type %}
+                                    <option value="{{ type.0 }}">{{ type.1 }}</option>
+                                {% endfor %}
+                            </select> {% endcomment %}
+                            <input type="text" class="form-control" disabled="true" value="{{ transaction_type }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="trans_field" class="col-lg-2 col-sm-2 control-label">GL Transaction Field</label>
+                        <div class="col-lg-8">
+                            {% comment %} <select class="form-control" id="trans_field" name="trans_field">
+                                {% for field in trans_field %}
+                                    <option value="{{ field.0 }}">{{ field.1 }}</option>{% endfor %}
+                            </select> {% endcomment %}
+                            <input type="text" class="form-control" disabled="true" value="{{ transaction_field }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="example" class="col-lg-2 col-sm-2 control-label">Example</label>
+                        <div class="col-lg-8">
+                            <input id="example" name="example" type="text" class="form-control" disabled="true" value="{{ example }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-12">Choose Segments from list</label>
+                        <div class="col-md-12">
+                            <select multiple="multiple" class="multi-select" id="my_multi_select2"
+                                    name="my_segment_list">
+                                {% for segment in segments_list %}
+                                    <option value="{{ segment.0 }}"
+                                            {% if segment.0 in selected_list %} selected {% endif %}>{{ segment.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <input type="hidden" id="selected_list_data" name="selected_list_data">
+                    </div>
+
+                    <div class="form-group bottom-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" name="btnSave" class="btn btn-success">Save</button>
+                            {% if type == 'AP'%}
+                                <a type="submit" class="btn btn-default" href="{% url 'ap_gl_integration' %}">Cancel</a>
+                            {% else %}
+                                <a type="submit" class="btn btn-default" href="{% url 'ar_gl_integration' %}">Cancel</a>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </section>
+    </div>
+
+{% endblock %}
+
+{% block js %}
+    {% comment %} <script src="{% static "js/select2/select2.js" %}"></script> {% endcomment %}
+    <script type="application/javascript" src="{% static 'js/ga.js' %}?{% now 'H' %}"></script>
+    <script type="text/javascript" src="{% static 'assets/jquery-multi-select/js/jquery.multi-select.js' %}"></script>
+    <script type="text/javascript" src="{% static 'assets/jquery-multi-select/js/jquery.quicksearch.js' %}"></script>
+    <script src="{% static 'js/advanced-form-multiselect.js' %}?{% now 'H' %}"></script>
+    <script>
+        var example = '';
+        var segments_list = [];
+        var selected_list = [];
+        $("#my_multi_select2").on('change', function(){
+            var $el=$("#my_multi_select2");
+            segments_list.length = 0;
+            $el.find('option:selected').each(function(){
+                segments_list.push($(this).text());
+            });
+            if (segments_list.length > selected_list.length) {
+                segments_list.forEach(function(element, indx){
+                    const index = selected_list.indexOf(element);
+                    if (index == -1) {
+                        selected_list.push(element);
+                    }
+                });
+            } else {
+                selected_list.forEach(function(element, indx){
+                    const index = segments_list.indexOf(element);
+                    if (index == -1) {
+                        selected_list.splice(indx, 1);
+                    }
+                });
+            }
+            example = '';
+            selected_list.forEach(function(element, indx){
+                example += (element + '-');
+            });
+            var ex_split = example.split('-');
+            ex_split.length -= 1;
+            example = ex_split.join('-');
+            $('#example').val(example);
+            $('#selected_list_data').val(JSON.stringify(selected_list));
+        });
+        $(document).ready(function () {
+            if ($('#example').val()) {
+                var ex_split = $('#example').val().split('-');
+                selected_list.length = 0;
+                ex_split.forEach(function(element, indx){
+                    selected_list.push(element);
+                });
+                $('#selected_list_data').val(JSON.stringify(selected_list));
+            }
+        });
+    </script>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+{% endblock %}

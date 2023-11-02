@@ -1,0 +1,2392 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    {% load humanize %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <link href="{% static "css/standard_header.css" %}" rel="stylesheet">
+    <style>
+        .hide_column {
+            display: none;
+        }
+        .divTable{
+            display: table;
+            width: 100%;
+        }
+        .divTableRow {
+            display: table-row;
+        }
+        .divTableCell {
+            border: 0px;
+            display: table-cell;
+            padding: 0px 3px 0px 0px;
+        }
+
+        .adv-table ::-webkit-scrollbar {
+          -webkit-appearance: none;
+        }
+        .adv-table ::-webkit-scrollbar-thumb {
+          background-color: rgba(0, 0, 0, 0.3);
+          border-radius: 5px;
+        }
+
+        .modal-backdrop {
+          position: fixed !important
+        }
+
+        @media (min-width: 1200px) {
+            .modal-xlg {
+                width: 70%; 
+            }
+        }
+        .dataTable tbody tr td {
+            word-break: break-word;
+        }
+        .large-width {
+            width: 150px;
+        }
+        .mid-width {
+            width: 120px;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}
+    G/L Journal Entry
+{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block parent_GL_a_active %}active{% endblock %}
+{% block parent_GL_i_active %}active{% endblock %}
+{% block gl_transaction_active %}active{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                {% if journal.id %}
+                    Edit Journal Entry
+                {% else %}
+                    Add Journal Entry
+                {% endif %}
+            </header>
+            <div class="panel-body">
+                <form class="form-horizontal"
+                        {% if journal.id %}
+                      action="{% url 'journal_GL_edit' journal.id %}"
+                        {% else %}
+                      action="{% url 'journal_GL_add' batch_id %}"
+                        {% endif %}
+                      role="form" method="post"  onsubmit="return checkForm(this);" enctype="multipart/form-data" id="frmglentry">
+
+                    {% csrf_token %}
+                    <input type="text" class="hide" id="is_period_closed" name="is_period_closed" value="{{ data_anu.is_period_closed }}">
+
+                    <!-- First row -->
+                    <div class="form-group">
+                        <div class="col-xs-6 display_block">
+                          <label for="code" class="col-lg-12 control-label">Batch Number</label>
+                          <div class="col-lg-12 display_flex full_width">
+                              <div class="">
+                                  {% if prev_batch != 0 %}
+                                      <button type="button" class="btn btn-white" onclick="checkInput({{prev_batch}}, {{prev_status}})"><i class="fa fa-chevron-left"></i></button>
+                                  {% else %}
+                                      <button type="button" class="btn btn-white" disabled><i class="fa fa-chevron-left"></i></button>
+                                  {% endif %}
+                              </div>
+                              <div class="" style="margin: 0 10px 0 10px">
+                                  <div class=" center date_length">
+                                    {{ batch_form.batch_no }}
+                                  </div>
+                              </div>
+                              <div class="">
+                                  {% if next_batch != 0 %}
+                                      <button type="button" class="btn btn-white" onclick="checkInput({{next_batch}}, {{next_status}})"><i class="fa fa-chevron-right"></i></button>
+                                  {% else %}
+                                      <button type="button" class="btn btn-white" disabled><i class="fa fa-chevron-right"></i></button>
+                                  {% endif %}
+                              </div>
+                              <div class="" style="margin: 0 10px 0 10px">
+                                    <a class="btn btn-success start" href="/accounting/add/GL/0/">
+                                        <i class="glyphicon glyphicon-plus"></i>
+                                    </a>
+                              </div>
+                          </div>
+                        </div>
+                        <div class="col-xs-6 display_block">
+                          <label for="entries" class="col-lg-12 control-label">Entries</label>
+                          <div class="col-lg-12 full_width">
+                              <div class="center" style="width: 60px">
+                                <input id="journal_count" class="form-control text-right" name="journal_count" type="text" value="{{ data_anu.journal_count }}" readonly="true" tabindex="-1">
+                              </div>
+                          </div>
+                        </div>
+                    </div>
+
+                    <!-- Secind row -->
+                    <div class="form-group">
+                        <div class="col-xs-6 display_block">
+                          <label for="name" class="col-lg-12 full_width control-label">Batch Description</label>
+                          {% if batch_form %}
+                              <div class="col-lg-12 full_width">
+                                  <div class="dscrp_length">
+                                    {{ batch_form.description }}
+                                  </div>
+                              </div>
+                          {% else %}
+                              <div class="col-lg-12 full_width">
+                                  <div class="dscrp_length">
+                                    <input class="form-control txtbatchdesc" type="text" value="">
+                                  </div>
+                              </div>
+                          {% endif %}
+                        </div>
+                        <div class="col-xs-6 display_block">
+                          <label for="posting_date" class="col-lg-12 control-label">Debits</label>
+                          <div class="col-lg-12 full_width">
+                              <div class="amount_length">
+                                {{ batch_form.debit_amount }}
+                              </div>
+                          </div>
+                        </div>
+                    </div>
+
+                    <!-- Third row -->
+                    <div class="form-group">
+                        <div class="col-xs-6 display_block">
+                          <label for="entry_num" class="col-lg-12 control-label">Entry Number</label>
+                          <div class="col-lg-12 full_width">
+                            <!-- {{ form.code }} -->
+                             <div style="display: flex">
+                              {% comment %} {% if journal.status != 6 %} {# STATUS_TYPE_DICT['Auto Reverse Entry'] #}
+                              <div>
+                                  <button type="button" id="entry_num_backward" class="btn btn-white" tabindex="-1"><i class="fa fa-step-backward"></i></button>
+                              </div>
+                              <div class="divTableCell">
+                                <a id="entry_num_sub" class="btn btn-white" style="margin: 0 5px 0 5px"><i class="fa fa-chevron-left"></i></a>
+                              </div>
+                              {% endif %} {% endcomment %}
+                              <div class="">
+                                {% if first_journal != 0 %}
+                                    <button type="button" class="btn btn-white" tabindex="-1" onclick="checkInput({{first_journal}}, {{first_status}})"><i class="fa fa-step-backward"></i></button>
+                                {% else %}
+                                    <button type="button" class="btn btn-white" tabindex="-1" disabled><i class="fa fa-step-backward"></i></button>
+                                {% endif %}
+                              </div>
+                              <div class="" style="margin: 0 10px 0 10px;">
+                                {% if prev_journal != 0 %}
+                                    <button type="button" class="btn btn-white" tabindex="-1" onclick="checkInput({{prev_journal}}, {{first_status}})"><i class="fa fa-chevron-left"></i></button>
+                                {% else %}
+                                    <button type="button" class="btn btn-white" tabindex="-1" disabled><i class="fa fa-chevron-left"></i></button>
+                                {% endif %}
+                              </div>
+                              <div class="divTableCell">
+                                  <div class="center" style="width: 90px">
+                                    {{ form.code }}
+                                  </div>
+                              </div>
+                              {% comment %} {% if journal.status != 6 %} {# STATUS_TYPE_DICT['Auto Reverse Entry'] #}
+                              <div class="divTableCell">
+                                  <a id="entry_num_add" class="btn btn-white" style="margin: 0 5px 0 5px"><i class="fa fa-chevron-right"></i></a>
+                              </div>
+                              <div>
+                                <button type="button" id="entry_num_foward" class="btn btn-white" tabindex="-1"><i class="fa fa-step-forward"></i></button>
+                              </div>
+                              {% endif %} {% endcomment %}
+                              <div class="" style="margin: 0 10px 0 10px;">
+                                {% if next_journal != 0 %}
+                                    <button type="button" class="btn btn-white" tabindex="-1" onclick="checkInput({{next_journal}}, {{last_status}})"><i class="fa fa-chevron-right"></i></button>
+                                {% else %}
+                                    <button type="button" class="btn btn-white" tabindex="-1" disabled><i class="fa fa-chevron-right"></i></button>
+                                {% endif %}
+                              </div>
+                              <div>
+                                {% if last_journal != 0 %}
+                                    <button type="button" class="btn btn-white" tabindex="-1" onclick="checkInput({{last_journal}}, {{last_status}})"><i class="fa fa-step-forward"></i></button>
+                                {% else %}
+                                    <button type="button" class="btn btn-white" tabindex="-1" disabled><i class="fa fa-step-forward"></i></button>
+                                {% endif %}
+                              </div>
+                              <div>
+                                <button id="btnSearchEntry" type="button" class="btn btn-info" tabindex="-1"
+                                        data-toggle="modal" href="#searchEntryModal" style="margin: 0 0 0 5px"><i class="fa fa-search"></i></button>
+                              </div>
+                              {% if batch.id and batch.id != '0' %}
+                                <a class="btn btn-success start sended" style="margin: 0 10px 0 10px" href="/accounting/add/GL/{{ batch.id }}/">
+                                    <i class="glyphicon glyphicon-plus"></i>
+                                </a>
+                              {% endif %}
+                            </div>
+                          </div>
+                        </div>
+                        <div class="col-xs-6 display_block">
+                          <label for="posting_date" class="col-lg-12 control-label">Credits</label>
+                          <div class="col-lg-12 full_width">
+                              <div class="amount_length">
+                                {{ batch_form.credit_amount }}
+                              </div>
+                          </div>
+                        </div>
+                    </div>
+
+                    <!-- Fourth row -->
+                    <div class="form-group">
+                        <div class="col-xs-6 display_block">
+                          <label for="entry_desc" class="col-lg-12 control-label">Entry Description</label>
+                          <div class="col-lg-12 full_width">
+                              <div class="dscrp_length">
+                                {{ form.name }}
+                              </div>
+                          </div>
+                        </div>
+                        <div class="col-xs-6 display_block">
+                          <label for="status" class="col-lg-12 control-label">Status</label>
+                          <div class="col-lg-12 full_width">
+                              <div class="date_length">
+                                <input class="form-control text-right" name="status" type="text" tabindex="-1"
+                                       value="{% if batch.status == 1 %}Open
+                                              {% elif batch.status == 2 %}Posted
+                                              {% endif %}" readonly="true">
+                              </div>
+                          </div>
+                        </div>
+                    </div>
+
+                    <!-- Fifth row -->
+                    <div class="form-group">
+                        <div class="col-xs-3 display_block">
+                          <label for="document_date" class="col-lg-12 control-label">Date</label>
+                          <div class="col-lg-12 full_width">
+                              <div class="date_length">
+                                {{ form.document_date }}
+                                 <input type="text" name="doc_date_vue" id="doc_date_vue" class="sended fieldset form-control form-control-inline input-medium default-date-picker">
+                              </div>
+                          </div>
+                        </div>
+                        <div class="col-xs-3 display_block">
+                          <label for="year_period" class="col-lg-12 control-label">Year/Period</label>
+                          <div class="col-lg-12 full_width">
+                              <div style="width: 80px">
+                                <input type="text" class="hide" id="perd_year" name="perd_year" value="{{journal.perd_year}}">
+                                <input type="text" class="hide" id="perd_month" name="perd_month" value="{{journal.perd_month}}">
+                                <input id="year_period" class="form-control" name="year_period" value="{{journal.perd_month}}-{{journal.perd_year}}" required="required" disabled tabindex="-1">
+                                <!-- <select id="year_period" class="form-control trs-field fieldset" name="year_period" required="required">
+                                </select> -->
+                              </div>
+                          </div>
+                        </div>
+                        {% if journal.status != 6 %} {# STATUS_TYPE_DICT['Auto Reverse Entry'] #}
+                        <div class="col-xs-6">
+                          <label class="col-lg-12 control-label">&nbsp</label>
+                          <div class="col-lg-12 control-label full_width checkbox checkbox-primary">
+                              <input name="is_auto_reverse" id="is_auto_reverse" class="styled fieldset" type="checkbox" {% if journal.is_auto_reverse %}checked{% endif %}/>
+                              <label for="is_auto_reverse">Auto Reverse</label>
+                          </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Sixth row -->
+                    <div class="form-group">
+                        <div class="col-xs-3 display_block">
+                          <label for="source_type" class="col-lg-12 control-label">Source Code<span
+                                  class="span-required">(*)</span></label>
+                          <div class="col-lg-12 full_width">
+                              <select class="form-control fieldset hdrdata sended" id="source_type" name="source_type" required="required">
+                                  {% for type in source_type_list %}
+                                      {% if type.0 == journal.source_type %}
+                                          <option value="{{ type.0 }}" selected>{{ type.0 }}</option>
+                                      {% else %}
+                                          <option value="{{ type.0 }}">{{ type.0 }}</option>
+                                      {% endif %}
+                                  {% endfor %}
+                              </select>
+                          </div>
+                        </div>
+                        <div class="col-xs-4 display_block">
+                          <label class="col-lg-12 control-label full_width">&nbsp</label>
+                          <div class="col-lg-12">
+                              <div class="dscrp_length">
+                                <input class="form-control" id="source_type_name" name="source_type_name" type="text"
+                                value="{{ data_anu.source_type_name }}" readonly="true" tabindex="-1">
+                              </div>
+                          </div>
+                        </div>
+
+                        {% comment %} <label for="source_type" class="col-lg-2 col-sm-2 control-label">Source Code<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-2 col-sm-2">
+                            {{ form.source_type }}
+                        </div>
+                        <div class="col-lg-1 col-sm-1">
+                            <button id="btnSearchSourceType" type="button" class="btn btn-info fieldset" data-toggle="modal"
+                                    href="#mySourceTypeModal"><i class="fa fa-search"></i></button>
+                        </div> {% endcomment %}
+                    </div>
+
+                    <div class="form-group">
+                      {% if journal.status != 6 %} {# STATUS_TYPE_DICT['Auto Reverse Entry'] #}
+                      <div class="col-xs-5">
+                        <div id="div_rv_period_opt" class="col-lg-12">
+                            <select id="rv_period_opt" class="form-control fieldset" name="rv_period_opt">
+                                {% if journal.id %}
+                                    <option value="1" {% if journal.reverse_to_period == '1' %}selected{% endif %}>Next Period</option>
+                                    <option value="2" {% if journal.reverse_to_period == '2' %}selected{% endif %}>Specific Period</option>
+                                {% else %}
+                                    <option value="1" selected>Next Period</option>
+                                    <option value="2">Specific Period</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                      </div>
+                      <div id="div_rv_period" class="col-lg-2 col-md-2"><input id="rv_period" name="rv_period" type="text" class="form-control fieldset" value="{{ journal.reverse_to_period_val|date:"m-Y" }}"></div>
+                      {% endif %}
+                    </div>
+
+
+                    <div id="error_msg" class="form-group hide_column">
+                        <div class="col-lg-2 col-sm-2"></div>
+                        <span id="srccode_error" class="col-lg-10 col-sm-10 messages" style="text-align: left; font-size: 14.5px !important;"></span>
+                    </div>
+                    {% comment %} <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-5 col-sm-5">
+                            <input class="form-control" id="source_type_name" name="source_type_name" type="text"
+                            value="{{ data_anu.source_type_name }}" readonly="true">
+                        </div>
+                    </div> {% endcomment %}
+                    <div class="form-group control-label">
+                        <div class="col-xs-12">
+                          <label for="entry_mode" class="col-lg-2 col-md-2 control-label">Entry Mode</label>
+                          <label class="radio-inline">
+                          <input class="fieldset" type="radio" name="radioOptions" id="entry_mode_1" value="1">
+                              Normal</label>
+
+                          <label class="radio-inline">
+                          <input class="fieldset" type="radio" name="radioOptions" id="entry_mode_2" value="2">
+                              Quick</label>
+                        </div>
+                    </div>
+
+                    <hr style="margin: 0px -15px 15px -15px;" />
+
+                    <div class="form-group" style="margin-bottom: 0px">
+                        <div class="col-lg-12" style="margin-bottom: 0px">
+                            <input type="text" class="hide" id="BatchID" name="BatchID" value="{{ batch_id }}">
+                            <input type="text" class="hide" id="JournalID" name="JournalID" value="{{ journal.id }}">
+                            <input type="text" class="hide" id="transaction_list_data" name="transaction_list_data">
+                            <input type="text" class="hide" id="company_curr_id" name="company_curr_id" value="{{ data_anu.to_currency }}">
+                            <input type="text" class="hide hdrdata" id="total_amt" name="total_amt" value="0">
+                            <input type="text" class="hide" id="input_state" name="input_state" value="{{ data_anu.input_state }}">
+                            <input type="text" class="hide hdrdata" id="journal_curr_id" name="journal_curr_id" value="{{journal.currency_id}}">
+                            <input type="text" class="hide" id="journal_curr_code" name="journal_curr_code" value="{{journal.currency.code}}">
+                            <input type="text" class="hide" id="txtexcrateid" name="txtexcrateid" value="0">
+                            <div class="adv-table table-responsive"
+                                 style="overflow-x: scroll; overflow-y: auto; margin-bottom: 0px;">
+                                <table class="display table table-bordered table-striped"
+                                       id="dynamic-table" style="width:100%; table-layout:fixed">
+                                    <thead>
+                                    <tr>
+                                        <th id="trs-line">Line</th>
+                                        <th id="trs-reference">Reference</th>
+                                        <th id="trs-description">Description</th>
+                                        <th id="trs-account">Account</th>
+                                        <th id="trs-currency">Currency</th>
+                                        <th id="trs-srcdebit">Source Debit</th>
+                                        <th id="trs-srccredit">Source Credit</th>
+                                        <th id="trs-exchange_rate">Exchange Rate</th>
+                                        <th id="trs-funcdebit">Functional Debit</th>
+                                        <th id="trs-funccredit">Functional Credit</th>
+                                        <th id="trs-comment">Comments</th>
+                                        <th id="trs-options">Options</th>
+                                        <th id="trs-id" class="hide_column">ID</th>
+                                        <th id="trs-account_id" class="hide_column">Account Id</th>
+                                        <th id="trs-currency_id" class="hide_column">Currency Id</th>
+                                        <th id="trs-delete" class="hide_column">Delete</th>
+                                        <th id="trs-is_auto_exch" class="hide_column">Auto Exchange</th>
+                                        <th id="trs-is_decimal" class="hide_column"></th>
+                                        <th id="trs-row_number" class="hide_column"></th>
+                                        <th id="trs-rate_date" class="hide_column"></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for transaction in transactions %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td>{{ transaction.reference|default:"" }}</td>
+                                            <td>{{ transaction.description|default:"" }}</td>
+                                            <td>{{ transaction.account.code }} - {{transaction.account.name }}</td>
+                                            <td>{{ transaction.currency.code }}</td>
+                                            {% if transaction.currency.is_decimal %}
+                                            <td>{% if transaction.is_debit_account %}{{ transaction.total_amount|floatformat:2|intcomma}}{% else %}0.00{% endif %}</td>
+                                            <td>{% if transaction.is_credit_account %}{{ transaction.total_amount|floatformat:2|intcomma }}{% else %}0.00{% endif %}</td>
+                                            {% else %}
+                                            <td>{% if transaction.is_debit_account %}{{ transaction.total_amount|floatformat:0|intcomma}}{% else %}0{% endif %}</td>
+                                            <td>{% if transaction.is_credit_account %}{{ transaction.total_amount|floatformat:0|intcomma }}{% else %}0{% endif %}</td>
+                                            {% endif %}
+                                            <td>{{ transaction.exchange_rate|intcomma }}</td>
+                                            {% if company_is_decimal %}
+                                            <td>{% if transaction.functional_balance_type == '1' %}{{ transaction.functional_amount|floatformat:2|intcomma}}{% else %}0.00{% endif %}</td>
+                                            <td>{% if transaction.functional_balance_type == '2' %}{{ transaction.functional_amount|floatformat:2|intcomma}}{% else %}0.00{% endif %}</td>
+                                            {% else %}
+                                            <td>{% if transaction.functional_balance_type == '1' %}{{ transaction.functional_amount|floatformat:0|intcomma}}{% else %}0{% endif %}</td>
+                                            <td>{% if transaction.functional_balance_type == '2' %}{{ transaction.functional_amount|floatformat:0|intcomma}}{% else %}0{% endif %}</td>
+                                            {% endif %}
+                                            <td>{{ transaction.remark|default:"" }}</td>
+                                            <td>
+                                                <div class="btn-group dropdown">
+                                                     <button type="button"
+                                                        class="btn btn-primary btn-sm dropdown-toggle set_line"
+                                                        data-toggle="dropdown" aria-haspopup="true"
+                                                        aria-expanded="false" style="min-width: 40px!important;">Action<span
+                                                        class="caret" style="margin-left:15px;"></span><span
+                                                        class="sr-only">Toggle Dropdown</span></button>
+                                                    <ul class="dropdown-menu dropdown-menu-right">
+                                                        <li id="active-{{ forloop.counter }}">
+                                                            {% if data_anu.input_state != '2' %}
+                                                                {% comment %} <a onclick="NewTransactionModal({{ transaction.id }}, {{ forloop.counter }})">New</a> {% endcomment %}
+                                                                <a onclick="editOldTransactionModal({{ transaction.id }}, {{ forloop.counter }})">Edit</a>
+                                                                <a onclick="deleteOldTransactionModal({{ transaction.id }},{{ transaction.is_debit_account|yesno:'true,false' }},{{ transaction.functional_amount }},{{ journal.id }})">Delete</a>
+                                                            {% else %}
+                                                                <a onclick="editOldTransactionModal({{ transaction.id }}, {{ forloop.counter }})">View</a>
+                                                            {% endif %}
+                                                        </li>
+                                                        <li id="deactive-{{ forloop.counter }}" style="display: none">
+                                                            <a onclick="restoreOldTransaction({{ forloop.counter }})">Restore</a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                            <td class="hide_column">{{ transaction.id }}</td>
+                                            <td class="hide_column">{{ transaction.account_id }}</td>
+                                            <td class="hide_column">{{ transaction.currency_id }}</td>
+                                            <td class="hide_column"></td>
+                                            {% if transaction.is_auto_exch %}
+                                                <td class="hide_column">{{ 1 }}</td>
+                                            {% else %}
+                                                <td class="hide_column">{{ "" }}</td>
+                                            {% endif %}
+                                            <td class="hide_column"></td>
+                                            <td class="hide_column">{{ forloop.counter }}</td>
+                                            <td class="hide_column">{{ transaction.rate_date }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                    <tfoot>
+                                    <tr>
+                                        <th colspan="11" style="text-align: left;">
+                                            <!-- <a id="btnAddTransDialog" data-toggle="modal" href="#AddTransModal" class="btn btn-white fa fa-plus sended"></a> -->
+                                            <a id="btnAddTransDialog" href="javascript:void(0);" onclick="showTransactionModal()" class="btn btn-white fa fa-plus sended fieldset"></a>
+                                        </th>
+                                    </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                            <div class="form-group display_flex">
+                              <div class="col-xs-3">
+                                <!-- DECOI -->&nbsp
+                              </div>
+                                <div class="col-xs-3 display_block">
+                                  <label for="txttrxdebits" class="col-lg-12 control-label">Debits</label>
+                                  <div class="col-lg-12 full_width">
+                                      <div class="amount_length">
+                                        <input class="form-control text-right" id="txttrxdebits" type="text" value="{{ data_anu.total_debit }}" readonly="readonly" tabindex="-1">
+                                      </div>
+                                  </div>
+                                </div>
+                                <div class="col-xs-3 display_block">
+                                  <label for="txttrxcredits" class="col-lg-12 control-label">Credits</label>
+                                  <div class="col-lg-12 full_width">
+                                      <div class="amount_length">
+                                        <input class="form-control text-right" id="txttrxcredits" type="text" value="{{ data_anu.total_credit }}" readonly="readonly" tabindex="-1">
+                                      </div>
+                                  </div>
+                                </div>
+                                <div class="col-xs-3 display_block">
+                                  <label for="txtunbalance" class="col-lg-12 control-label" style="padding-right: 0">Out of Balance By</label>
+                                  <div class="col-lg-12 full_width">
+                                      <div class="amount_length">
+                                        <input class="form-control text-right" id="txtunbalance" type="text" value="{{ data_anu.unbalance_amount|intcomma }}" readonly="readonly" tabindex="-1">
+                                      </div>
+                                  </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="div_journal_errorr" class="form-group text-center hide_column">
+                        <span id="journal_error" class="col-lg-12 col-sm-12 messages" style="font-size: 14.5px !important;"></span>
+                    </div>
+                    <div class="form-group">
+                    </div>
+                    <div class="form-group">
+                        <div class="col-lg-offset-5 col-lg-6">
+                            {% if data_anu.input_state != '2' %}
+                                {% if journal.id %}
+                                    <a class="btn btn-danger sended" onclick="deleteGL('{{journal.id}}')">Delete</a>
+                                {% endif %}
+                                <button type="submit" data-url="{% url 'journal_list' 5 batch_id %}" class="btn btn-success sended" id="btnSaveJournal" name="btnSave" onclick="SaveData()">Save</button> {# TRANSACTION_TYPES['GL'] #}
+                                {% if batch.id %}
+                                    <a class="btn btn-default" href="{% url 'journal_list' 5 batch_id %}">Cancel</a> {# TRANSACTION_TYPES['GL'] #}
+                                {% else %}
+                                    <a class="btn btn-default" href="{% url 'batch_list' 5 %}">Cancel</a> {# TRANSACTION_TYPES['GL'] #}
+                                {% endif %}
+                            {% else %}
+                                <a class="btn btn-danger" id="btnReverseTrx" name="btnReverse" onclick="showReverseTrxModal()">Reverse</a>
+                                <a class="btn btn-primary" href="{% url 'journal_list' 5 batch_id %}">Close</a> {# TRANSACTION_TYPES['GL'] #}
+                            {% endif %}
+                        </div>
+                    </div>
+                </form>
+
+                <!-- confirm to add new transactions -->
+                <div class="modal fade" id="entry_add_dialog" tabindex="-1" role="dialog"
+                     aria-labelledby="myModalLabel"
+                     aria-hidden="true">
+                    <div class="modal-dialog modal-sm">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                                <h4 class="modal-title">Add New Entry Dialog</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-group" style="font-size: 14px ">
+                                    <label>Are you sure want to add new journal to this batch ?</label>
+                                </div>
+                                <button id="entry_add_dialog_OK" class="btn btn-success">OK</button>
+                                <a aria-hidden="true" data-dismiss="modal" class="btn btn-default">Cancel</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- confirm to add new transactions -->
+
+                <div class="modal fade" id="searchEntryModal" tabindex="-1" role="dialog"
+                     aria-labelledby="searchEntryModal" aria-hidden="true">
+                    <div class="modal-dialog modal-xlg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal"
+                                        aria-hidden="true">&times;</button>
+                                <h4 class="modal-title">Search Entry</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="adv-table table-responsive">
+                                    <table class="display table table-bordered table-striped table-hover"
+                                           id="search_entry_table" style="width: 100%">
+                                        <thead>
+                                        <tr>
+                                            <th style="min-width: 80px !important">Batch Number</th>
+                                            <th>ID</th>
+                                            <th>Entry Number</th>
+                                            <th>Entry Description</th>
+                                            <th>Source Ledger</th>
+                                            <th>Fiscal Year</th>
+                                            <th>Fiscal Period</th>
+                                            <th>Posting Date</th>
+                                            <th class="text-center" style="min-width:90px!important;">View</th>
+                                        </tr>
+                                        </thead>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- modal add detail GL -->
+                <div class="form-group form-horizontal">
+                    <div class="col-lg-12">
+                        <div class="modal fade" id="AddTransModal" role="dialog"
+                             aria-labelledby="myModalLabel"
+                             aria-hidden="true">
+                            <div class="modal-dialog modal-lg"
+                                 style="width: 80%; padding-left: 10%; padding-right: 10%;">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal"
+                                                aria-hidden="true">&times;</button>
+                                        <h4 class="modal-title"><strong>Transaction</strong></h4>
+                                    </div>
+                                    <div class="modal-body" style="margin-bottom: 0px; padding-bottom: 0px">
+                                        <section class="panel">
+                                            <div class="row">
+                                                <div class="panel-body" style="font-size: 14px!important;">
+                                                    <div class="adv-table" id="myDialog">
+                                                        <div id="div_transaction_error" class="form-group hide_column text-center">
+                                                            <span id="transaction_error" class="col-lg-12 col-sm-12 messages" style="font-size: 14.5px !important;"></span>
+                                                        </div>
+                                                        {% include 'modal_navigation.html' %}
+                                                        <div class="form-group">
+                                                            <div class="hide_column">
+                                                                <input type="text" name="txttrxid">
+                                                            </div>
+                                                            <label for="reference"
+                                                                   class="col-lg-2 col-sm-2 control-label">Reference</label>
+                                                            <div class="col-lg-10 col-sm-10">
+                                                                <input id="txtref" type="text"
+                                                                    class="form-control trs-field fieldset"
+                                                                    name ="txtref" autofocus>
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="description"
+                                                                   class="col-lg-2 col-sm-2 control-label">Description</label>
+                                                            <div class="col-lg-10 col-sm-10">
+                                                                <input id="txtdesc" type="text"
+                                                                    class="form-control trs-field fieldset">
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="txtacccode"
+                                                                   class="col-lg-2 col-sm-2 control-label">Account</label>
+                                                            <div class="hide_column">
+                                                                <input type="text" id="txtaccid">
+                                                            </div>
+                                                            <div class="col-lg-3 col-sm-3">
+                                                                {% comment %} <input id="txtacccode" type="text"
+                                                                    class="form-control trs-field fieldset"
+                                                                    name="txtacccode" required="required"> {% endcomment %}
+                                                                <select id="txtacccode"
+                                                                    class="form-control trs-field fieldset"
+                                                                    name="txtacccode" required="required">
+                                                                    {% for acc in account_list %}
+                                                                    <option value="{{acc.id}}">{{acc.code}}</option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-lg-1 col-sm-1">
+                                                                <button id="btnOpentAccountDialog" type="button"
+                                                                        class="btn btn-info fieldset" data-toggle="modal" tabindex="-1"
+                                                                        href="#myAccountCodeModal">
+                                                                        <i class="fa fa-search"></i>
+                                                                </button>
+                                                            </div>
+                                                            <div class="col-lg-6 col-sm-6">
+                                                                <input class="form-control trs-field" type="text" tabindex="-1"
+                                                                       name="account_desc"
+                                                                       id="account_desc" disabled>
+                                                            </div>
+                                                        </div>
+                                                        <div id="error_msg2" class="form-group hide_column">
+                                                            <div class="col-lg-2 col-sm-2"></div>
+                                                            <span id="acccode_error" class="col-lg-8 col-sm-8 messages" style="text-align: left; font-size: 14.5px !important;"></span>
+                                                        </div>
+                                                        <div class="form-group" style="border-bottom: 1px solid #e5e5e5;"></div>
+                                                        <div class="form-group">
+                                                            <div class="hide_column">
+                                                                <input type="text" id="curr_id">
+                                                            </div>
+                                                            <label for="curr_code"
+                                                                   class="col-lg-2 col-sm-2 control-label">Currency
+                                                            </label>
+                                                            <div class="col-lg-3 col-sm-3">
+                                                            <!-- <input type="text" name="curr_code" id="curr_code"> -->
+                                                                <select id="curr_code"
+                                                                    class="form-control trs-field fieldset"
+                                                                    name="curr_code" required="required">
+                                                                   <!--  <option value="0" selected="selected">Select Currency</option>
+                                                                    {% for curr in currency_list %}
+                                                                    <option value="{{curr.id}}" data-name="{{curr.name}}">{{curr.code}}</option>
+                                                                    {% endfor %}-->
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-lg-2 col-sm-2 text-left control-label">
+                                                                <span id="curr_name"></span>
+                                                            </div>
+                                                            <div class="col-lg-3 col-sm-3 checkbox checkbox-primary" style="padding-top: 0px; font-size: 16px">
+                                                                <input class="styled sended" id="id_auto_exch" name="id_auto_exch" type="checkbox">
+                                                                <label for="id_auto_exch">
+                                                                    Auto Exchange Rate
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        <div id="error_msg3" class="form-group hide_column">
+                                                            <div class="col-lg-2 col-sm-2"></div>
+                                                            <span id="curr_error" class="col-lg-8 col-sm-8 messages" style="text-align: left; font-size: 14.5px !important;"></span>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="txtexcrate"
+                                                                   class="col-lg-2 col-sm-2 control-label">Exchange Rate
+                                                                   </label>
+                                                            <div class="col-lg-3 col-sm-3">
+                                                                <input id="txtexcrate" type="number"
+                                                                    class="form-control trs-field text-right fieldset"
+                                                                    name="txtexcrate" value="1.0000000" min="1" required>
+                                                            </div>
+                                                            <div class="col-lg-1 col-sm-1">
+                                                                <button id="btnOpentExchRateDialog" type="button"
+                                                                        class="btn btn-info fieldset" data-toggle="modal" tabindex="-1"
+                                                                        href="#myExchRateModal">
+                                                                        <i class="fa fa-search"></i>
+                                                                </button>
+                                                            </div>
+                                                            <div class="col-lg-1 col-sm-1"></div>
+                                                            <label for="txtexcdate"
+                                                                   class="col-lg-2 col-sm-2 control-label">
+                                                                   Exchange Date
+                                                            </label>
+                                                            <div class="col-lg-3 col-sm-3">
+                                                                <input id="txtexcdate" type="text" class="form-control trs-field text-left" readonly tabindex="-1">
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="txtsrcdebit"
+                                                                   class="col-lg-2 col-sm-2 control-label">
+                                                                   Source Debit</label>
+                                                            <div class="col-lg-3 col-sm-3">
+                                                                <input id="txtsrcdebit" type="text"
+                                                                    class="form-control trs-field text-right"
+                                                                      required="required">
+                                                            </div>
+                                                            <div class="col-lg-2 col-sm-2"></div>
+                                                            <label for="txtsrccredit"
+                                                                   class="col-lg-2 col-sm-2 control-label">
+                                                                   Source Credit</label>
+                                                            <div class="col-lg-3 col-sm-3">
+                                                                <input id="txtsrccredit" type="text"
+                                                                    class="form-control trs-field text-right"
+                                                                      required="required">
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="txtfuncdebit"
+                                                                   class="col-lg-2 col-sm-2 control-label">
+                                                                   Functional Debit
+                                                            </label>
+                                                            <div class="col-lg-3 col-sm-3">
+                                                                <input id="txtfuncdebit" type="text" class="form-control trs-field text-right">
+                                                            </div>
+                                                            <div class="col-lg-2 col-sm-2"></div>
+                                                            <label for="txtfunccredit"
+                                                                   class="col-lg-2 col-sm-2 control-label">
+                                                                   Functional Credit
+                                                            </label>
+                                                            <div class="col-lg-3 col-sm-3">
+                                                                <input id="txtfunccredit" type="text" class="form-control trs-field text-right">
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="txtcomment"
+                                                                   class="col-lg-2 col-sm-2 control-label">Comment</label>
+                                                            <div class="col-lg-10 col-sm-10">
+                                                                <textarea id="txtcomment" class="form-control trs-field fieldset"></textarea>
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group" style="border-bottom: 1px solid #e5e5e5;"></div>
+                                                        <div class="form-group text-center">
+                                                            {% if data_anu.input_state != '2' %}
+                                                                <button data-dismiss="modal" class="btn btn-default" type="button">Cancel</button>
+                                                                <button class="btn btn-success" id="save-trs" type="button">Save</button>
+                                                            {% else %}
+                                                                <button data-dismiss="modal" class="btn btn-success" type="button">Close</button>
+                                                            {% endif %}
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </section>
+                                    </div> <!--end modal body -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--end of modal add detail GL -->
+            </div>
+        </section>
+    </div>
+
+    <!-- modal LOV source_code -->
+    <div class="modal fade" id="mySourceTypeModal" tabindex="-1" role="dialog"
+         aria-labelledby="mySourceTypeModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Source Type</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="source-code-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Source Type</th>
+                                                    <th>Description</th>
+                                                    <th>Select</th>
+                                                </tr>
+                                                </thead>
+                                                {% for source_type in source_type_list %}
+                                                    <tr>
+                                                        <td class="text-left">{{ source_type.0 }}</td>
+                                                        <td class="text-left">{{ source_type.1 }}</td>
+                                                        <td><input type="radio" name="choices"
+                                                                   id="{{ source_type.0 }}"
+                                                                   class="call-checkbox"
+                                                                   value="{{ source_type.1 }}">
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success hide_column" type="button" id="btnSourceTypeSelect">
+                            Select
+                        </button>
+                        <button class="btn btn-success" type="button" id="btnSourceTypeSelect2">
+                            Select
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- end of modal LOV source_code -->
+
+    <!-- modal LOV account_code -->
+    <div class="modal fade" id="myAccountCodeModal" tabindex="-1" role="dialog"
+         aria-labelledby="myAccountCodeModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Account Code</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="account-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Account Code</th>
+                                                    <th>Description</th>
+                                                    <th class="hide_column">Select</th>
+                                                </tr>
+                                                </thead>
+                                                {% for account in account_list %}
+                                                    <tr id="{{ account.id }}">
+                                                        <td class="text-left">{{ account.code }}</td>
+                                                        <td class="text-left">{{ account.name }}</td>
+                                                        <td class="hide_column"><input type="radio" name="choices"
+                                                                   id="{{ account.id }}"
+                                                                   class="call-radio hide_column"
+                                                                   value="{{ account.code }}">
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button data-dismiss="modal" class="btn btn-success" type="button" id="btnSelectAccount">
+                            Select
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- end of modal LOV account_code -->
+
+    <!-- modal LOV exchange rate history -->
+    <div class="modal fade" id="myExchRateModal" tabindex="-1" role="dialog"
+         aria-labelledby="myExchRateModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Currency Rates</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="exchrate-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th id="date">Rate Date</th>
+                                                    <th id="rate">Rate</th>
+                                                    <th id="sel">Select</th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button data-dismiss="modal" class="btn btn-success" type="button" id="btnSelectExchRate">
+                            Select
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- end of modal LOV account_code -->
+
+    {# Comfirm Save Changes #}
+    <div class="modal form-dialog" id="confirmSaveChanges" tabindex="-1" role="dialog" style="padding-top:15%">
+      <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+         <div id="content-dialog" class="panel panel-warning">
+            <div id="header-message" class="panel-heading">Confirmation</div>
+            <div class="panel-body">
+                <div class="col-lg-12" style="margin-left: -15px; margin-right:-15px"><p id="body-message">Do you want to save the changes ?</p></div>
+                <button class="btn btn-default pull-right btnConfirm" type="button"
+                    data-dismiss="modal" style="margin-left:5px">No</button>
+                <a style="margin-right:0px">
+                    <button class="btn btn-primary pull-right btnConfirm" data-isYes="false" id="comfirm-save">Yes</button>
+                </a>
+            </div>
+         </div>
+        </div>
+      </div>
+    </div>
+    {# End Comfirm Save Changes #}
+
+    {# Comfirm Delete Transaction #}
+    <div class="modal fade" id="comfirmDeleteTransactionModal" tabindex="-1" role="dialog"
+         aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <form id="comfirmDeleteTransactionForm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-hidden="true">&times;</button>
+                        <h4 class="modal-title"><strong>Delete Confirm Dialog</strong></h4>
+                    </div>
+                    <div class="modal-body" style="padding-bottom: 0px!important;">
+                        <div class="form-group">
+                            <label>Are you sure want to delete?</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="text-align: center">
+                        <button class="btn btn-default" type="button" data-dismiss="modal">No
+                        </button>
+                        <a>
+                            <button class="btn btn-success" id="comfirm-yes">Yes</button>
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    {# End Comfirm delete Transaction #}
+
+    <!-- modal reverse transaction -->
+    <div class="form-group form-horizontal">
+        <div class="col-lg-12">
+            <div class="modal fade" id="ReverseTrxModal" tabindex="false" role="dialog"
+                 aria-labelledby="myModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog modal-lg"
+                     style="width: 80%; padding-left: 10%; padding-right: 10%;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"
+                                    aria-hidden="true" onclick="deleteEmptyBatch({{batch.batch_type}})">&times;</button>
+                            <h4 class="modal-title"><strong>Create Reversing Batch</strong></h4>
+                        </div>
+                        <div class="modal-body" style="margin-bottom: 0px; padding-bottom: 0px">
+                            <section class="panel">
+                                <div class="row">
+                                    <div class="panel-body" style="font-size: 14px!important;">
+                                        <div class="adv-table" id="myDialog">
+                                            <div id="div_transaction_error" class="form-group hide_column text-center">
+                                                <span id="transaction_error" class="col-lg-12 col-sm-12 messages" style="font-size: 14.5px !important;"></span>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="reverse_option" class="col-lg-3 col-sm-3 control-label">Reverse</label>
+                                                <div class="col-lg-6">
+                                                    <div class="input-group">
+                                                        <input name="reverse_option" value="1" type="radio" checked> Entry <span id="span_journal_no">{{ data_anu.j_no|stringformat:"05d" }}</span> in Batch <span id="span_batch_no">{{ data_anu.batch_no|stringformat:"06d" }}</span>
+                                                    </div>
+                                                    <div class="input-group">
+                                                        <input name="reverse_option" value="2" type="radio"> Batch <span id="span_batch_no">{{ data_anu.batch_no|stringformat:"06d" }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="reverse_batch_num" class="col-lg-3 col-sm-3 control-label">Batch Number</label>
+                                                <div class="col-lg-6 col-sm-6">
+                                                  <!-- {{ form.code }} -->
+                                                   <div class="divTable">
+                                                    <div class="divTableBody">
+                                                        <div class="divTableRow">
+                                                            <div class="divTableCell">
+                                                                <a id="reverse_batch_num_prev" class="btn btn-white fa fa-chevron-left"></a>
+                                                            </div>
+                                                            <div class="divTableCell">
+                                                                <input id="reverse_batch_num" data-batch_id="0" class="form-control" name="reverse_batch_num" type="text" value="000000" maxlength="6" />
+                                                            </div>
+                                                            <div class="divTableCell">
+                                                                <a id="reverse_batch_num_next" class="btn btn-white fa fa-chevron-right"></a>
+                                                            </div>
+                                                            <div class="divTableCell">
+                                                                <button id="btnSearchUnpostedBatch" type="button" class="btn btn-white" data-toggle="modal" href="#UnpostedBatchList"><i class="fa fa-search"></i></button>
+                                                            </div>
+                                                            <div class="divTableCell">
+                                                                <button id="btnNewBatch" type="button" class="btn btn-white"><i class="fa fa-plus" onclick="openNewBatch({{batch.id}},{{batch.batch_type}})"></i></button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="reverse_batch_desc"
+                                                       class="col-lg-3 col-sm-3 control-label">Batch Description</label>
+                                                <div class="col-lg-9 col-sm-9">
+                                                    <input id="reverse_batch_desc" type="text" name="reverse_batch_desc"
+                                                        class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="reverse_entry_desc"
+                                                       class="col-lg-3 col-sm-3 control-label">Entry Description</label>
+                                                <div class="col-lg-9 col-sm-9">
+                                                    <input id="reverse_entry_desc" type="text" name="reverse_entry_desc"
+                                                        class="form-control" value="REVERSING ENTRY">
+                                                </div>
+                                            </div>
+                                            <div class="form-group text-center">
+                                                    <button class="btn btn-danger" id="submit_reverse" type="button" onclick="submitReverseTransaction({{batch.id}} , {{journal.id}})">Process</button>
+                                                    <button data-dismiss="modal" class="btn btn-primary" type="button" onclick="deleteEmptyBatch({{batch.batch_type}})">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div> <!--end modal body -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--end of modal reverse transaction -->
+
+    <!-- modal list of unposted batch -->
+    <div class="modal fade" id="UnpostedBatchList" tabindex="-1" role="dialog"
+         aria-labelledby="myExchRateModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Finder - Batches</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="unposted_batch_table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Batch Number</th>
+                                                    <th>Description</th>
+                                                    <th>Type</th>
+                                                    <th>Status</th>
+                                                    <th>Source Ledger</th>
+                                                    <th>Amount</th>
+                                                    <th>Select</th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-primary" type="button" id="btnSelectBatch">
+                            Select
+                        </button>
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- end of modal list of unposted batch -->
+
+    {#Comfirm reverse transaction#}
+    <div class="modal fade" id="comfirmReverseTransactionModal" tabindex="-1" role="dialog"
+         aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title"><strong>Reverse Transaction</strong></h4>
+                </div>
+                <div class="modal-body" style="padding-bottom: 0px!important;">
+                    <div class="form-group">
+                        <label>Are you sure want to continue?</label>
+                    </div>
+                </div>
+                <div class="modal-footer" style="text-align: center">
+                    <a id="ReverseTransaction_yes"><button class="btn btn-success" type="button">Yes</button></a>
+                    <button class="btn btn-default" type="button" data-dismiss="modal">No</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {#End Comfirm reverse transaction#}
+
+    {#notification#}
+    <div class="modal fade" id="notificationModal" tabindex="-1" role="dialog"
+         aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title"><strong><span id='notificationModal_title'>Notification Title</span></strong></h4>
+                </div>
+                <div class="modal-body" style="padding-bottom: 0px!important;">
+                    <div class="form-group">
+                        <div id="notificationModal_text1" class="text-left">Notification #1</div>
+                        <div id="notificationModal_text2" class="text-left">Notification #2</div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="text-align: center">
+                    <button class="btn btn-primary" type="button" data-dismiss="modal">Ok</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {#End notification#}
+    {#Comfirm Delete journal#}
+    <div class="modal fade" id="comfirmDeleteJournalModal" tabindex="-1" role="dialog"
+         aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title"><strong>Delete Confirm Dialog</strong></h4>
+                </div>
+                <div class="modal-body" style="padding-bottom: 0px!important; padding: 0 3%;">
+                    <form action="">
+                        <div class="form-group">
+                            <label>Are you sure want to delete?</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer" style="text-align: center">
+                    <button class="btn btn-default" type="button" data-dismiss="modal">No
+                    </button>
+                    <a id="comfirm-yes" class="comfirm-yes" href="">
+                        <button class="btn btn-success" type="button">Yes</button>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {#End Comfirm delete journal#}
+
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="text/javascript" src="{% static 'js/standard.js' %}"></script>
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}?{% now 'H' %}"></script>
+    <!-- Jquery UI -->
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="application/javascript" src="{% static 'js/accounting/journal_GL.js' %}?{% now 'H' %}"></script>
+    <script type="text/javascript">
+        var transaction_mix = [];
+        var description = "{{description}}";
+        var reference = "{{reference}}";
+        var saved_prd = "{{journal.perd_month}}";
+        var batch_type = "{{batch.batch_type}}";
+        var source_ledger = "{{batch.source_ledger}}";
+        var source_type = "{{journal.source_type}}";
+        var is_decimal = "{{company_is_decimal}}";
+        var is_currency_decimal = true;
+        var current_line = 0;
+        if (is_decimal == 'True') {
+            is_decimal = true;
+        } else {
+            is_decimal = false;
+        }
+
+        {% for transaction in transactions %}
+            var res = {};
+            res.line = "{{forloop.counter}}";
+            res.reference = "{{transaction.reference}}";
+            res.description = "{{transaction.description}}";
+            res.account_code = "{{transaction.account_code}}";
+            res.account_name = "{{transaction.account_name}}";
+            res.currency_code = "{{transaction.currency_code}}";
+            res.srcdebit = "{{transaction.srcdebit}}";
+            res.srccredit = "{{transaction.srccredit}}";
+            res.exchange_rate = "{{transaction.exchange_rate}}";
+            res.funcdebit = "{{transaction.funcdebit}}";
+            res.funccredit = "{{transaction.funccredit}}";
+            res.comment = "{{transaction.comment}}";
+            res.account_id = "{{transaction.account_id}}";
+            res.currency_id = "{{transaction.currency_id}}";
+            res.is_auto_exch = '"{{transaction.is_auto_exch}}"';
+            res.is_debit_account = "{{isDebit}}";
+            res.is_decimal = is_decimal;
+            res.row_number = "{{forloop.counter}}";
+            transaction_mix.push(res);
+            current_line = current_line + 1;
+        {% endfor %}
+
+        {% comment %} $('#perd_year').val($('#document_date').val().split("-")[0]);
+        $('#perd_month').val($('#document_date').val().split("-")[1]);
+        $('#year_period').val($('#document_date').val().split("-")[1] + "-" + $('#document_date').val().split("-")[0]); {% endcomment %}
+
+        var unpostd_batch = [];
+        {% for elem in unposted_batch %}
+            var obj = {};
+            obj.id = "{{elem.id}}";
+            obj.batch_no = "{{elem.batch_no}}";
+            obj.batch_type = "{{elem.batch_type}}";
+            obj.description = "{{elem.description}}";
+            unpostd_batch.push(obj);
+        {% endfor %}
+        var selected_unpostd_batch = -1;
+
+        var entry_mode = '1';
+        $('#entry_mode_1').prop('checked', true);
+
+        $('input[type=radio][name=radioOptions]').change(function() {
+            entry_mode = this.value;
+        });
+
+        // var list_curr = [];
+        // {% for curr in currency_list %}
+        //     var od = {};
+        //     od.id = "{{curr.id}}";
+        //     od.name = "{{curr.name}}";
+        //     od.code = "{{curr.code}}";
+        //     list_curr.push(od);
+        // {% endfor %}
+        // $.each(list_curr, function(key, value) {
+        //     $('#curr_code')
+        //             .append($("<option></option>")
+        //             .attr("value",value.id)
+        //             .attr("data-name",value.name)
+        //             .text(value.code));
+        // });
+
+        function deleteGL(id) {
+            var url = '/accounting/delete/GL/' + id + '/'
+            $("#comfirmDeleteJournalModal").modal("show");
+            $(".comfirm-yes").attr("href", url);
+        }
+
+        function checkInput(j_id, status){
+            var id = '{{journal.id}}';
+            if (id == '') {
+                pop_ok_cancel_dialog(
+                    "Data loss warning!",
+                    "Unsaved data will be lost. Do you want to proceed?",
+                    function () {
+                        if (status == 1) {
+                            window.location.href = '/accounting/edit/GL/' + j_id + '/';
+                        } else {
+                            window.location.href = '/accounting/view/GL/' + j_id + '/';
+                        }
+                     },
+                    function () {}
+                );
+            } else {
+                if (status == 1) {
+                    window.location.href = '/accounting/edit/GL/' + j_id + '/';
+                } else {
+                    window.location.href = '/accounting/view/GL/' + j_id + '/';
+                }
+            }
+
+        }
+
+        $('#doc_date_vue').keyup(function(event){
+            adjust_input_date(this);
+        });
+        $('#doc_date_vue').bind('keydown', function (event) {
+            if (event.which == 13) {
+                date_key_down(this);
+                return false;
+            }
+        });
+        $('#doc_date_vue').on('change', function() {
+            var dt = $(this).val();
+            if (dt && moment(dt, "DD-MM-YYYY", true).isValid()) {
+                checkPostingDate(dt);
+                var goodday = takeday($("#doc_date_vue").val());
+                $("#document_date").val(goodday);
+                $('#is_auto_reverse').focus();
+                return false;
+    
+            }else{
+                if ($("#document_date").val()) {
+                    var date_view = dateView($("#document_date").val());
+                    $("#doc_date_vue").datepicker('setDate', date_view);
+                    $('#is_auto_reverse').focus();
+                }
+            }
+        });
+
+        function checkPostingDate(post_date) {
+            $.ajax({
+                type: "GET",
+                url: "/accounting/check_fiscal_calendar/" + post_date + "/",
+                success: function (data) {
+                    fiscal_start_date = data.fiscal_start_date;
+                    fiscal_end_date = data.fiscal_end_date;
+                    fiscal_year = data.fiscal_year
+                    fiscal_month = data.fiscal_month
+                    current_month = data.current_month
+                    current_year = data.current_year
+                    if (fiscal_start_date == '' && fiscal_end_date == '') {
+                        pop_ok_dialog("Invalid Document Date",
+                            "Document Date (" + post_date + ") must be in between valid fiscal period.",
+                            function () { $("#doc_date_vue").val(moment().format("DD-MM-YYYY")); })
+                    } else {
+                        if (fiscal_month != current_month || fiscal_year != current_year) {
+                            {% comment %} pop_ok_dialog("Document Date",
+                                "Document Date (" + post_date + ") is not in current fiscal month.",
+                                function () { return; }) {% endcomment %}
+                        }
+                        $("#doc_date_vue").val(post_date);
+                        var goodday = takeday(post_date);
+                        $("#document_date").val(goodday);
+
+                    }
+                    $('#perd_year').val(data.fiscal_year);
+                    $('#perd_month').val(data.fiscal_month);
+                    $('#year_period').val(data.fiscal_month + "-" + data.fiscal_year);
+                }
+            });
+        }
+
+        $(document).ready(function () {
+          if("{{ batch.id }}" != "None") {
+            var dttbl = $('#search_entry_table').DataTable({
+                "order": [[3, "asc"]],
+                "serverSide": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'JournalList__asJson' 5 batch.id %}"
+                },
+                "columns": [
+                    {
+                        "data": "batch_number", "orderable": false,
+                        "width": "55px"
+                    },
+                    {
+                        "data": "id", "orderable": false,
+                        "visible": false,
+                    },
+                    {
+                        "data": "code", "orderable": false,
+                        "width": "10px"
+                    },
+                    {
+                        "data": "name", "orderable": false,
+                        "width": "300px"
+                    },
+                    {
+                        "data": "source_type", "orderable": false,
+                        "width": "50px"
+                    },
+                    {
+                        "data": "fiscal_year", "orderable": false,
+                    },
+                    {
+                        "data": "fiscal_period", "orderable": false,
+                    },
+                    {
+                        "data": "document_date", "orderable": false,
+                    },
+                    {
+                        "sClass": "text-center",
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, row, meta) {
+                            var btn =
+                                    '<div class="btn-group dropdown">' +
+                                    '<button type="button"' +
+                                    'class="btn btn-primary btn-sm dropdown-toggle"' +
+                                    'style="min-width: 30px!important;">';
+                            var btn_blank =
+                                    '<div class="btn-group dropdown">' +
+                                    '<button type="button"' +
+                                    'class="btn btn-default btn-sm dropdown-toggle not-use"' +
+                                    'data-toggle="dropdown" aria-haspopup="true"' +
+                                    'aria-expanded="false"' +
+                                    'style="min-width: 40px!important;">Action' +
+                                    '<span class="caret" style="margin-left:15px"></span>' +
+                                    '<span class="sr-only">Toggle Dropdown</span>' +
+                                    '</button>' +
+                                    '<ul class="dropdown-menu dropdown-menu-right">' +
+                                    '<li>';
+                            if ((row.status == '1') /* STATUS_TYPE_DICT['Open'] */
+                                || (row.status == '2') /* STATUS_TYPE_DICT['Posted'] */
+                                || (row.status == '7') /* STATUS_TYPE_DICT['Prov. Posted'] */
+                                || (row.status == '8')) { /* STATUS_TYPE_DICT['Draft'] */
+                                btn += '<a href="/accounting/view/GL/' + row.id + '/" style="text-decoration: none; color: white">View</a></button>'
+                            } else {
+                                btn = btn_blank;
+                            }
+
+                            btn += '</li></ul/div>';
+                            return btn;
+                        }
+                    }
+                ]
+            });
+          } else {
+            $('#btnSearchEntry').attr('disabled', 'disabled')
+          }
+
+          $('#search_entry_table').parents().eq(0).attr('style', 'overflow: scroll');
+
+          //validateDate('#doc_date_vue', '#post_date_view');
+
+            $('#document_date').addClass('hide');
+            $("#doc_date_vue").addClass("default-date-picker");
+            var date_view = dateView($("#document_date").val());
+            $("#doc_date_vue").datepicker('setDate', date_view);
+            $("#doc_date_vue").trigger('change');
+
+            last_reference = reference;
+            last_description = description;
+
+            // FillYearPeriodOptLst();
+            $('#curr_code').select2({
+                placeholder: "Select currency",
+            });
+            $('#txtacccode').select2({
+                placeholder: "Select Account",
+            });
+            $('#source_type').select2({
+                placeholder: "Select source type",
+            });
+
+            {% if journal.status == 2 or journal.status == 4 %} /* STATUS_TYPE_DICT['Posted'] or STATUS_TYPE_DICT['Reversed']*/
+                $('input').attr('readonly', 'readonly');
+                $(".sended").attr("disabled", "disabled");
+            {% endif %}
+            $('#search_entry_table_filter label input').removeAttr('readonly');
+
+            if (source_type) {
+                $('#source_type').val(source_type).trigger('change');
+            } else {
+                $('#source_type').val(1).trigger('change');
+            }
+            {% comment %} var id_credit_amount = $('#id_credit_amount').val();
+            if(id_credit_amount != 0){
+                var ps1 = id_credit_amount.toString().split(".");
+                var new_id_credit_amount = ps1[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                $('#id_credit_amount').val(new_id_credit_amount+'.'+ps1[1]);
+            }
+            var id_debit_amount = $('#id_debit_amount').val();
+            if(id_debit_amount != 0){
+                var ps2 = id_debit_amount.toString().split(".");
+                var new_id_debit_amount = ps2[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                $('#id_debit_amount').val(new_id_debit_amount+'.'+ps2[1]);
+            }
+            var txttrxdebits = $('#txttrxdebits').val();
+            if(txttrxdebits != 0){
+            var ps2 = txttrxdebits.toString().split(".");
+            var new_txttrxdebits = ps2[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            $('#txttrxdebits').val(new_txttrxdebits+'.'+ps2[1]);
+            }
+
+            var txttrxcredits = $('#txttrxcredits').val();
+            if(txttrxcredits != 0){
+            var ps3 = txttrxcredits.toString().split(".");
+            var new_txttrxcredits = ps3[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            $('#txttrxcredits').val(new_txttrxcredits+'.'+ps3[1]);
+            } {% endcomment %}
+
+            $('html,body').animate({scrollTop:0},0);
+            //$('#btnOpentExchRateDialog').prop('disabled', true);
+
+            if ($('#input_state').val()=='2'){
+                $('.fieldset').prop('disabled', true);
+                $('#btnAddTransDialog').prop('onclick',null).off('click');
+            }
+
+            $('#dynamic-table').DataTable({
+                bFilter: false,
+                bLengthChange: false,
+                ordering: false,
+                bInfo: false,
+                bPaginate: false,
+                //scrollY: '50vh',
+                scrollX: true,
+                scrollCollapse: true,
+                columnDefs: [
+                    {
+                        className: "hide_column",
+                        targets: [12, 13, 14, 15, 16, 17, 18, 19]
+                    },
+                    {
+                        className: "text-right",
+                        targets: [5, 6, 7, 8, 9]
+                    },
+                    {
+                        className: "mid-width",
+                        targets: [1, 2]
+                    },
+                    {
+                        className: "large-width",
+                        targets: [3, 5, 6, 7, 8, 9]
+                    }
+                ]
+            });
+
+            // $('#document_date').change(function(){
+            //     ResetYearPeriodOptLst();
+            // });
+
+            var arr = [];
+            {% for source_type in source_type_list %}
+                arr.push({
+                    code: '{{ source_type.0 }}',
+                    name: '{{ source_type.1 }}'
+                });
+            {% endfor %}
+
+            $('#source_type').on('change', function(){
+                source_type_selected = $('#source_type').val();
+                $.each( arr, function( key, value ) {
+                    if (source_type_selected==value.code){
+                        $("#source_type_name").val(value.name);
+                    }
+                });
+            });
+
+            $('#txtsource_code').keyup(function() {
+                $(this).val($(this).val().toUpperCase());
+            });
+
+            $('#txtsource_code').focusout(function() {
+                var source_type_found = false;
+                var source_type_selected_id = $("#txtsource_code").val();
+                var source_type_desc = '';
+                if (source_type_selected_id!==''){
+                    $.each( arr, function( key, value ) {
+                        if (source_type_selected_id==value.code){
+                            source_type_desc = value.name;
+                            source_type_found = true;
+                        }
+                    });
+                    if (source_type_found){
+                        $("#error_msg").addClass('hide_column');
+                        $("#source_type_name").val(source_type_desc);
+                        if($('.txtbatchdesc').val()) {
+                            $('button[type="submit"]').prop('disabled', false);
+                            $('#btnAddTransDialog').prop('disabled', false);
+                        }
+                    } else {
+                        $("#txtsource_code").val('');
+                        $("#source_type_name").val('');
+                        $("#error_msg").removeClass('hide_column');
+                        $("#srccode_error").text('Source code is not valid. Please type or choose a valid source code !');
+                        $(this).focus();
+                    }
+                } else {
+                    $("#error_msg").addClass('hide_column');
+                }
+            });
+
+            $('.txtbatchdesc').focusout(function(){
+                //if(($('#txtbatchdesc').val()) && ($('#txtsource_code').val())) {
+                if(($('#txtbatchdesc').val()) && ($('#source_type').val())) {
+                    $('button[type="submit"]').prop('disabled', false);
+                    $('#btnAddTransDialog').prop('disabled', false);
+                }
+            });
+
+            $('.call-radio').click(function () {
+                if ($(this).is(':checked'))
+                    $(this).attr('checked', 'checked');
+                else
+                    $(this).removeAttr('checked');
+            });
+
+            $('#btnSearchSourceType').on('click', function () {
+                $("#error_msg").addClass('hide_column');
+                setTimeout(() => {
+                    $('#source-code-table').DataTable().columns.adjust();
+                }, 500);
+            });
+
+            $('#btnOpentAccountDialog').on('click', function () {
+                $("#error_msg2").addClass('hide_column');
+
+                setTimeout(() => {
+                    $('#account-table').DataTable().columns.adjust();
+                }, 500);
+            });
+
+            $('#btnSourceTypeSelect2').on('click', function () {
+                $("#txtsource_code").val($("input[name='choices']:checked").attr('id'));
+                $("#source_type_name").val($("input[name='choices']:checked").attr('value'));
+                if($('.txtbatchdesc').val()) {
+                    $('button[type="submit"]').prop('disabled', false);
+                    $('#btnAddTransDialog').prop('disabled', false);
+                }
+                $(this).attr('data-dismiss', 'modal');
+            });
+
+            $('#account-table').on( 'draw.dt', function () {
+                selectTableRow('#account-table', 2);
+                $("input[type='radio']").each(function () {
+                    $(this).closest('tr').css('background-color', '#f9f9f9');
+                });
+            });
+            $('#source-code-table').on( 'draw.dt', function () {
+                selectTableRow('#source-code-table', 2);
+                $("input[type='radio']").each(function () {
+                    $(this).closest('tr').css('background-color', '#f9f9f9');
+                });
+            });
+
+            $('#btnSelectAccount').on('click', function () {
+                var table = $('#account-table').DataTable();
+                var selectedRow = table.$(".call-radio:checked", {"page": "all"});
+                var row = $('#' + selectedRow[0].id);
+                $('#txtaccid').val(selectedRow[0].id);
+                //$('#txtacccode').val(selectedRow[0].value).trigger('change');
+                $('#txtacccode').val(selectedRow[0].id).trigger('change');
+                $('#account_desc').val(row[0].cells[1].textContent);
+                setCurrency(selectedRow[0].id);
+                table.search('').draw();
+            });
+
+            $('#account-table').DataTable({
+                "iDisplayLength": 10,
+                scrollY: '50vh',
+                scrollCollapse: true,
+                "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]]
+            });
+
+            $('#source-code-table').DataTable({
+                "iDisplayLength": 10,
+                scrollY: '50vh',
+                scrollCollapse: true,
+                "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]]
+            });
+
+            // validate input on transaction modal
+            $('#txtref').on('change',function(){
+                $("#div_transaction_error").addClass('hide_column');
+            });
+
+            var arr2 = [];
+            {% for acc in account_list %}
+                arr2.push({
+                    id: '{{ acc.id }}',
+                    code: '{{ acc.code }}',
+                    name: '{{ acc.name }}'
+                });
+            {% endfor %}
+
+            $('#txtacccode').on('change', function() {
+                var acc_found = false;
+                var acc_code_selected = $("#txtacccode").val();
+                var acc_id = '';
+                var acc_desc = '';
+                if (acc_code_selected!==''){
+                    $.each( arr2, function( key, value ) {
+                        if (acc_code_selected==value.id){
+                            acc_id = value.id;
+                            acc_desc = value.name;
+                            acc_found = true;
+                        }
+                    });
+                    if (acc_found){
+                        $("#error_msg2").addClass('hide_column');
+                        $("#div_transaction_error").addClass('hide_column');
+                        $("#txtaccid").val(acc_id);
+                        $("#account_desc").val(filter_special_char(acc_desc));
+                        setCurrency(acc_id);
+                    } else {
+                        $("#txtacccode").val('');
+                        $("#account_desc").val('');
+                        $("#error_msg2").removeClass('hide_column');
+                        $("#acccode_error").text('Account code is not valid. Please type or choose a valid account code !');
+                        $(this).focus();
+                    }
+                } else {
+                    $("#error_msg2").addClass('hide_column');
+                }
+
+                $('#curr_code').select2('open');
+            });
+            $('#txtacccode').on('select2:close', function (e)
+            {
+                $('#curr_code').select2('open');
+            });
+
+            $('#curr_code').on('change',function(){
+                var isEmptyTable = false;
+                var datatbl = $('#dynamic-table').DataTable();
+                if ( ! datatbl.data().count() ) {
+                    isEmptyTable = true;
+                }
+                var company_curr_id = $('#company_curr_id').val();
+                var last_curr_id = $('#journal_curr_id').val();
+                var last_curr_code = $('#journal_curr_code').val();
+                var curr_id =  $('#curr_code option:selected').val();
+                var curr_code = $('#curr_code option:selected').html();
+                var curr_name = $('#curr_code option:selected').data("name");
+                $('#curr_id').val(curr_id);
+                $('#curr_name').html(curr_name);
+                if(!old_trx){
+                    var auto_exch = $('#id_auto_exch:checkbox:checked').length;
+                    if(curr_id) {
+                        if(auto_exch == 0) {
+                            setExchangeRate(curr_id, company_curr_id);
+                        }
+                    }
+                    $("#div_transaction_error").addClass('hide_column');
+
+                    //$('#btnOpentExchRateDialog').prop('disabled', true);
+                }
+                is_decimal_allow($('#curr_code option:selected').data("is_currency_decimal"));
+            });
+
+            $("#txtexcrate").change(function () {
+                if (!special_trx) {
+                    var amt_d = float_format($("#txtsrcdebit").val());
+                    var amt_c = float_format($("#txtsrccredit").val());
+                    var exc_rate =  float_format($("#txtexcrate").val());
+                    fn_amtd = amt_d*exc_rate;
+                    fn_amtc = amt_c*exc_rate;
+                    if(!is_decimal) {
+                        $("#txtfuncdebit").val(comma_format(fn_amtd, 0));
+                        $("#txtfunccredit").val(comma_format(fn_amtc, 0));
+                    } else {
+                        $("#txtfuncdebit").val(comma_format(fn_amtd));
+                        $("#txtfunccredit").val(comma_format(fn_amtc));
+                    }
+                }
+                setTimeout(() => {
+                    var exch_date = $('#txtexcdate').val();
+                    var year_perd = $('#doc_date_vue').val();
+                    if (exch_date && year_perd) {
+                        if (exch_date.split('-')[1] != year_perd.split('-')[1]) {
+                            pop_ok_dialog("Warning",
+                                "This Exchange Rate is not from current period. It is from (" + exch_date + ") .",
+                                function () { });
+                        } else if (exch_date.split('-')[2] != year_perd.split('-')[2]) {
+                            pop_ok_dialog("Warning",
+                                "This Exchange Rate is not from current period. It is from (" + exch_date + ") .",
+                                function () { });
+                        }
+                    }
+                }, 300);
+
+            });
+
+            $("#txtsrcdebit").change(function () {
+                if (!special_trx) {
+                    $("#div_transaction_error").addClass('hide_column');
+                    var auto_exch = $('#id_auto_exch:checkbox:checked').length;
+                    if(auto_exch == 0) {
+                        var s = float_format($("#txtsrcdebit").val());
+                        if (s!=0||s!='0'){
+                            var rate = float_format($("#txtexcrate").val());
+                            if(!is_decimal) {
+                                {#$("#txtsrcdebit").val(comma_format(s, 0));#}
+                                $("#txtfuncdebit").val(comma_format(float_format($(this).val())*rate, 0));
+                            } else {
+                                {#$("#txtsrcdebit").val(comma_format(s));#}
+                                $("#txtfuncdebit").val(comma_format(float_format($(this).val())*rate));
+                            }
+
+                            if(!is_currency_decimal) {
+                                $("#txtsrcdebit").val(comma_format(s, 0));
+                                {#$("#txtfuncdebit").val(comma_format(float_format($(this).val())*rate, 0));#}
+                            } else {
+                                $("#txtsrcdebit").val(comma_format(s));
+                                {#$("#txtfuncdebit").val(comma_format(float_format($(this).val())*rate));#}
+                            }
+                        } else {
+                            if(!is_decimal) {
+                                $("#txtfuncdebit").val('0');
+                            } else {
+                                $("#txtfuncdebit").val('0.00');
+                            }
+                        }
+                    } else {
+                        var func = float_format($("#txtfuncdebit").val());
+                        var src = float_format($("#txtsrcdebit").val());
+                        if(func > 0 && src > 0) {
+                            $("#txtexcrate").val(float_format(func/src).toFixed(10));
+                            if(!is_decimal) {
+                                $("#txtfuncdebit").val(comma_format(func, 0));
+                                {#$("#txtsrcdebit").val(comma_format(src, 0));#}
+                            } else {
+                                $("#txtfuncdebit").val(comma_format(func));
+                                {#$("#txtsrcdebit").val(comma_format(src));#}
+                            }
+
+                            if(!is_currency_decimal) {
+                                {#$("#txtfuncdebit").val(comma_format(func, 0));#}
+                                $("#txtsrcdebit").val(comma_format(src, 0));
+                            } else {
+                                {#$("#txtfuncdebit").val(comma_format(func));#}
+                                $("#txtsrcdebit").val(comma_format(src));
+                            }
+                        }
+                    }
+
+                    if (!is_decimal) {
+                        {#$("#txtsrccredit").val('0');#}
+                        $("#txtfunccredit").val('0');
+                    } else {
+                        {#$("#txtsrccredit").val('0.00');#}
+                        $("#txtfunccredit").val('0.00');
+                    }
+
+                    if (!is_currency_decimal) {
+                        $("#txtsrccredit").val('0');
+                        {#$("#txtfunccredit").val('0');#}
+                    } else {
+                        $("#txtsrccredit").val('0.00');
+                        {#$("#txtfunccredit").val('0.00');#}
+                    }
+                }
+            });
+
+            $("#txtfuncdebit").change(function () {
+                if (!special_trx) {
+                    $("#div_transaction_error").addClass('hide_column');
+                    var auto_exch = $('#id_auto_exch:checkbox:checked').length;
+                    if(auto_exch == 0) {
+                        var s = float_format($("#txtfuncdebit").val());
+                        if (s!=0||s!='0'){
+                            var rate = float_format($("#txtexcrate").val());
+                            if(!is_decimal) {
+                                $("#txtfuncdebit").val(comma_format(s, 0));
+                                {#$("#txtsrcdebit").val(comma_format(float_format($(this).val())/rate, 0));#}
+                            } else {
+                                $("#txtfuncdebit").val(comma_format(s));
+                                {#$("#txtsrcdebit").val(comma_format(float_format($(this).val())/rate));#}
+                            }
+
+                            if(!is_currency_decimal) {
+                                {#$("#txtfuncdebit").val(comma_format(s, 0));#}
+                                $("#txtsrcdebit").val(comma_format(float_format($(this).val())/rate, 0));
+                            } else {
+                                {#$("#txtfuncdebit").val(comma_format(s));#}
+                                $("#txtsrcdebit").val(comma_format(float_format($(this).val())/rate));
+                            }
+                        } else {
+                            if(!is_currency_decimal) {
+                                $("#txtsrcdebit").val('0');
+                            } else {
+                                $("#txtsrcdebit").val('0.00');
+                            }
+                        }
+                    } else {
+                        var func = float_format($("#txtfuncdebit").val());
+                        var src = float_format($("#txtsrcdebit").val());
+                        if(func > 0 && src > 0) {
+                            $("#txtexcrate").val(float_format(func/src).toFixed(10));
+                            if(!is_decimal) {
+                                $("#txtfuncdebit").val(comma_format(func, 0));
+                                {#$("#txtsrcdebit").val(comma_format(src, 0));#}
+                            } else {
+                                $("#txtfuncdebit").val(comma_format(func));
+                                {#$("#txtsrcdebit").val(comma_format(src));#}
+                            }
+
+                            if(!is_currency_decimal) {
+                                {#$("#txtfuncdebit").val(comma_format(func, 0));#}
+                                $("#txtsrcdebit").val(comma_format(src, 0));
+                            } else {
+                                {#$("#txtfuncdebit").val(comma_format(func));#}
+                                $("#txtsrcdebit").val(comma_format(src));
+                            }
+
+                        }
+                    }
+
+                    if (!is_decimal) {
+                        {#$("#txtsrccredit").val('0');#}
+                        $("#txtfunccredit").val('0');
+                    } else {
+                        {#$("#txtsrccredit").val('0.00');#}
+                        $("#txtfunccredit").val('0.00');
+                    }
+
+                    if (!is_currency_decimal) {
+                        $("#txtsrccredit").val('0');
+                        {#$("#txtfunccredit").val('0');#}
+                    } else {
+                        $("#txtsrccredit").val('0.00');
+                        {#$("#txtfunccredit").val('0.00');#}
+                    }
+                }
+            });
+
+            $("#txtsrccredit").change(function () {
+                if (!special_trx) {
+                    $("#div_transaction_error").addClass('hide_column');
+                    var auto_exch = $('#id_auto_exch:checkbox:checked').length;
+                    if(auto_exch == 0) {
+                        var s = float_format($("#txtsrccredit").val());
+                        if (s!=0||s!='0'){
+                            var rate = float_format($("#txtexcrate").val());
+                            if(!is_decimal) {
+                                {#$("#txtsrccredit").val(comma_format(s, 0));#}
+                                $("#txtfunccredit").val(comma_format(float_format($(this).val())*rate, 0));
+                            } else {
+                                {#$("#txtsrccredit").val(comma_format(s));#}
+                                $("#txtfunccredit").val(comma_format(float_format($(this).val())*rate));
+                            }
+
+                            if(!is_currency_decimal) {
+                                $("#txtsrccredit").val(comma_format(s, 0));
+                                {#$("#txtfunccredit").val(comma_format(float_format($(this).val())*rate, 0));#}
+                            } else {
+                                $("#txtsrccredit").val(comma_format(s));
+                                {#$("#txtfunccredit").val(comma_format(float_format($(this).val())*rate));#}
+                            }
+                        } else {
+                            if(!is_decimal) {
+                                $("#txtfunccredit").val('0');
+                            } else {
+                                $("#txtfunccredit").val('0.00');
+                            }
+                        }
+                    } else {
+                        var func = float_format($("#txtfunccredit").val());
+                        var src = float_format($("#txtsrccredit").val());
+                        if(func > 0 && src > 0) {
+                            $("#txtexcrate").val(float_format(func/src).toFixed(10));
+                            if(!is_decimal) {
+                                $("#txtfunccredit").val(comma_format(func, 0));
+                                {#$("#txtsrccredit").val(comma_format(src, 0));#}
+                            } else {
+                                $("#txtfunccredit").val(comma_format(func));
+                                {#$("#txtsrccredit").val(comma_format(src));#}
+                            }
+
+                            if(!is_currency_decimal) {
+                                {#$("#txtfunccredit").val(comma_format(func, 0));#}
+                                $("#txtsrccredit").val(comma_format(src, 0));
+                            } else {
+                                {#$("#txtfunccredit").val(comma_format(func));#}
+                                $("#txtsrccredit").val(comma_format(src));
+                            }
+
+                        }
+                    }
+
+                    if(!is_decimal) {
+                        {#$("#txtsrcdebit").val('0');#}
+                        $("#txtfuncdebit").val('0');
+                    } else {
+                        {#$("#txtsrcdebit").val('0.00');#}
+                        $("#txtfuncdebit").val('0.00');
+                    }
+
+                    if(!is_currency_decimal) {
+                        $("#txtsrcdebit").val('0');
+                        {#$("#txtfuncdebit").val('0');#}
+                    } else {
+                        $("#txtsrcdebit").val('0.00');
+                        {#$("#txtfuncdebit").val('0.00');#}
+                    }
+                }
+            });
+
+            $("#txtfunccredit").change(function () {
+                if (!special_trx) {
+                    $("#div_transaction_error").addClass('hide_column');
+                    var auto_exch = $('#id_auto_exch:checkbox:checked').length;
+                    if(auto_exch == 0) {
+                        var s = float_format($("#txtfunccredit").val());
+                        if (s!=0||s!='0'){
+                            var rate = float_format($("#txtexcrate").val());
+                            if(!is_decimal) {
+                                $("#txtfunccredit").val(comma_format(s, 0));
+                                {#$("#txtsrccredit").val(comma_format(float_format($(this).val())/rate, 0));#}
+                            } else {
+                                $("#txtfunccredit").val(comma_format(s));
+                                {#$("#txtsrccredit").val(comma_format(float_format($(this).val())/rate));#}
+                            }
+
+                            if(!is_currency_decimal) {
+                                {#$("#txtfunccredit").val(comma_format(s, 0));#}
+                                $("#txtsrccredit").val(comma_format(float_format($(this).val())/rate, 0));
+                            } else {
+                                {#$("#txtfunccredit").val(comma_format(s));#}
+                                $("#txtsrccredit").val(comma_format(float_format($(this).val())/rate));
+                            }
+                        } else {
+                            if(!is_currency_decimal) {
+                                $("#txtsrccredit").val('0');
+                            } else {
+                                $("#txtsrccredit").val('0.00');
+                            }
+
+                        }
+                    } else {
+                        var func = float_format($("#txtfunccredit").val());
+                        var src = float_format($("#txtsrccredit").val());
+                        if(func > 0 && src > 0) {
+                            $("#txtexcrate").val(float_format(func/src).toFixed(10));
+                            if(!is_decimal) {
+                                $("#txtfunccredit").val(comma_format(func, 0));
+                                {#$("#txtsrccredit").val(comma_format(src, 0));#}
+                            } else {
+                                $("#txtfunccredit").val(comma_format(func));
+                                {#$("#txtsrccredit").val(comma_format(src));#}
+                            }
+
+                            if(!is_currency_decimal) {
+                                {#$("#txtfunccredit").val(comma_format(func, 0));#}
+                                $("#txtsrccredit").val(comma_format(src, 0));
+                            } else {
+                                {#$("#txtfunccredit").val(comma_format(func));#}
+                                $("#txtsrccredit").val(comma_format(src));
+                            }
+                        }
+                    }
+                    if(!is_decimal) {
+                        {#$("#txtsrcdebit").val('0');#}
+                        $("#txtfuncdebit").val('0');
+                    } else {
+                        {#$("#txtsrcdebit").val('0.00');#}
+                        $("#txtfuncdebit").val('0.00');
+                    }
+
+                    if(!is_currency_decimal) {
+                        $("#txtsrcdebit").val('0');
+                        {#$("#txtfuncdebit").val('0');#}
+                    } else {
+                        $("#txtsrcdebit").val('0.00');
+                        {#$("#txtfuncdebit").val('0.00');#}
+                    }
+                }
+            });
+            // end validate input on transaction modal
+
+            $('#btnOpentExchRateDialog').on('click', function () {
+                $('#exchrate-table').DataTable().destroy();
+                $('#exchrate-table').dataTable({
+                    "iDisplayLength": 10,
+                    scrollY: '50vh',
+                    scrollCollapse: true,
+                    //"aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+                    "order": [[0, "desc"]],
+                    "serverSide": true,
+                    "ajax": {
+                        "type": "POST",
+                        "url": "{% url 'ExchangeRateHistory__asJson' %}",
+                        "data": function (d) {
+                            d.csrfmiddlewaretoken = $('input[name="csrfmiddlewaretoken"]').val();
+                            d.currency_id = $('#curr_code option:selected').val();
+                        }
+                    },
+                    "columns": [
+                        {"data": "exchange_date"},
+                        {"data": "rate"},
+                        {
+                            "orderable": false,
+                            "data": null,
+                            "sClass": "hide_column",
+                            "render": function (data, type, full, meta) {
+                                var button_radio = '<input type="radio" name="choices" id="'+full['id']+'" data-date="'+full['exchange_date']+'" class="call-radio" value="'+full['rate']+'">'
+                                return button_radio;
+                            }
+                        }
+                    ]
+                });
+                setTimeout(() => {
+                    $('#exchrate-table').DataTable().columns.adjust();
+                }, 300);
+            });
+            $('#exchrate-table').on( 'draw.dt', function () {
+                selectTableRow('#exchrate-table', 2);
+                $("input[type='radio']").each(function () {
+                    $(this).closest('tr').css('background-color', '#f9f9f9');
+                });
+            });
+
+
+            $('#btnSelectExchRate').on('click', function () {
+                var selected_row = [];
+                var exchrate_dttbl = $('#exchrate-table').DataTable();
+                $("input[name='choices']:checked").each(function () {
+                    selected_row.push(this.id);
+                    selected_row.push(float_format(this.value).toFixed(10));
+                    selected_row.push(this.dataset.date);     
+                });
+                $('#txtexcdate').val(selected_row[2]);
+                $('#txtexcrateid').val(selected_row[0]);
+                $('#txtexcrate').val(selected_row[1]).trigger('change');
+                var amt_d = float_format($('#txtsrcdebit').val());
+                var amt_c = float_format($('#txtsrccredit').val());
+                var exc_rate =  float_format(selected_row[1]);
+
+                var fn_amt = 0;
+                if ((amt_d!=0)&&(amt_c==0)){
+                    fn_amt = amt_d*exc_rate;
+                    $("#txtfuncdebit").val(comma_format(fn_amt));
+                } else if ((amt_d==0)&&(amt_c!=0)){
+                    fn_amt = amt_c*exc_rate;
+                    $("#txtfunccredit").val(comma_format(fn_amt));
+                } else {
+                    //do nothing
+                }
+            });
+
+            $('#id_auto_exch').on('change', function(){
+                if(!$(this).is(':checked')) {
+                    //$('#txtexcrate').val('1.000000000');
+                    $('#txtexcrate').prop('disabled', false);
+                    $('#btnOpentExchRateDialog').prop('disabled', false);
+                } else {
+                    //$('#txtexcrate').val('1.000000000');
+                    $('#txtexcrate').prop('disabled', true);
+                    $('#btnOpentExchRateDialog').prop('disabled', true);
+                }
+            });
+
+            $('#btnSelectBatch').on('click', function () {
+                var unposted_batch_table = $('#unposted_batch_table').DataTable();
+                var selectedRow = unposted_batch_table.$(".call-radio:checked", {"page": "all"});
+                var batch_no = leftPad(selectedRow[0].value,6);
+                $('#reverse_batch_num').data('batch_id',selectedRow[0].id);
+                $('#reverse_batch_num').val(batch_no);
+                $('#reverse_batch_desc').val(selectedRow.closest('tr').find('td:eq(1)').text());
+            });
+
+            $('#reverse_batch_num_prev').on('click', function () {
+                if (selected_unpostd_batch>0){
+                    var idx = parseInt(selected_unpostd_batch)-1;
+                    $('#reverse_batch_num').data('batch_id',unpostd_batch[idx].id);
+                    $('#reverse_batch_num').val(leftPad(unpostd_batch[idx].batch_no,6));
+                    $('#reverse_batch_desc').val(unpostd_batch[idx].description);
+                    selected_unpostd_batch--;
+                }
+            });
+
+            $('#reverse_batch_num_next').on('click', function () {
+                if (selected_unpostd_batch<unpostd_batch.length){
+                    var idx = parseInt(selected_unpostd_batch)+1;
+                    $('#reverse_batch_num').data('batch_id',unpostd_batch[idx].id);
+                    $('#reverse_batch_num').val(leftPad(unpostd_batch[idx].batch_no,6));
+                    $('#reverse_batch_desc').val(unpostd_batch[idx].description);
+                    selected_unpostd_batch++;
+                }
+            });
+
+            $("#reverse_batch_num").focus(function() {
+                var save_this = $(this);
+                window.setTimeout (function(){
+                   save_this.select();
+                },5);
+            });
+
+            $('#reverse_batch_num').focusout(function() {
+                var user_type_batch_no = $('#reverse_batch_num').val();
+                var is_unpostd_batch = false;
+                for (var i = 0; i < unpostd_batch.length; i++) {
+                    if (unpostd_batch[i].batch_no==user_type_batch_no){
+                        is_unpostd_batch = true;
+                        $('#reverse_batch_num').data('batch_id',unpostd_batch[i].id);
+                        $('#reverse_batch_num').val(leftPad(unpostd_batch[i].batch_no,6));
+                        $('#reverse_batch_desc').val(unpostd_batch[i].description);
+                        break;
+                    }
+                }
+                if (!is_unpostd_batch){
+                    $('#notificationModal_title').text('Error');
+                    $('#notificationModal_text1').text('Invalid Input.');
+                    $('#notificationModal_text2').text('Batch '+leftPad(user_type_batch_no,6)+' does not exist');
+                    $("#notificationModal").modal("show");
+                    $('#reverse_batch_num').data('batch_id','0');
+                    $('#reverse_batch_num').val('000000');
+                    $('#reverse_batch_desc').val('');
+                }
+            });
+
+            var is_auto_reverse = $('#is_auto_reverse').is(':checked');
+            if (is_auto_reverse){
+                $('#div_rv_period_opt').removeClass('hide');
+            } else {
+                $('#div_rv_period_opt').addClass('hide');
+            }
+            var period_val = $('#document_date').val().split("-",2);
+            var bln = period_val[1];
+            var yy = period_val[0];
+            if (period_val[0] == 12){
+                        bln = 01;
+                        yy = period_val[0]+1;
+                }
+            $('#is_auto_reverse').click( function(){
+                if( $(this).is(':checked') ){
+                    $('#div_rv_period_opt').removeClass('hide');
+                    $('#rv_period_opt').val('1').trigger('change');
+
+                    $('#rv_period').val(bln+'-'+yy);
+                } else {
+                    $('#div_rv_period_opt').addClass('hide');
+                    $('#div_rv_period').addClass('hide');
+                }
+            });
+            $('#rv_period_opt').select2();
+            if ($('#rv_period_opt').val()=='2'){
+                $('#div_rv_period').removeClass('hide');
+                if (!$('#rv_period').val()){
+                    $('#rv_period').val(bln+'-'+yy);
+                }
+            } else {
+                $('#div_rv_period').addClass('hide');
+            }
+            $('#rv_period_opt').on('change',function(){
+                var perd = (parseInt(period_val[1])+1)+'-'+period_val[0];
+                $('#rv_period').datepicker('setDate', perd);
+                if( $(this).val()=='2' ){
+                    $('#div_rv_period').removeClass('hide');
+                } else {
+                    $('#div_rv_period').addClass('hide');
+                }
+            });
+
+            $('#rv_period').datepicker({
+                format: "mm-yyyy",
+                startView: 1,
+                minViewMode: 1,
+                autoclose: true
+            });
+
+            var year_period = moment().format("MM-YYYY");
+            $('#rv_period').bind('keyup', function (event) {
+                if (event.which != 13) {
+                    temp_date = $(this).val();
+                    valid_date = moment(temp_date, "MM-YYYY", true).isValid();
+                    if (valid_date) {
+                        year_period = temp_date;
+                    }
+                    return true;
+                }
+            });
+            $('#rv_period').bind('keydown', function (event) {
+                if (event.which == 13) {
+                    $(this).datepicker('setDate', year_period);
+                    move_next_elem(this, 1);
+                    return false;
+                } else {
+                    adjust_input_month_year(this);
+                }
+            });
+
+            //$('#id_debit_amount').val($('#txttrxdebits').val());
+            //$('#id_credit_amount').val($('#txttrxcredits').val());
+
+            $('#id_description').focus();
+            $('#doc_date_vue').on('blur', function (e)
+            {
+                $('#is_auto_reverse').focus();
+            });
+            $('#source_type').on('select2:close', function (e)
+            {
+                $('#entry_mode_1').focus();
+            });
+            check_if_empty('#btnSaveJournal')
+        });
+
+    function is_decimal_allow(is_cur_decimal) {
+        if (is_cur_decimal == false) {
+            $("#txtsrccredit").val(comma_format(float_format($("#txtsrccredit").val()), 0));
+            {#$("#txtfunccredit").val(comma_format(float_format($("#txtfunccredit").val()), 0));#}
+            $("#txtsrcdebit").val(comma_format(float_format($("#txtsrcdebit").val()), 0));
+            {#$("#txtfuncdebit").val(comma_format(float_format($("#txtfuncdebit").val()), 0));#}
+            is_currency_decimal = false
+        } else {
+            $("#txtsrccredit").val(comma_format(float_format($("#txtsrccredit").val())));
+            {#$("#txtfunccredit").val(comma_format(float_format($("#txtfunccredit").val())));#}
+            $("#txtsrcdebit").val(comma_format(float_format($("#txtsrcdebit").val())));
+            {#$("#txtfuncdebit").val(comma_format(float_format($("#txtfuncdebit").val())));#}
+            is_currency_decimal = true
+        }
+    }
+
+    $("#AddTransModal").on('hide.bs.modal', function(){
+        $('#dynamic-table').DataTable().columns.adjust();
+    });
+    
+    $('.modal').on('shown.bs.modal', function() {
+        $(this).find('[autofocus]').focus();
+    });
+
+    function dateView(date){
+        var pecahin = date.split('-');
+        var today = pecahin[2]+'-'+pecahin[1]+'-'+pecahin[0];
+        return today
+    }
+    function takeday(date) {
+        var pecahin = date.split('-');
+        var today = pecahin[2]+'-'+pecahin[1]+'-'+pecahin[0];
+        return today
+    }
+    </script>
+{% endblock %}

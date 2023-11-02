@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+{% endblock %}
+
+{% block title %}Add Tax{% endblock %}
+{% block tax_active %}active{% endblock %}
+{% block sp_setting_a_active %}active{% endblock %}
+{% block sp_setting_i_active %}active{% endblock %}
+{% block parent_order_a_active %}active{% endblock %}
+{% block parent_order_i_active %}active{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                Add Tax
+            </header>
+            <div class="panel-body">
+                <form class="form-horizontal" action="{% url 'tax_add' %}" role="form" method="post" onsubmit="return checkForm(this);"
+                      enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Name<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-8">
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="rate" class="col-lg-2 col-sm-2 control-label">Rate<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-8">
+                            <input type="text" class="form-control" id="rate" name="rate" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="number" class="col-lg-2 col-sm-2 control-label">Number</label>
+                        <div class="col-lg-8">
+                            <input type="number" class="form-control" id="number" name="number">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" name="btnSave" class="btn btn-success">Save</button>
+                            <a class="btn btn-default" href="{% url 'tax_list' %}">Cancel</a>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </section>
+    </div>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="application/javascript" src="{% static 'js/ga.js' %}"></script>
+{% endblock %}

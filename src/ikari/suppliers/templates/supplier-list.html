@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% load staticfiles %}
+
+{% block title %}Supplier List{% endblock %}
+{% block supplier_active %}active{% endblock %}
+{% block supplier_a_active %}active{% endblock %}
+{% block supplier_i_active %}active{% endblock %}
+{% block sp_setting_a_active %}active{% endblock %}
+{% block sp_setting_i_active %}active{% endblock %}
+{% block parent_order_a_active %}active{% endblock %}
+{% block parent_order_i_active %}active{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    Supplier List
+                    <span class="tools pull-right">
+                         {% if request.session.staff_admin %}
+                             <a class="btn btn-success start" href="{% url 'supplier_add' %}">
+                                 <i class="glyphicon glyphicon-plus"></i>
+                                 <span>Add new</span>
+                             </a>
+                         {% endif %}
+                    </span>
+                </header>
+                    <div class="panel-body">
+                        <div class="adv-table">
+                            <table class="display table table-bordered table-striped table-condensed"
+                                   id="custom-table" style="width:100%">
+                                <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Name</th>
+                                    <th>Country</th>
+                                    <th>Currency</th>
+                                    <th>Tax</th>
+                                    <th>Payment Mode</th>
+                                    <th>Update Date</th> 
+                                    {% if request.session.staff_admin %}
+                                        <th class="text-center">Edit</th>
+                                    {% endif %}
+                                </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#custom-table').dataTable({
+                "order": [[ 1, "asc" ]],
+                "serverSide": true,
+                "scrollX": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'SupplierList__asJson' %}"
+                },
+                "columns": [
+                    {"data": "customer_code"},
+                    {"data": "customer_name"},
+                    {"data": "country_code"},
+                    {"data": "currency_code"},
+                    {"data": "tax_name"},
+                    {"data": "payment_mode_code"},
+                    {"data": "update_date"},
+                    {% if request.session.staff_admin %}
+                        {
+                            "className": "text-center",
+                            "orderable": false,
+                            "data": null,
+                            "render": function (data, type, full, meta) {
+                                var button_edit = '<a href="../edit/' + full.id + '/" class="fa fa-pencil fa-lg btn btn-primary btn-sm"></a>'
+                                return button_edit;
+                            }
+                        }
+                    {% endif %}
+                ]
+            });
+        });
+    </script>
+{% endblock %}
+
+

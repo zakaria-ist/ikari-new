@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static 'assets/advanced-datatable/media/css/demo_page.css' %}" rel="stylesheet" type="text/css"/>
+    <link href="{% static 'assets/advanced-datatable/media/css/demo_table.css' %}" rel="stylesheet" type="text/css"/>
+    <link rel="stylesheet" href="{% static 'assets/data-tables/DT_bootstrap.css' %}" type="text/css"/>
+{% endblock %}
+
+{% block title %}User List{% endblock %}
+{% block staff_active %} class="active" {% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    User List
+                     <span class="tools pull-right">
+                          <a class="btn btn-success start" href="{% url '/admin/auth/user/add/' %}">
+                              <i class="glyphicon glyphicon-plus"></i>
+                              <span>Add new</span>
+                          </a>
+                     </span>
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table">
+                        <table class="display table table-bordered table-striped"
+                               id="dynamic-table" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>User Name</th>
+                                <th>First Name</th>
+                                <th>Last Name</th>
+                                <th>Email</th>
+                            </tr>
+                            </thead>
+                            {% if user_list %}
+                                <tbody>
+                                {% for c in user_list %}
+                                    <tr class="gradeX">
+                                        <td>{{ c.username }}</td>
+                                        <td>{{ c.first_name }}</td>
+                                        <td>{{ c.last_name }}</td>
+                                        <td>{{ c.email }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="text/javascript" language="javascript"
+            src="{% static 'assets/advanced-datatable/media/js/jquery.dataTables.js' %}"></script>
+    <script type="text/javascript" src="{% static 'assets/data-tables/DT_bootstrap.js' %}"></script>
+    <!--dynamic table initialization -->
+    <script src="{% static 'js/common/dynamic_table_init.js' %}"></script>
+{% endblock %}
+
+

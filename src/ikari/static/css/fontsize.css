@@ -1,0 +1,90 @@
+ul.sidebar-menu li a {
+    font-size: 14.5px;
+}
+
+.form-horizontal .control-label{
+    font-size: 13.5px;
+}
+
+#sidebar > ul > li > ul.sub > li > a {
+    font-size: 13.5px;
+}
+
+ul.sidebar-menu li ul.sub li a {
+    font-size: 13.5px;
+}
+
+table.table-bordered.dataTable tbody th, table.table-bordered.dataTable tbody td{
+    font-size: 13.5px;
+}
+
+.table>caption+thead>tr:first-child>td, .table>caption+thead>tr:first-child>th, .table>colgroup+thead>tr:first-child>td, .table>colgroup+thead>tr:first-child>th, .table>thead:first-child>tr:first-child>td, .table>thead:first-child>tr:first-child>th {
+    font-size: 13.5px;
+}
+
+article, aside, details, figcaption, figure, footer, header, hgroup, main, menu, nav, section, summary {
+    font-size: 14.5px;
+}
+
+section {
+    font-size: 13.5px !important;
+}
+
+.form-horizontal .control-label-item {
+	font-size: 13.5px;
+    padding-top: 7px;
+    padding-bottom: 0px !important;
+}
+
+.form-control {
+	font-size: 13.5px;
+}
+.form-control-item {
+	font-size: 13.5px;
+}
+.select2-results__option[aria-selected] {
+	font-size: 13.5px
+}
+
+tr.gradeX td label {
+    vertical-align: sub;
+}
+
+.adv-table::-webkit-scrollbar {
+    -webkit-appearance: none;
+}
+
+.adv-table::-webkit-scrollbar:vertical {
+    width: 11px;
+}
+
+.adv-table::-webkit-scrollbar:horizontal {
+    height: 11px;
+}
+
+.adv-table::-webkit-scrollbar-thumb {
+    border-radius: 8px;
+    border: 2px solid white; /* should match background, can't be transparent */
+    background-color: rgba(0, 0, 0, .5);
+}
+
+body::-webkit-scrollbar {
+    -webkit-appearance: none !important;
+}
+
+body::-webkit-scrollbar:vertical {
+    width: 11px;
+}
+
+body::-webkit-scrollbar:horizontal {
+    height: 11px;
+}
+
+body::-webkit-scrollbar-thumb {
+    border-radius: 8px;
+    border: 2px solid white; /* should match background, can't be transparent */
+    background-color: rgba(0, 0, 0, .5);
+}
+
+
+

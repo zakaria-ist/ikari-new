@@ -1,0 +1,97 @@
+<!-- Modal for closing Inventory -->
+<div class="modal fade modal-dialog-center" id="ICClosing" tabindex="-1" role="dialog"
+         aria-labelledby="ICClosing"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">End Month Closing</h4>
+                </div>
+                <div class="modal-body">
+                <div class="row">
+                    <div class="form-group">
+                        <div class="col-md-5">
+                            <label for="test333" class="control-label" style="padding-top: 7px;">You are closing Inventory Control for </label>
+                        </div>
+                        <div class="col-md-7">
+                            <input class="form-control" type="text" readonly="readonly" id="ic_period">
+                        </div>
+                    </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="text-align: center">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Cancel</button>
+                        <button data-dismiss="modal" class="btn btn-success" type="button" id="btnICClosing">
+                            Yes
+                        </button>
+                </div>
+            </div>
+        </div>
+</div>
+
+<!-- Modal for closing S&P -->
+<div class="modal fade modal-dialog-center" id="SPClosing" tabindex="-1" role="dialog"
+         aria-labelledby="SPClosing"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">End Month Closing</h4>
+                </div>
+                <div class="modal-body">
+                <div class="row">
+                    <div class="form-group">
+                        <div class="col-md-5">
+                            <label for="test333" class="control-label" style="padding-top: 7px;">You are closing Sales & Purchases for </label>
+                        </div>
+                        <div class="col-md-7">
+                            <input class="form-control" type="text" readonly="readonly" id="sp_period">
+                        </div>
+                    </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="text-align: center">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Cancel</button>
+                        <button data-dismiss="modal" class="btn btn-success" type="button" id="btnSPClosing">
+                            Yes
+                        </button>
+                </div>
+            </div>
+        </div>
+</div>
+
+<!-- Modal for confirm closing -->
+<div class="modal fade modal-dialog-center" id="ConfirmClosing" tabindex="-1" role="dialog"
+         aria-labelledby="ConfirmClosing"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Confirmation</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="form-group">
+                                <div>
+                                    <label id="ConfirmationText" for="test333" class="control-label" style="padding-top: 7px;">You are about to close <span id="close_type_str"></span> period. Continue ?</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="text-align: center">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Cancel</button>
+                        <button data-dismiss="modal" class="btn btn-success" type="button" id="btnSubmitClosing">
+                            Yes
+                        </button>
+                </div>
+            </div>
+        </div>
+</div>

@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block extrahead %}
+    {% load staticfiles %}
+    <!-- Datatables -->
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+
+{% endblock %}
+
+{% block title %}Item List{% endblock %}
+{% block ics_a_active %}active  {% endblock %}
+{% block stock_location_active %}active{% endblock %}
+{% block inv_setting_a_active %}active{% endblock %}
+{% block inv_setting_i_active %}active{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    Location stock 
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table">
+                        <div id="defaul_item">
+                            <div class="col-lg-12">
+                                <form class="form-horizontal" action="{% url 'add_loc_item' item.id  %}" 
+                                 role="form"
+                                  method="post"
+                                  enctype="multipart/form-data">
+                                  {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="fax" class="col-lg-2 col-sm-2 control-label">Location Code<span class="span-required">(*)</label>
+                                    <div class="col-lg-4">
+                                        <select id="location" name="location" required="required">
+                                            <option value="">Select Location</option>
+                                            {% for location in locations %}
+                                                <option value="{{ location.0 }}">{{ location.1 }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="fax" class="col-lg-2 col-sm-2 control-label">Item code</label>
+                                    <div class="col-lg-4">
+                                        <input type="text" tabindex="-1" readonly="readonly" class="form-control" name="item_code" value="{{item.code}}">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="fax" class="col-lg-2 col-sm-2 control-label">Minimum Qty</label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" id="min_qty" name="min_qty"
+                                               value="0">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="fax" class="col-lg-2 col-sm-2 control-label">Maximum Qty</label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" id="max_qty" name="max_qty"
+                                               value="0">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="fax" class="col-lg-2 col-sm-2 control-label">Re-order Qty</label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" id="reorder_qty" name="reorder_qty"
+                                               value="0">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="fax" class="col-lg-2 col-sm-2 control-label">In Measurement</label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" tabindex="-1" id="fax" name="inv_measure"
+                                               readonly="readonly"
+                                               value="{{item.inv_measure.code}}">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="fax" class="col-lg-2 col-sm-2 control-label">Out Measurement</label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" tabindex="-1" name="out_measurement"
+                                               readonly="readonly"
+                                               value="{{item.inv_measure.code}}">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="fax" class="col-lg-2 col-sm-2 control-label">Available Qty</label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" id="onhand_qty" name="onhand_qty"
+                                               value="0">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="fax" class="col-lg-2 col-sm-2 control-label">Inv. measurement</label>
+                                    <div class="col-lg-4">
+                                        <input type="text" class="form-control" tabindex="-1" name="inv_measurement"
+                                               readonly="readonly"
+                                               value="{{item.inv_measure.code}}">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-lg-offset-2 col-lg-10">
+                                        <button type="submit" class="btn btn-success">Save</button>
+                                        <a class="btn btn-default" href="{% url 'item_edit' item.id 3 %}">Cancel</a>
+                                    </div>
+                                </div>
+                                </form>
+                            </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    
+{% endblock %}
+{% block js %}
+    <!-- Datatables -->
+    <!-- <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script> -->
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+        $('#location').select2({
+            placeholder: "Select Location",
+        });
+        $('#location').select2('open');
+        $(document).on('keyup', '.select2-selection.select2-selection--single', function (e) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if(keycode == '9'){
+                $(this).closest(".select2-container").siblings('select:enabled').select2('open');
+            }
+        });
+        $('#location').on('select2:close', function (e)
+        {
+            $('#min_qty').focus();
+        });
+    </script>
+{% endblock %}
+
+

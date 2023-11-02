@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+{% block extrahead %}
+    {% load staticfiles %}
+    link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <style>
+        .hide_column {
+            display: none;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}
+    {% if customeritem == None %}
+        Add Customer Item
+    {% else %} Edit Customer Item
+    {% endif %}
+{% endblock %}
+{% block ics_a_active %}active  {% endblock %}
+{% block item_active %}active{% endblock %}
+{% block inv_setting_a_active %}active{% endblock %}
+{% block inv_setting_i_active %}active{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                {% if customeritem.id == None %} Add Customer Item
+                {% else %} Edit Customer Item {% endif %}
+            </header>
+            <div class="panel-body">
+                {% if messages_error %}
+                    <div class="text-center alert alert-danger"><strong>{{ messages_error }}</strong></div>{% endif %}
+                <form class="form-horizontal"
+                        {% if customeritem.id == None %} action="{% url 'customeritem_add' item_id %}"
+                        {% else %} action="{% url 'customeritem_edit' customeritem.id %}" {% endif %}
+                      role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="customer" class="col-lg-2 col-sm-2 control-label">Customer Code<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="customer_code" name="customer_code"
+                                    {% if customer.id != None %} value="{{ customer.code }}" {% endif %} required>
+                            <input type="hidden" id="hdCustomerSelected" name="hdCustomerSelected"
+                                    {% if customer.id != None %} value="{{ customer.id }}" {% endif %}>
+                        </div>
+                        <div class="col-lg-4">
+{#                            <a data-toggle="modal" href="#myCustomerListModal"#}
+{#                               class="btn btn-white fa fa-search">Search</a>#}
+                            <button tabindex="-1" type="button" class="btn btn-info" data-toggle="modal" href="#myCustomerListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="customer" class="col-lg-2 col-sm-2 control-label">Customer Name<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-4">
+                            <input type="text" tabindex="-1" class="form-control" id="customer_name" name="customer_name"
+                                    {% if customer.id != None %} value="{{ customer.name }}" {% endif %}
+                                   readonly required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="customer" class="col-lg-2 col-sm-2 control-label">Sales Currency<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-4">
+                            {{ form.currency }}
+                            <span class="messages">{{ form.errors.currency }}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="sales_price" class="col-lg-2 col-sm-2 control-label">Sales Price<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-4">
+                            {{ form.sales_price|default_if_none:"" }}
+                            <span class="messages">{{ form.errors.sales_price }}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="leading_days" class="control-label col-md-2">Lead Time</label>
+                        <div class="col-md-4">
+                            {{ form.leading_days|default_if_none:"" }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="effective_date" class="control-label col-md-2">Effective Date</label>
+                        <div class="col-md-4">
+                            {{ form.effective_date|default_if_none:"" }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputPassword1" class="col-lg-2 col-sm-2 control-label"></label>
+                        <div class="col-lg-10">
+                            <div class="checkbox checkbox-primary">
+                                <input name="is_active" id="is_active" class="styled" type="checkbox" checked/>
+                                <label for="is_active">
+                                    Active
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" name="btnSave" class="btn btn-success" onclick="fixDate()">Save</button>
+                            {% if 'customers.delete_customeritem' in user.get_all_permissions %}
+                                <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger"
+                                   {% if customeritem.id == None %}style="display: none"{% endif %}>Delete</a>
+                            {% endif %}
+                            {% if item_id %}
+                                <a class="btn btn-default" href="{% url 'item_edit' item_id '1' %}">Cancel</a> {# ITEM_TABS['Load Stock'] #}
+                            {% else %}
+                                <a class="btn btn-default"
+                                   href="{% url 'item_edit' customeritem.item_id '1' %}">Cancel</a> {# ITEM_TABS['Load Stock'] #}
+                            {% endif %}
+                        </div>
+                    </div>
+                </form>
+            </div>
+            {% if customeritem != None %}
+                <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+                     class="modal fade">
+                    <div class="modal-dialog modal-sm">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                                <h4 class="modal-title">Delete Confirm Dialog</h4>
+                            </div>
+                            <div class="modal-body">
+                                <form role="form" action="{% url 'customeritem_delete' customeritem.id %}"
+                                      method="post">
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-success">OK</button>
+                                    <a class="btn btn-default"
+                                       href="{% url 'customeritem_edit' customeritem.id %}">Cancel</a>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            <div class="modal fade" id="myCustomerListModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"
+                                    aria-hidden="true">&times;</button>
+                            <h4 class="modal-title">Search Customer</h4>
+                        </div>
+                        <div class="modal-body" style="padding-bottom: 10px!important;">
+                            <div class="form-group">
+                                <section class="panel" style="margin-top: 10px!important;">
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <div class="panel-body"
+                                                 style="padding: 0px!important; font-size: 12.5px !important;">
+                                                <div class="adv-table">
+                                                    <table id="customer-table" style="width: 100% !important;"
+                                                           class="display table table-bordered table-striped table-condensed">
+                                                        <thead>
+                                                        <tr>
+                                                            <th>Customer Code</th>
+                                                            <th>Customer Name</th>
+                                                            <th>Country</th>
+                                                            <th>Location</th>
+                                                            <th>Currency</th>
+                                                            <th class="hide_column"></th>
+                                                        </tr>
+                                                        </thead>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+
+                            </div>
+                            <div class="modal-footer">
+                                <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                                <button class="btn btn-success" type="button" id="btnCustomerSelect">Select</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+        var eff_date = $('#id_effective_date').val().split('-').reverse().join('-');
+        $('#id_effective_date').val(eff_date);
+        function fixDate() {
+            var eff_date = $('#id_effective_date').val().split('-').reverse().join('-');
+            $('#id_effective_date').val(eff_date);
+        }
+
+        jQuery(document).ready(function ($) {
+            $('#id_currency').select2();
+            $('#customer_code').focus();
+            $(document).on('keyup', '.select2-selection.select2-selection--single', function (e) {
+                var keycode = (e.keyCode ? e.keyCode : e.which);
+                if(keycode == '9'){
+                    $(this).closest(".select2-container").siblings('select:enabled').select2('open');
+                }
+            });
+            $('#id_currency').on('select2:close', function (e)
+            {
+                $('#id_sales_price').focus();
+            });
+
+            {#$('option:not(:selected)').attr('disabled', true);#}
+            {#$('form input').on('keypress', function (e) {#}
+            {#    return e.which !== 13;#}
+            {#});#}
+
+            $('#customer_code').on('keypress', function (e) {
+                if (e.which === 13) {
+                    var customer_code = $('#customer_code').val();
+                    $.ajax({
+                        method: "POST",
+                        url: '/items/get_customer_info/',
+                        dataType: 'JSON',
+                        data: {
+                            'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val(),
+                            'customer_code': customer_code,
+                            'item_id': {{ item.id }},
+                        },
+                        responseTime: 200,
+                        response: function (settings) {
+                            if (settings.data.value) {
+                                this.responseText = '{"success": true}';
+                            } else {
+                                this.responseText = '{"success": false, "msg": "required"}';
+                            }
+                        },
+                        success: function (json) {
+                            $('#hdCustomerSelected').val(json['id']);
+                            $('#customer_code').val(json['code']);
+                            $('#customer_name').val(json['name']);
+                            if (json['sale_price'] != '0') {
+                                $('#id_sales_price').val(json['sale_price']);
+                            }
+                            else {
+                                $('#id_sales_price').val(0);
+                                {% if item.sale_price != None %}
+                                    $('#id_sales_price').val({{ item.sale_price }});
+                                {% endif %}
+                            }
+
+                            $('option').attr('disabled', false);
+                            $('#id_currency').find('option:selected').removeAttr('selected');
+                            $('#id_currency option[value=' + json['currency_id'] + ']').attr('selected', 'selected');
+                            $('#id_currency').val(json['currency_id']);
+                            $('option:not(:selected)').attr('disabled', true);
+                        }
+                    });
+                }
+            });
+            $('#btnCustomerSelect').on('click', function () {
+
+                var currency_select_id = $("input[name='choices']:checked").val();
+                var customer_select_id = $("input[name='choices']:checked").attr('id');
+                var nRow = $("input[name='choices']:checked").parents('tr')[0];
+                var jqInputs = $('td', nRow);
+
+                $('#hdCustomerSelected').val(customer_select_id);
+                $('#customer_code').val(jqInputs[0].innerText);
+                $('#customer_name').val(jqInputs[1].innerText);
+                $('#id_sales_price').val(0);
+                {% if item.sale_price != None %}
+                    $('#id_sales_price').val({{ item.sale_price }});
+                {% endif %}
+
+                $('option').attr('disabled', false);
+                //$('#id_currency').find('option:selected').removeAttr('selected');
+                //$('#id_currency option[value=' + currency_select_id + ']').attr('selected', 'selected');
+                $('#id_currency').val(currency_select_id).trigger('change');
+                $('option:not(:selected)').attr('disabled', true);
+
+                $.ajax({
+                    method: "POST",
+                    url: '/items/get_customer_info/',
+                    dataType: 'JSON',
+                    data: {
+                        'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val(),
+                        'customer_code': jqInputs[0].innerText,
+                        'item_id': {{ item.id }},
+                    },
+                    responseTime: 200,
+                    success: function (json) {
+                        if (json['sale_price'] != '0' && json['sale_price'] != '') {
+                            $('#id_sales_price').val(json['sale_price']);
+                        }
+                        else {
+                            $('#id_sales_price').val(0);
+                            {% if item.sale_price != None %}
+                                $('#id_sales_price').val({{ item.sale_price }});
+                            {% endif %}
+                        }
+                    }
+                });
+
+                $(this).attr('data-dismiss', 'modal');
+            });
+
+
+            $('#customer-table').dataTable({
+                "order": [[0, "desc"]],
+                "bLengthChange": false,
+                "iDisplayLength": 5,
+                "serverSide": true,
+                "ajax": {
+                    "url": "{% url 'ItemCustomerList__asJson' %}"
+                },
+                "columns": [
+                    {"data": "code", "sClass": "text-left"},
+                    {"data": "name", "sClass": "text-left"},
+                    {"data": "country_code", "sClass": "text-left"},
+                    {"data": "location_code", "sClass": "text-left"},
+                    {"data": "currency_code", "sClass": "text-left"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "sClass": "hide_column",
+                        "render": function (data, type, full, meta) {
+                            var button_edit = '<input type="radio" name="choices" id="' + full.id + '" class="call-checkbox" value="' + full.currency_id + '">';
+                            return button_edit;
+                        }
+                    }
+                ]
+            });
+            $('#customer-table').on( 'draw.dt', function () {
+                selectTableRow('#customer-table', 5);
+                $("input[type='radio']").each(function () {
+                    $(this).closest('tr').css('background-color', '#f9f9f9');
+                });
+            });
+
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    {% load staticfiles %}
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.min.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap-reset.css' %}">
+    <!--external css-->
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/font-awesome/css/font-awesome.css' %}"/>
+    {% comment %} <link rel="stylesheet" type="text/css" href="{% static 'assets/jquery-ui/jquery-ui-1.10.1.custom.css' %}">
+    <link href="{% static 'css/pop-dialog.css' %}" rel="stylesheet"> {% endcomment %}
+    <!-- Custom styles for this template -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style-responsive.css' %}"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 tooltipss and media queries -->
+    <!--[if lt IE 9]>
+    <script src="js/html5shiv.js"></script>
+    <script src="js/respond.min.js"></script>
+    <![endif]-->
+
+    <title>Ikari login</title>
+</head>
+
+<body class="login-body">
+
+<div class="container">
+
+    <form class="form-signin" action="/login/" method="post" id="login_form">
+        {% csrf_token %}
+        <h2 class="form-signin-heading">sign in now {{ com_select }} </h2>
+        <div class="login-wrap">
+            {% if next %}
+                <input type="hidden" name="next" value="{{ next }}"/>
+            {% endif %}
+            <label class="messages text-center">{{ state }}</label>
+            <div class="login-company" style="margin-bottom: 15px; font-size: 12px;">
+                <select class="form-control" id="company" name="company"
+                        style="padding: 5px!important;">
+                    {% for company in company_list %}
+                        <option value="{{ company.id }}"
+                        {% if  login_comp = company.id %}
+                        selected="selected" {% endif %}>{{ company.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <input type="text" class="form-control" placeholder="User ID" name="username" id="username" autofocus>
+            <input type="password" class="form-control" placeholder="Password" name="password">
+            <input class="form-control input-medium" id="session_date" name="session_date" type="text" style="display:none"/>
+            <input class="form-control input-medium" id="session_date_view" name="session_date_view" type="text"/>
+
+            <label class="checkbox">
+                <span class="pull-right" style="display:none;">
+                    <a data-toggle="modal" href="{% url 'reset_confirm' %}"> Forgot Password?</a>
+                </span>
+            </label>
+            <button class="btn btn-lg btn-login btn-block" type="submit">Sign in</button>
+            {% comment %} <button class="btn btn-lg btn-login btn-block" type="button" onclick="checkFiscalDate()">Sign in</button> {% endcomment %}
+
+        </div>
+
+        <!-- Modal -->
+        <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="myModal"
+             class="modal fade modal-dialog-center">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content" style="min-width: 400px!important;">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title">Forgot Password ?</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>Enter your user name / e-mail address below to reset your password.</p>
+                        <input type="text" name="email" placeholder="User name / E-mail address" autocomplete="off"
+                               class="form-control placeholder-no-fix">
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Cancel</button>
+                        <button class="btn btn-success" type="submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- modal -->
+    </form>
+    <div id="dialog-yes-no-modal" title="Basic modal dialog" style="display: none;"></div>
+</div>
+
+
+<script src="{% static 'js/jquery.js' %}"></script>
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+<script src="{% static "js/select2/select2.js" %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+{% comment %} <script type="text/javascript" src="{% static 'assets/jquery-ui/jquery-ui-1.10.1.custom.min.js' %}"></script> {% endcomment %}
+
+<!-- js placed at the end of the document so the pages load faster -->
+<script type="text/javascript">
+{% comment %} var end_date = '{{end_date}}';
+end_date = moment(end_date, 'YYYY-MM-DD');
+
+function pop_ok_cancel_dialog(title, text, ok_function, cancel_function, cancelText){
+    cancelText = typeof cancelText !== 'undefined' ? cancelText : "No";
+    $("#dialog-yes-no-modal").dialog({
+        title: title,
+        closeOnEscape: false,
+        closeText: "hide",
+        autoResize: true,
+        show: "fade",
+        hide: "fade",
+        autoOpen: false,
+        resizable: false,
+        dialogClass: "dialog-modal",
+        buttons: [
+            {
+                text: "Yes",
+                icon: "ui-icon-heart",
+                class: 'dialog-yes-button',
+                click: function () {
+                   setTimeout(function () {
+                       ok_function();
+                   }, 150);
+                    $("#dialog-yes-no-modal").dialog("close");
+                },
+            },
+            {
+                text: cancelText,
+                icon: "ui-icon-heart",
+                class: 'dialog-no-button',
+                click: function () {
+                    setTimeout(function () {
+                        cancel_function();
+                    }, 150);
+                    $("#dialog-yes-no-modal").dialog("close");
+                },
+            },
+        ],
+         open: function () {
+             $(this).parent().find("button:eq(0)").focus();
+         },
+    });
+    $("#dialog-yes-no-modal").html("<p>" + text + "</p>");
+    $("#dialog-yes-no-modal").dialog('open');
+} {% endcomment %}
+
+$(document).ready(function () {
+    if ('{{ com_select }}' != '')
+        $('#company').val('{{ com_select }}');
+
+    $('#session_date_view').val(moment(new Date(), 'DD-MM-YYYY').format('DD-MM-YYYY'));
+    $('#company').select2({
+    });
+    var s_date = String($('#session_date_view').val()).split("-").reverse().join("-");
+    $('#session_date').val(s_date);
+});
+
+$('#company').on('change', function(){
+    setTimeout(() => {
+        $('#username').select();
+    }, 200);
+});
+
+$(document).ready(function() {
+  $(window).keydown(function(event){
+    if((event.keyCode == 13) && ($(event.target)[0]==$("input")[1])) { // username
+        $('[name="password"]').focus();
+        $('[name="password"]').select();
+        event.preventDefault();
+        return false;
+    }
+    else if((event.keyCode == 13) && ($(event.target)[0]==$("input")[2])) { // password
+        setTimeout(function(){
+            $('#session_date_view').focus();
+            $('#session_date_view').select();
+        }, 300);
+        event.preventDefault();
+        return false;
+    } else if((event.keyCode == 13) && ($(event.target)[0]==$("input")[4])) { // session date
+        setTimeout(function(){
+            $('.btn-login').focus(); // submit btn
+        }, 100);
+        event.preventDefault();
+        return false;
+    }
+  });
+});
+
+{% comment %} function checkFiscalDate() {
+    var session_date = moment($('#session_date').val(), 'YYYY-MM-DD');
+    if(session_date > end_date) {
+        pop_ok_cancel_dialog("Invalid Session Date",
+            "Session Date does not belongs to any Fiscal Calendar. Do you want to proceed?",
+            function () { $('#login_form').submit(); },
+            function () { }
+        );
+    } else {
+        $('#login_form').submit();
+    }
+} {% endcomment %}
+
+
+$(document).on('click', 'input[type="text"]', function(){
+    $(this).select();
+});
+
+$(document).on('click', 'input[type="number"]', function(){
+    $(this).select();
+});
+
+var year_period_day = moment().format("DD-MM-YYYY");
+$('#session_date_view').bind('keyup', function (event) {
+    if (event.which != 13) {
+        adjust_input_date(this);
+        temp_date = $(this).val();
+        valid_date = moment(temp_date, "DD-MM-YYYY", true).isValid();
+        if (valid_date) {
+            year_period_day = temp_date;
+        }
+        return true;
+    } else if (event.which == 13) {
+        $('#session_date_view').val(moment(year_period_day, 'DD-MM-YYYY').format('DD-MM-YYYY'));
+        var s_date = String(year_period_day).split("-").reverse().join("-");
+        $('#session_date').val(s_date);
+        $('.btn-login').focus();
+    }
+});
+
+$('#session_date_view').on('change', function() {
+    var s_date = String($(this).val()).split("-").reverse().join("-");
+    $('#session_date').val(s_date);
+});
+
+function adjust_input_date(element, event){
+    var foo = $(element).val().split("-").join(""); // remove hyphens
+    if (foo.length > 4) {
+        foo = foo.substring(0,2) + '-' + foo.substring(2,4) + '-' + foo.substring(4, foo.length);
+    }else if (foo.length > 2){
+        foo = foo.substring(0,2) + '-' + foo.substring(2, foo.length);
+    }
+    $(element).val(foo);
+}
+</script>
+
+</body>
+</html>

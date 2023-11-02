@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "css/table.css" %}" rel="stylesheet">
+    <style type="text/css">
+      .dataTables_scrollHeadInner {
+        margin-left: auto !important;
+        margin-right: auto !important;
+      }
+
+    </style>
+{% endblock %}
+
+{% block title %}Segment List{% endblock %}
+{% block segment_active %}active{% endblock %}
+{% block account_setting_a_active %}active{% endblock %}
+{% block account_setting_i_active %}active{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+
+{% block content %}
+    {% if company.use_segment %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                     Segment List
+                    <span class="tools pull-right">
+                    {% if request.session.staff_admin %}
+                        <a class="btn btn-success start" href="{% url 'segment_add' %}">
+                            <i class="glyphicon glyphicon-plus"></i>
+                            <span>Add new</span>
+                        </a>
+                    {% endif %}
+                    </span>
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table table-responsive">
+                        <table class="display table table-bordered table-striped table-hover"
+                               id="dynamic-table">
+                               <thead>
+                                 <tr>
+                                   <th></th>
+                                   <th>Update Date</th>
+                                   <th>Code</th>
+                                   <th>Name</th>
+                                   <th>Description</th>
+                                   {% if request.session.staff_admin %}
+                                   <th class="text-center">Options</th>
+                                   {% endif %}
+                                 </tr>
+                               </thead>
+                               <tbody>
+                                   {% for entry in segment_list %}
+                                   <tr>
+                                       <td>{{ forloop.counter }}</td>
+                                       <td>{{ entry.update_date|date:"d-m-Y" }}</td>
+                                       <td>{{ entry.code|default:"" }}</td>
+                                       <td>{{ entry.name|default:"" }}</td>
+                                       <td>{{ entry.description|default:"" }}</td>
+                                       {% if request.session.staff_admin %}
+                                       <td class="text-center">
+                                           <div class="btn-group dropdown">
+                                               <button type="button" class="btn btn-primary btn-sm dropdown-toggle sended" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                                   style="min-width: 40px!important;">
+                                                   Action
+                                                   <span class="caret"></span>
+                                                   <span class="sr-only" id="BtnTrxOption">Toggle Dropdown</span>
+                                               </button>
+                                               <ul class="dropdown-menu dropdown-menu-right">
+                                                   <li id="active-{{ forloop.counter }}">
+                                                       <a href="/companies/edit_segment/{{entry.id}}/">Edit</a>
+                                                       <a onclick="deleteSegment({{ entry.id }})">Delete</a>
+                                                   </li>
+                                               </ul>
+                                           </div>
+                                       </td>
+                                       {% endif %}
+                                   </tr>
+                                   {% endfor %}
+                               </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    No Segment
+                </header>
+                <div class="panel-body">
+                    <div class="col-lg-offset-3"><h1>Segment is not enabled for this company</h1></div>
+                </div>
+            </section>
+        </div>
+    </div>
+    {% endif %}
+     {# Comfirm Delete Transaction #}
+    <div class="modal fade" id="comfirmDeleteTransactionModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <form id="comfirmDeleteTransactionForm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title">
+                            <strong>Delete Confirm Dialog</strong>
+                        </h4>
+                    </div>
+                    <div class="modal-body" style="padding-bottom: 0px!important;">
+                        <div class="form-group">
+                            <label>Are you sure want to delete?</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="text-align: center">
+                        <button class="btn btn-default" type="button" data-dismiss="modal">No
+                        </button>
+                        <a>
+                            <button class="btn btn-success" id="comfirm-yes">Yes</button>
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+{% block extrafoot %}
+    {% load staticfiles %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+
+    <script>
+      $(document).ready(function() {
+        var dttbl = $('#dynamic-table').DataTable({
+          "scrollX": true,
+          "columns": [
+          {"width": "10px"},
+          {"width": "55px"},
+          {"width": "50px"},
+          {"width": "300px"},
+          {"width": "300px"},
+          {% if request.session.staff_admin %}
+          {"width": "50px"}
+          {% endif %}
+          ]
+        });
+        // $('th').parents().eq(3).attr('style', 'margin-left: auto !important; margin-right: auto !important;');
+      })
+        function deleteSegment(id) {
+                $("#comfirmDeleteTransactionModal").modal("show");
+                $("#comfirm-yes").attr("onclick", "delete_re(" + id + ")");
+        }
+
+        function delete_re(id) {
+            $.ajax({
+                method: "POST",
+                url: '/companies/delete_segment/',
+                data: {
+                    'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val(),
+                    'segment_id': id
+                },
+                success: function (data) {
+                    console.log('deleted')
+                    location.reload();
+                },
+                error: function () {
+
+                }
+            });
+        }
+    </script>
+{% endblock %}

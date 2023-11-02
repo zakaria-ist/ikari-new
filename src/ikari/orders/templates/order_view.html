@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static 'assets/advanced-datatable/media/css/demo_page.css' %}" rel="stylesheet" type="text/css"/>
+    <link href="{% static 'assets/advanced-datatable/media/css/demo_table.css' %}" rel="stylesheet" type="text/css"/>
+    <link rel="stylesheet" href="{% static 'assets/data-tables/DT_bootstrap.css' %}" type="text/css"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+{% endblock %}
+
+{% block title %}
+    Order View
+{% endblock %}
+{% block parent_order_a_active %}active{% endblock %}
+{% block parent_order_i_active %}active{% endblock %}
+{% block order_sale_active %}{% if order.order_type_id == 1 %} active {% endif %}{% endblock %}
+{% block order_purchase_active %}{% if order.order_type_id == 2 %}active{% endif %}{% endblock %}
+{% block order_other_active %}{% if order.order_type_id == 3 %}active{% endif %}{% endblock %}
+{% block order_good_receive_active %}{% if order.order_type_id == 5 %}active{% endif %}{% endblock %}
+{% block order_delivery_invoice_active %}{% if order.order_type_id == 6 %}active{% endif %}{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading text-center text-primary " style="font-size:40px">
+                {% if order.order_type_id == 1 %}
+                    <strong>  Sale Order</strong>
+                {% elif order.order_type_id == 2 %}
+                    <strong> Purchase Order</strong>
+                {% elif order.order_type_id == 5 %}
+                    <strong> Good Receive</strong>
+                {% elif order.order_type_id == 6 %}
+                    <strong> Delivery Order / Invoice</strong>
+                {% endif %}
+            </header>
+            <div class="panel-body form-horizontal">
+                <div class="col-lg-12 " >
+                    <div class="col-lg-4">
+                        <label class="control-label" style="font-size:16px">COMPANY ADDRESS</label>
+                    </div>
+                    <div class="col-lg-4" style >
+                         {% if order.order_type_id == 1  or order.order_type_id == 6  %}
+                        <p class="control-label" style="font-size:16px" >CUSTOMER ADDRESS</p>
+                        {% elif order.order_type_id == 2  or  order.order_type_id == 5%}
+                             <label class="control-label" style="font-size:16px">SUPPLIER ADDRESS</label>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="col-lg-12">
+                            <label class="control-label" style="font-size:16px">INVOICE INFO</label>
+                         </div>
+                    </div>
+                </div>
+                {% for o in company %}
+                {% for i in information %}
+                <div class="col-lg-12">
+                    <div class="col-lg-4">
+                         <label class="control-label"> {{ o.name }}</label>
+                    </div>
+                    <div class="col-lg-4 col-sm-4">
+                       <label class="control-label"> {{i.name }}</label>
+                    </div>
+                    <div class="col-lg-4">
+                        <label class="col-lg-6 control-label">Document Number:</label>
+                        <label class="col-lg-6 control-label">: {{ order.document_number }}</label>
+                    </div>
+                </div>
+                <div class="col-lg-12">
+                    <div class="col-lg-4">
+                        <label class="control-label"> {{ o.address }}</label>
+                    </div>
+                    <div class="col-lg-4">
+                        <label class="control-label"> {{i.address }}</label>
+                    </div>
+                    <div class="col-lg-4">
+                        <label class="col-lg-6 control-label">Invoice Date:</label>
+                        <label class="col-lg-6 control-label">: {{ order.invoice_date }}</label>
+                    </div>
+                </div>
+                <div class="col-lg-12">
+                    <div class="col-lg-4">
+                       <label class="control-label"> {{ o.phone }}</label>
+                    </div>
+                    <div class="col-lg-4">
+                        <label class="control-label"> {{i.phone }}</label>
+                    </div>
+                    <div class="col-lg-4">
+                        <label class="col-lg-6  control-label">Due Date:</label>
+                        <label class="col-lg-6 control-label">: {{ order.due_date }}</label>
+                    </div>
+                </div>
+                <div class="col-lg-12">
+                    <div class="col-lg-8">
+                    </div>
+                     {% for s in orderStatus %}
+                    <div class="col-lg-4">
+                        <label class="col-lg-6 control-label">Order Status:</label>
+                        <label class="col-lg-6 control-label">: {{ s.name  }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+                {% endfor %}
+
+                <div class="panel-body">
+                    <div class="adv-table">
+                         <table class="display table table-bordered table-striped table-condensed"
+                                   id="dynamic-table" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th></th>
+                                <th>Item</th>
+                                <th>Description</th>
+                                <th>Unit Price</th>
+                                <th>Quantity</th>
+                                <th>Amount</th>
+                            </tr>
+                            </thead>
+                            {% if orderItem %}
+                                <tbody >
+                                {% for c in orderItem %}
+                                    <tr class="gradeX ">
+                                        <td>{{ c.line_number }}</td>
+                                        <td>{{ c.item_code }}</td>
+                                        <td>{{ c.item_name }}</td>
+                                        <td>{{ c.price }}</td>
+                                        <td>{{ c.quantity }}</td>
+                                        <td>{{ c.total}} {{ c.order__currency__code}}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+                <div class="col-lg-12">
+                    {% if currency %}
+                    {% for cu in currency %}
+                    <div class="col-lg-8"></div>
+                    <div class="col-lg-4  well well-sm">
+                        <div class="col-lg-6 ">
+                            <label class="control-label"><strong>Sub Total Amount:</strong></label>
+                        </div>
+                        <div class="col-lg-6 text-right ">
+                            <label class="control-label">{{ order.subtotal}} {{ cu.code}} </label>
+                        </div>
+                    </div>
+                    <div class="col-lg-8"></div>
+                    <div class="col-lg-4  well well-sm">
+                        <div class="col-lg-6 ">
+                            <label class="control-label"><strong>VAT:</strong></label>
+                        </div>
+                        <div class="col-lg-6 text-right ">
+                             <label class="control-label">{{ order.tax_amount}} {{ cu.code}} </label>
+                        </div>
+                    </div>
+                    <div class="col-lg-8"></div>
+                    <div class="col-lg-4  well well-sm">
+                        <div class="col-lg-6 ">
+                            <label class="control-label"><strong>Grand Total:</strong></label>
+                        </div>
+                        <div class="col-lg-6  text-right">
+                             <label class="control-label">{{ order.total}} {{ cu.code}} </label>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                  </div>
+                </div>
+        </section>
+    </div>
+
+
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="text/javascript" language="javascript"
+            src="{% static 'assets/advanced-datatable/media/js/jquery.dataTables.js' %}"></script>
+    <script type="text/javascript" src="{% static 'assets/data-tables/DT_bootstrap.js' %}"></script>
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}?{% now 'H' %}"></script>
+
+{% endblock %}

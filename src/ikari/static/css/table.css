@@ -1,0 +1,42 @@
+/* CSS for UI adjustment of batch list tables */
+td {
+  vertical-align: baseline !important;
+}
+
+table{
+  margin-left: auto !important;
+  margin-right: auto !important;
+  table-layout: fixed !important;
+  overflow: scroll !important;
+}
+
+.adv-table ::-webkit-scrollbar {
+  -webkit-appearance: none;
+}
+.adv-table ::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 5px;
+}
+
+.expand_button {
+  font-size: 28px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  vertical-align: sub !important;
+}
+
+.fa-plus-circle {
+  color: limegreen;
+}
+
+.fa-plus-circle:hover {
+  color: green;
+}
+
+.fa-minus-circle {
+  color: red;
+}
+
+.fa-minus-circle:hover{
+  color: darkred;
+}

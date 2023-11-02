@@ -1,0 +1,536 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/select2/select2.css' %}"/>
+    <style>
+      .dropdown-menu {width: 400px;}
+    </style>
+{% endblock %}
+
+{% block title %}Tax Tracking Report{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block com_tax_services_a_active %}active{% endblock %}
+{% block com_tax_services_i_active %}active{% endblock %}
+{% block com_tax_tracking_active %}active{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-3">
+            <section class="panel" id="secFilterCondition">
+                <header class="panel-heading">Tax Tracking Report</header>
+                <div class="panel-body form-horizontal">
+                    <div id="divDateFromTo" class="form-group filter divGL1 divGL2">
+                        <label class="control-label col-md-12">Tax Authority</label>
+                        <div class="col-md-11">
+                            <select class="form-control" id="tax_authority" name="tax_authority">
+                                <option value=""></option>
+                                {% for tx_auth in tax_authority %}
+                                    {% if tx_auth.code == 'GSTDOS' or tx_auth.code == 'GSTSGD' %}
+                                        <option value="{{tx_auth.id}}" selected>{{tx_auth.code}}</option>
+                                    {% else %}
+                                        <option value="{{tx_auth.id}}">{{tx_auth.code}}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12"></label>
+
+                        <label class="control-label col-md-6">From Period-Year</label>
+                        <label class="control-label col-md-6">To Period-Year</label>
+                        <div class="col-md-6">
+                            <div id="from-container" class="dropdown">
+                                <div class="" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                    <input type="text" class="form-control text-center year-period year-period-from" value="">
+                                </div>
+                                {% comment %} <div class="dropdown-toggle col-md-5" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                    <i class="fa fa-calendar" aria-hidden="true"></i>
+                                    <span class="caret"></span>
+                                </div> {% endcomment %}
+                                <div class="dropdown-menu" id="from_menu" aria-labelledby="dropdownMenu1">
+                                    <button type="button" style="border-color: transparent;" class="btn btn-white col-md-offset-2 col-md-2" onclick="changeYear('from','Prev')"><i class="fa fa-chevron-circle-left fa-2x"></i></button>
+                                    <div class="col-md-4">
+                                        <select class="form-control" name="f_year" id="f_year" class="form-control">
+                                            {% for year in fsc_years %}
+                                                <option value="{{year}}">{{year}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <button type="button" style="border-color: transparent;" class="btn btn-white col-md-2" onclick="changeYear('from','Next')"><i class="fa fa-chevron-circle-right fa-2x"></i></button>
+                                    <table class="table table-condensed table-hover table-striped" id="fromTable">
+                                        <thead>
+                                            <tr>
+                                                <th id="period" class="th-fsc" style="width: 5%;">Prd.</th>
+                                                <th id="start" class="th-fsc" style="width: 35%;">Start Date</th>
+                                                <th id="end" class="th-fsc" style="width: 35%;">End Date</th>
+                                                <th id="status" class="th-fsc" style="width: 25%;">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="f">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div id="to-container" class="dropdown">
+                                <div class="" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                    <input type="text" class="form-control text-center year-period year-period-to" value="">
+                                </div>
+                                {% comment %} <div class="dropdown-toggle col-md-5" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                    <i class="fa fa-calendar" aria-hidden="true"></i>
+                                    <span class="caret"></span>
+                                </div> {% endcomment %}
+                                <div class="dropdown-menu" id="to_menu" aria-labelledby="dropdownMenu2">
+                                    <button type="button" style="border-color: transparent;" class="btn btn-white col-md-offset-2 col-md-2" onclick="changeYear('to','Prev')"><i class="fa fa-chevron-circle-left fa-2x"></i></button>
+                                    <div class="col-md-4">
+                                        <select class="form-control" name="t_year" id="t_year" class="form-control">
+                                            {% for year in fsc_years %}
+                                                <option value="{{year}}">{{year}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <button type="button" style="border-color: transparent;" class="btn btn-white col-md-2" onclick="changeYear('to','Next')"><i class="fa fa-chevron-circle-right fa-2x"></i></button>
+                                    <table class="table table-condensed table-hover table-striped" id="toTable">
+                                        <thead>
+                                            <tr>
+                                                <th id="period" class="th-fsc" style="width: 5%;">Prd.</th>
+                                                <th id="start" class="th-fsc" style="width: 35%;">Start Date</th>
+                                                <th id="end" class="th-fsc" style="width: 35%;">End Date</th>
+                                                <th id="status" class="th-fsc" style="width: 25%;">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="t">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <label class="control-label col-md-12"></label>
+
+                        <label class="control-label col-md-12">Print Amounts In</label>
+                        <div class="col-md-11">
+                            <select class="form-control" id="print_type" name="print_type">
+                                <option value="1" selected>Source Currency</option>
+                                <option value="2">Functional Currency</option>
+                                <option value="3">Tax Reporting Currency</option>
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12"></label>
+
+                        <label class="control-label col-md-12">Report By</label>
+                        <div class="col-md-11">
+                            <select class="form-control" id="report_by" name="report_by">
+                                <option value="1" selected>Fiscal Period</option>
+                                <option value="2">Document Date</option>
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12"></label>
+
+                        <label class="control-label col-md-12">Print By</label>
+                        <div class="col-md-11">
+                            <select class="form-control" id="print_by" name="print_by">
+                                <option value="1" selected>Tax Authority</option>
+                                <option value="2">Item Tax Class</option>
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12"></label>
+
+                        <label class="control-label col-md-12">Transaction Type</label>
+                        <div class="col-md-11">
+                            <select class="form-control" id="transaction_type_options" name="transaction_type_options">
+                                <option value="1" selected>Sales</option>
+                                <option value="2">Purchases</option>
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12"></label>
+                        <div class="col-md-12" style="font-size: 14px">
+                                    <input name="history" id="history" class="styled" type="checkbox">
+                                    <label for="history">
+                                     &nbsp;Show History
+                                </label>
+                        </div>
+                        <div class="col-md-12" style="font-size: 14px">
+                                    <input name="clear_tax" id="clear_tax" class="styled" type="checkbox">
+                                    <label for="clear_tax">
+                                     &nbsp;Clear Tax Tracking
+                                </label>
+                        </div>
+                    </div>
+                    <div id="divButton_review" class="form-group bottom-group">
+                        <div class="col-md-5">
+                            <a id="btnReview" class="btn btn-success" style="margin-top: 10px;">Review</a>
+                        </div>
+                        <div class="col-md-7">
+                            <a id="btnXLS" class="btn btn-success" style="margin-top: 10px;">Excel Report</a>
+                        </div>
+                    </div>
+                    <div id="divButton_clear" class="form-group bottom-group" style="display: none;">
+                        <div class="col-md-offset-2 col-md-6">
+                            <a id="btnClear" class="btn btn-success" style="margin-top: 10px;">Clear Tax Tracking</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <div class="col-md-9">
+            <section class="panel">
+                <div class="panel-body" style="height: 100%; min-height: 500px;">
+                    <div id="divViewPDF" class="adv-table">
+                        <iframe id="frViewPDF" width="100%" height="100%" style="height: 100%; min-height: 510px;"
+                                src=""></iframe>
+                    </div>
+                    <div id="loadpage"
+                         style="position:absolute; left:0px; top:0px; background-color:white; layer-background-color:white; width: 100%; height: 100%;">
+                        <p align="center" style="font-size: large;">
+                            <img src="/static/img/loading1.gif">
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/advanced-form-datepicker.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/select2/select2.js' %}"></script>
+    <script type="text/javascript">
+        var divViewPDF = $('#divViewPDF');
+        var frViewPDF = $('#frViewPDF')[0];
+        var f_year = '';
+        var f_perd = '';
+        var t_year = '';
+        var t_perd = '';
+        var fiscal_data = [];
+
+        $("#tax_authority").select2({
+            placeholder: 'select tax authority',
+        });
+        $("#print_type").select2();
+        $("#report_by").select2();
+        $("#print_by").select2();
+        $("#transaction_type_options").select2();
+
+        function changeYear(selector, to) {
+            var curr_year = '';
+            if(selector == 'from') {
+                curr_year = $('#from-container select option:selected').val();
+            } else {
+                curr_year = $('#to-container select option:selected').val();
+            }
+            var to_year = curr_year;
+            if (to == 'Next') {
+                to_year = parseInt(curr_year) + 1;
+            } else {
+                to_year = parseInt(curr_year) - 1;
+            }
+
+            fiscal_data.forEach(element => {
+                if(element.year == to_year) {
+                    if(selector == 'from') {
+                        $("#from-container select").val(to_year).trigger('change');
+                    } else {
+                        $("#to-container select").val(to_year).trigger('change');
+                    }
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            f_year = '{{f_year}}';
+            t_year = '{{t_year}}';
+            f_perd = '{{f_month}}';
+            t_perd = '{{t_month}}';
+            $('#from-container input').val(f_perd + '-' + f_year);
+            $('#to-container input').val(t_perd + '-' + t_year);
+            get_fiscal_data();
+            $("#loadpage").hide();
+            $("#report_list").trigger('change');
+            //Set height of report view
+            var header = $('.header');
+            var height = $(this).height() - header.height() * 2;
+            divViewPDF.height(height);
+            var window = $(window).on('resize', function () {
+                divViewPDF.height(height);
+            }).trigger('resize'); //on page load
+        });
+
+        $('#dropdownMenu1').on('click', function(){
+            update_fiscal_table('#fromTable tbody', f_year, f_perd);
+            $("#from-container select").val(f_year);
+            $('#from_menu').addClass('show');
+        });
+        $('#dropdownMenu2').on('click', function(){
+            update_fiscal_table('#toTable tbody', t_year, t_perd);
+            $("#to-container select").val(t_year);
+            $('#to_menu').addClass('show');
+        });
+
+        $("#from-container select").on('change', function(){
+            f_year = $(this).val();
+            $('#from-container input').val(f_perd + '-' + f_year);
+            update_fiscal_table('#fromTable tbody', f_year, f_perd);
+        });
+
+        $("#to-container select").on('change', function(){
+            t_year = $(this).val();
+            $('#to-container input').val(t_perd + '-' + t_year);
+            update_fiscal_table('#toTable tbody', t_year, t_perd);
+        });
+
+        function get_fiscal_data() {
+            $.ajax({
+                type: "GET",
+                url: "/accounting/get_fiscal_data/",
+                success: function (data) {
+                    fiscal_data = data;
+                }
+            });
+        }
+
+        function update_fiscal_table(selector, year, perd='1'){
+            $(selector).empty();
+            fiscal_data.forEach(element => {
+                if(element.year == year) {
+                    let tr = '<tr class="rows';
+                    if (parseInt(perd) == parseInt(element.period)) {
+                        tr += ' success';
+                    }
+                    tr += '"><td class="td-fsc">' + element.period + '</td>';
+                    tr += '<td class="td-fsc">' + element.start + '</td>';
+                    tr += '<td class="td-fsc">' + element.end + '</td>';
+                    tr += '<td class="td-fsc">' + element.status + '</td>';
+                    tr += '</tr>';
+                    $(selector).append(tr);
+
+                }
+            });
+        }
+
+        $(document).on("click","tr.rows", function(e){
+            if($(this).parent().hasClass('f')){
+                f_perd = $(this).find('td').eq(0).text();
+                $('#from-container input').val(f_perd + '-' + f_year);
+                update_fiscal_table("#fromTable tbody", f_year, f_perd);
+                $('#from_menu').removeClass('show');
+            } else {
+                t_perd = $(this).find('td').eq(0).text();
+                $('#to-container input').val(t_perd + '-' + t_year);
+                update_fiscal_table("#toTable tbody", t_year, t_perd);
+                $('#to_menu').removeClass('show');
+            }
+            
+        });
+
+        $(document).on('click', function(e){
+            if($(e.target).hasClass('year-period-from')) {
+                $('#from_menu').addClass('show');
+            } else {
+                if($(e.target).parent().parent().hasClass('dropdown-menu') == false) {
+                    $('#from_menu').removeClass('show');
+                }
+            }
+            if($(e.target).hasClass('year-period-to')) {
+                $('#to_menu').addClass('show');
+            } else {
+                if($(e.target).parent().parent().hasClass('dropdown-menu') == false) {
+                    $('#to_menu').removeClass('show');
+                }
+            }
+        });
+
+        $('#btnClear').on('click', function () {
+            var from_year_period = 0;
+            var to_year_period = 0;
+            var clear = $('#clear_tax:checked').val();
+            var is_clear = 0;
+            if (clear){
+                is_clear = 1;
+            }
+
+            $("#loadpage").show();
+
+            if (is_clear) {
+                var inputData = divDateFromTo.getElementsByTagName("input");
+                if (inputData[0].value != '') {
+                    from_year_period = inputData[0].value.split("-").reverse().join("-");
+                }
+                if (inputData[1].value != '') {
+                    to_year_period = inputData[1].value.split("-").reverse().join("-");
+                }
+                var transaction_type_val = $('#transaction_type_options').val();
+                $.ajax({
+                    type: "GET",
+                    url: "/accounting/clear_tax_tracking/" + from_year_period + "/" + to_year_period + "/" + transaction_type_val + "/",
+                    success: function (data) {
+                        $("#loadpage").hide();
+                        pop_ok_dialog("Success!",
+                            "Tax data has been cleared for the period.",
+                            function () { return; })
+                    },
+                    error: function () {
+                        $("#loadpage").hide();
+                        pop_ok_dialog("Error!",
+                            "Tax data cannot be cleared. Please try again.",
+                            function () { return; })
+                    }
+                });
+            }
+        })
+
+        $('#btnReview').on('click', function () {
+            var from_year_period = 0;
+            var to_year_period = 0;
+            var inputData = divDateFromTo.getElementsByTagName("input");
+            var clear = $('#clear_tax:checked').val();
+            var history = $('#history:checked').val();
+            var tax_authority_text = $('#tax_authority option:selected').text();
+            if (inputData[0].value != '') {
+                from_year_period = inputData[0].value.split("-").reverse().join("-");
+            }
+            if (inputData[1].value != '') {
+                to_year_period = inputData[1].value.split("-").reverse().join("-");
+            }
+            var print_type_val = $('#print_type').val();
+            var print_type_text = $('#print_type option:selected').text();
+            var report_by_val = $('#report_by').val();
+            var report_by_text = $('#report_by option:selected').text();
+            var print_by_val = $('#print_by').val();
+            var print_by_text = $('#print_by option:selected').text();
+            var transaction_type_val = $('#transaction_type_options').val();
+            var transaction_type_text = $('#transaction_type_options option:selected').text();
+            $("#loadpage").show();
+            var is_history = 0;
+            if (history){
+                is_history = 1;
+            }
+            var is_clear = 0;
+            if (clear){
+                is_clear = 1;
+            }
+            var url = "";
+            if (!is_clear) {
+                if (parseInt(report_by_val)==1 && parseInt(print_by_val)==1 && parseInt(transaction_type_val)==1){
+                    url = '/reports/print_tax_tracking/'+ tax_authority_text +'/'+ from_year_period +'/'+ to_year_period +'/'+ print_type_text +'/'+ report_by_text +'/'+ transaction_type_text +'/'+ print_by_text +'/'+is_history+'/';
+                    frViewPDF.setAttribute("src", url);
+                    divViewPDF.innerHTML = frViewPDF.outerHTML;
+
+                } else if (parseInt(report_by_val)==1 && parseInt(print_by_val)==1 && parseInt(transaction_type_val)==2){
+                    url = '/reports/print_tracking_auth/'+ tax_authority_text +'/'+ from_year_period +'/'+ to_year_period +'/'+ print_type_text +'/'+ report_by_text +'/'+ transaction_type_text +'/'+ print_by_text +'/'+is_history+'/';
+                    frViewPDF.setAttribute("src", url);
+                    divViewPDF.innerHTML = frViewPDF.outerHTML;
+
+                } else if (parseInt(report_by_val)==1 && parseInt(print_by_val)==2 && parseInt(transaction_type_val)==1){
+                    url = '/reports/print_tracking_items/'+ tax_authority_text +'/'+ from_year_period +'/'+ to_year_period +'/'+ print_type_text +'/'+ report_by_text +'/'+ transaction_type_text +'/'+ print_by_text +'/'+is_history+'/';
+                    frViewPDF.setAttribute("src", url);
+                    divViewPDF.innerHTML = frViewPDF.outerHTML;
+
+                } else if (parseInt(report_by_val)==1 && parseInt(print_by_val)==2 && parseInt(transaction_type_val)==2){
+                    url = '/reports/print_tracking_items/'+ tax_authority_text +'/'+ from_year_period +'/'+ to_year_period +'/'+ print_type_text +'/'+ report_by_text +'/'+ transaction_type_text +'/'+ print_by_text +'/'+is_history+'/';
+                    frViewPDF.setAttribute("src", url);
+                    divViewPDF.innerHTML = frViewPDF.outerHTML;
+
+                } else if (parseInt(report_by_val)==2 && parseInt(print_by_val)==1 && parseInt(transaction_type_val)==1){
+                    url = '/reports/print_tax_tracking/'+ tax_authority_text +'/'+ from_year_period +'/'+ to_year_period +'/'+ print_type_text +'/'+ report_by_text +'/'+ transaction_type_text +'/'+ print_by_text +'/'+is_history+'/';
+                    frViewPDF.setAttribute("src", url);
+                    divViewPDF.innerHTML = frViewPDF.outerHTML;
+                } else if (parseInt(report_by_val)==2 && parseInt(print_by_val)==1 && parseInt(transaction_type_val)==2){
+                    url = '/reports/print_tracking_auth/'+ tax_authority_text +'/'+ from_year_period +'/'+ to_year_period +'/'+ print_type_text +'/'+ report_by_text +'/'+ transaction_type_text +'/'+ print_by_text +'/'+is_history+'/';
+                    frViewPDF.setAttribute("src", url);
+                    divViewPDF.innerHTML = frViewPDF.outerHTML;
+
+                } else if (parseInt(report_by_val)==2 && parseInt(print_by_val)==2 && parseInt(transaction_type_val)==1){
+                    url = '/reports/print_tracking_items/'+ tax_authority_text +'/'+ from_year_period +'/'+ to_year_period +'/'+ print_type_text +'/'+ report_by_text +'/'+ transaction_type_text +'/'+ print_by_text +'/'+is_history+'/';
+                    frViewPDF.setAttribute("src", url);
+                    divViewPDF.innerHTML = frViewPDF.outerHTML;
+
+                } else if (parseInt(report_by_val)==2 && parseInt(print_by_val)==2 && parseInt(transaction_type_val)==2){
+                    url = '/reports/print_tracking_items/'+ tax_authority_text +'/'+ from_year_period +'/'+ to_year_period +'/'+ print_type_text +'/'+ report_by_text +'/'+ transaction_type_text +'/'+ print_by_text +'/'+is_history+'/';
+                    frViewPDF.setAttribute("src", url);
+                    divViewPDF.innerHTML = frViewPDF.outerHTML;
+                } else {
+                    alert('else apaan tauk deh');
+                }
+            } 
+
+            document.getElementById("frViewPDF").onload = function () {
+                $("#loadpage").hide();
+            }
+        });
+
+
+        $('#clear_tax').on('change', function(){
+            if($(this).is(':checked')) {
+                $('#history').prop('disabled', true);
+                $('#divButton_clear').css('display', 'block');
+                $('#divButton_review').css('display', 'none');
+            } else {
+                $('#history').prop('disabled', false);
+                $('#divButton_clear').css('display', 'none');
+                $('#divButton_review').css('display', 'block');
+            }
+        });
+
+
+        $('#history').on('change', function(){
+            if($(this).is(':checked')) {
+                $('#clear_tax').prop('disabled', true);
+            } else {
+                $('#clear_tax').prop('disabled', false);
+            }
+        });
+
+
+        $('#btnXLS').on('click', function () {
+            var from_year_period = 0;
+            var to_year_period = 0;
+            var inputData = divDateFromTo.getElementsByTagName("input");
+            var clear = $('#clear_tax:checked').val();
+            var history = $('#history:checked').val();
+            var tax_authority_text = $('#tax_authority option:selected').text();
+            if (inputData[0].value != '') {
+                from_year_period = inputData[0].value.split("-").reverse().join("-");
+            }
+            if (inputData[1].value != '') {
+                to_year_period = inputData[1].value.split("-").reverse().join("-");
+            }
+            var print_type_val = $('#print_type').val();
+            var print_type_text = $('#print_type option:selected').text();
+            var report_by_val = $('#report_by').val();
+            var report_by_text = $('#report_by option:selected').text();
+            var print_by_val = $('#print_by').val();
+            var print_by_text = $('#print_by option:selected').text();
+            var transaction_type_val = $('#transaction_type_options').val();
+            var transaction_type_text = $('#transaction_type_options option:selected').text();
+
+            var is_history = 0;
+            if (history){
+                is_history = 1;
+            }
+            var is_clear = 0;
+            if (clear){
+                is_clear = 1;
+            }
+            var url = "";
+            if (!is_clear) {
+                if (parseInt(print_by_val)==1) {
+                    url = '/reports/print_tax_auth_XLS/'+ tax_authority_text +'/'+ from_year_period +'/'+ to_year_period +'/'+ print_type_text +'/'+ report_by_text +'/'+ transaction_type_text +'/'+ print_by_text +'/'+is_history+'/';
+                    frViewPDF.setAttribute("src", url);
+                    divViewPDF.innerHTML = frViewPDF.outerHTML;
+                } else if (parseInt(print_by_val)==2) {
+                    url = '/reports/print_item_tax_XLS/'+ tax_authority_text +'/'+ from_year_period +'/'+ to_year_period +'/'+ print_type_text +'/'+ report_by_text +'/'+ transaction_type_text +'/'+ print_by_text +'/'+is_history+'/';
+                    frViewPDF.setAttribute("src", url);
+                    divViewPDF.innerHTML = frViewPDF.outerHTML;
+                }
+            }
+        });
+
+    </script>
+{% endblock %}
+
+

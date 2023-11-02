@@ -1,0 +1,62 @@
+section {
+  min-width: 665px;
+  overflow: scroll
+}
+
+.full_width {
+  width: 100%;
+}
+
+.display_block {
+  display: block;
+}
+
+.display_flex {
+  display: flex;
+}
+
+.date_length {
+  width: 120px;
+}
+
+.dscrp_length {
+  min-width: 250px;
+}
+
+.search_dscrp_length {
+  min-width: 200px;
+}
+
+.amount_length {
+  width: 180px;
+}
+
+.batch_no_length {
+  min-width: 100px;
+  width: 100px;
+}
+
+.currency_to_middle {
+  text-align-last:center;
+}
+
+/* body {
+  background: pink
+} */
+
+/* borders for div size check */
+.red {
+  border: 2px solid red;
+}
+
+.green {
+  border: 2px solid green;
+}
+
+.blue {
+  border: 2px solid blue;
+}
+
+.black {
+  border: 2px solid black;
+}

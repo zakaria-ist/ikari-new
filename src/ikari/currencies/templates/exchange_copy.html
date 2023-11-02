@@ -1,0 +1,380 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+{% endblock %}
+
+{% block sale_exchange_active %}
+{% if menu_type == '2' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block purchase_exchange_active %}
+{% if menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_a_active %}
+{% if menu_type == '2' or menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] or TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_i_active %}
+{% if menu_type == '2' or menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] or TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_order_i_active %}
+{% if menu_type == '2' or menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] or TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_order_a_active %}
+{% if menu_type == '2' or menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] or TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block exchange_rate_active %}
+{% if menu_type == '4' %} {# TRN_CODE_TYPE_DICT['Accounting'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block account_setting_a_active %}
+{% if menu_type == '4' %} {# TRN_CODE_TYPE_DICT['Accounting'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block account_setting_i_active %}
+{% if menu_type == '4' %} {# TRN_CODE_TYPE_DICT['Accounting'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_accounting_a_active %}
+{% if menu_type == '4' %} {# TRN_CODE_TYPE_DICT['Accounting'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_accounting_i_active %}
+{% if menu_type == '4' %} {# TRN_CODE_TYPE_DICT['Accounting'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+    <div class="col-lg-12">
+        <section class="panel">
+            <br/>
+            <form class="form-horizontal" action="{% url 'search_exchange_copy' menu_type %}" role="form" method="post"
+                   onsubmit="return checkForm(this);" enctype="multipart/form-data" id="mainForm">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="panel-body">
+                            <div class="form-group">
+                                <div class="row" style="padding-top:10px">
+                                    <div class="col-lg-5">
+                                        <div class="col-lg-4">
+                                            <label class="control-label">From Month</label>
+                                        </div>
+                                        <div class="col-lg-8">
+                                            <div id="sandbox-container">
+                                                <input type="text" id="from_month" name="from_month"
+                                                       class="form-control"
+                                                       value="{% if from_month %}{{ from_month }}
+                                                    {% else %}{% now "m-Y" %}{% endif %}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-5">
+                                        <div class="col-lg-4">
+                                            <label class="control-label  col-md-12">To Month</label>
+                                        </div>
+                                        <div class="col-lg-8">
+                                            <div id="sandbox-container">
+                                                <input type="text" id="to_month" name="to_month"
+                                                       class="form-control"
+                                                       value="{% if to_month %}{{ to_month }}
+                                                                    {% else %}{% now "m-Y" %}{% endif %}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-2">
+                                        <div class="form-group">
+                                            <div class=" col-lg-10">
+                                                <button id="check" class="btn btn-success">Copy</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </section>
+        <section class="panel">
+            <header class="panel-heading" style="font-size: 20px">
+                Exchange Rate Copy
+            </header>
+            <div>
+                <form class="form-horizontal" action="{% url 'generate_exchange_copy' '0' menu_type %}"
+                      role="form"
+                      method="post"
+                      enctype="multipart/form-data" id="form"> {# overwrite #}
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="panel-body">
+                                {% if messages %}
+                                    <div id="message" class="col-lg-12 alert alert-danger">
+                                        {% for message in messages %}
+                                            <strong id="me2">+{{ message }}</strong><br>
+                                        {% endfor %}
+                                        <strong name="nomessage" id="nomessage"
+                                                value=""></strong>
+                                    </div>
+                                {% endif %}
+                                <div id="avd" class="adv-table">
+                                    <table class="display table table-bordered table-striped table-condensed"
+                                           id="dynamic-table" style="width:100%">
+                                        <thead>
+                                        <tr>
+                                            <th>No</th>
+                                            <th>From Currency</th>
+                                            <th>To Currency</th>
+                                            <th>Rate</th>
+                                            <th>Exchange Date</th>
+                                            {% if 'currencies.change_exchangerate' in user.get_all_permissions %}
+                                                <th class="text-center">Delete</th>
+                                            {% endif %}
+                                        </tr>
+                                        </thead>
+                                        {% if exchangerate_list %}
+                                            <tbody>
+                                            {% for e in exchangerate_list %}
+                                                <tr class="gradeX" {% if e.is_exist == '1' %}
+                                                    style="background-color: #f2dede !important;" {% endif %}>
+                                                    <td>{{ e.line_number }}</td>
+                                                    <td id="from">{{ e.from_currency.name }}</td>
+                                                    <td id="to">{{ e.to_currency.name }}</td>
+                                                    <td>{{ e.rate }}</td>
+                                                    <td>{{ e.ex_rate_date }}</td>
+                                                    <td class="center">
+                                                        <a id="btnDelete" class="delelte btn btn-danger btn-sm"
+                                                           style="color: white"
+                                                           data-id="{{ e.id }}">Delete</a>
+                                                        <input type="hidden" class="ex_id" name="ex_id" id="ex_id"
+                                                               value={{ e.id }}>
+                                                        <input type="hidden" name="hdIsHidden" id="hdIsHidden"
+                                                               value='0'>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        {% endif %}
+                                    </table>
+                                </div>
+                                <div class="col-lg-10">
+                                    <div class="col-lg-offset-5 col-lg-10">
+                                        <input type="hidden" name="hdExchangeList" id="hdExchangeList" value=''>
+                                        <button id="btnSave" class="btn btn-success">Save</button>
+                                        <a class="btn btn-default" href="{% url 'exchange_rate_list' menu_type %}">Cancel</a>
+                                        <input type="hidden" name="hdFromMonth" id="hdFromMonth" value=''>
+                                        <input type="hidden" name="hdToMonth" id="hdToMonth" value=''>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                
+                <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1"
+                     id="delete-dialog"
+                     class="modal fade">
+                    <div class="modal-dialog modal-sm">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button aria-hidden="true" data-dismiss="modal" class="close"
+                                        type="button">×
+                                </button>
+                                <h4 class="modal-title"> Confirm
+                                    Dialog</h4>
+                            </div>
+                            <div class="modal-body">
+                                <form role="form" action="{% url 'generate_exchange_copy' '1' menu_type %}" method="post"> {# overwrite #}
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        <label for="exampleInputEmail1">The record exists in the selected month.</br>Do you
+                                            want to
+                                            replace?</label>
+                                    </div>
+                                    <button type="submit" name="btnSave" id="btnOk" class="btn btn-success">OK</button>
+                                    <a data-dismiss="modal" class="btn btn-default"
+                                       type="button">Cancel</a>
+                                    <input type="hidden" name="hdReplaceExchangeList" id="hdReplaceExchangeList" value=''>
+                                    <input type="hidden" name="hdReplaceFromMonth" id="hdReplaceFromMonth" value=''>
+                                    <input type="hidden" name="hdReplaceToMonth" id="hdReplaceToMonth" value=''>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </div>
+
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="text/javascript" language="javascript"
+            src="{% static 'assets/advanced-datatable/media/js/jquery.dataTables.js' %}"></script>
+    <script type="text/javascript" src="{% static 'assets/data-tables/DT_bootstrap.js' %}"></script>
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}?{% now 'H' %}"></script>
+    <!--dynamic table initialization -->
+    <script src="{% static 'js/common/dynamic_table_init.js' %}?{% now 'H' %}"></script>
+    <script type="text/javascript">
+
+        $('#sandbox-container input').datepicker({
+            format: "mm-yyyy",
+            startView: 1,
+            minViewMode: 1,
+            autoclose: true
+        });
+
+        var year_period = moment().format("MM-YYYY");
+        $('#sandbox-container input').bind('keyup', function (event) {
+            if (event.which != 13) {
+                temp_date = $(this).val();
+                valid_date = moment(temp_date, "MM-YYYY", true).isValid();
+                if (valid_date) {
+                    year_period = temp_date;
+                }
+                return true;
+            }
+        });
+        $('#sandbox-container input').bind('keydown', function (event) {
+            if (event.which == 13) {
+                $(this).datepicker('setDate', year_period);
+                move_next_elem(this, 1);
+                return false;
+            } else {
+                adjust_input_month_year(this);
+            }
+        });
+        $(window).load(function () {
+            AutoArrangeNumber();
+        });
+
+        $(document).on("click", "a.delelte", function () {
+            currentRow = $(this).parents('tr');
+            currentRow.css("display", "none");
+            $(this).parents("td").find('input')[1].value = "1"
+            AutoArrangeNumber();
+            var existpink = HidenMessage();
+            if (existpink == 0) {
+                $('#message').css("display", "none");
+            }
+        });
+
+        function AutoArrangeNumber() {
+            var rows = $("#dynamic-table").dataTable().fnGetNodes();
+            var count = 0;
+            for (var i = 0; i < rows.length; i++) {
+                if ($(rows[i]).find("#hdIsHidden").val() == '0') {
+                    count = count + 1;
+                    $(rows[i]).find("td:eq(0)").text(count);
+                }
+            }
+        }
+        ;
+
+        function HidenMessage() {
+            var rows = $("#dynamic-table").dataTable().fnGetNodes();
+            var existpink = 0;
+            for (var i = 0; i < rows.length; i++) {
+                if ($(rows[i]).find("#hdIsHidden").val() == '0') {
+                    var color = $(rows[i]).css("background-color");
+                    if (color == "rgb(242, 222, 222)") {
+                        existpink = 1
+                    }
+                }
+            }
+            return existpink;
+        }
+        ;
+
+        $(document).on("blur", "#to_month", function () {
+            var dataTable = $('#dynamic-table').dataTable();
+            dataTable.fnClearTable(this);
+            $('#message').css("display", "none");
+        });
+
+        $(document).on("blur", "#from_month", function () {
+            var dataTable = $('#dynamic-table').dataTable();
+            dataTable.fnClearTable(this);
+            $('#message').css("display", "none");
+        });
+
+        $('#btnSave').on('click', function () {
+            var hdExchangeRateList = $('#hdExchangeList').val();
+            var rows = $("#dynamic-table").dataTable().fnGetNodes();
+            for (var i = 0; i < rows.length; i++) {
+                if ($(rows[i]).find("#hdIsHidden").val() == '0') {
+                    if (hdExchangeRateList.length > 0) {
+
+                        hdExchangeRateList = hdExchangeRateList + ',' + $(rows[i]).find("#ex_id").val()
+                    }
+                    else {
+                        hdExchangeRateList = $(rows[i]).find("#ex_id").val()
+                    }
+                }
+            }
+            $('#hdExchangeList').val(hdExchangeRateList);
+            $('#hdFromMonth').val($('#from_month').val());
+            $('#hdToMonth').val($('#to_month').val());
+
+            var existpink = HidenMessage();
+            if (hdExchangeRateList.length > 0)
+            {
+                if (existpink == 1) {
+                    event.preventDefault;
+                    $('#hdReplaceExchangeList').val(hdExchangeRateList);
+                    $('#hdReplaceFromMonth').val($('#from_month').val());
+                    $('#hdReplaceToMonth').val($('#to_month').val());
+                    $('#delete-dialog').modal('show');
+                    return false;
+                }
+                else {
+                    event.stopPropagation();
+                    return true;
+                }
+            }
+            else
+            {
+                 event.preventDefault;
+                 return false;
+            }
+        });
+
+    </script>
+
+{% endblock %}
+
+

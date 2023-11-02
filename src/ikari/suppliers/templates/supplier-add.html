@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+{% endblock %}
+
+{% block title %}Add Supplier{% endblock %}
+{% block supplier_active %}active{% endblock %}
+{% block sp_setting_a_active %}active{% endblock %}
+{% block sp_setting_i_active %}active{% endblock %}
+{% block parent_order_a_active %}active{% endblock %}
+{% block parent_order_i_active %}active{% endblock %}
+
+{% block content %}
+    <form class="form-horizontal" action="{% url 'supplier_add' %}" role="form" method="post" onsubmit="return checkForm(this);"
+          enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="col-lg-12">
+            <section class="panel">
+                <header id="supplỉe_info" class="panel-heading">
+                    <strong>Supplier Info</strong>
+                </header>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label for="code" class="col-lg-2 col-sm-2 control-label">Supplier Code<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="code" name="code" required>
+                        </div>
+                        <label for="country"
+                               class="col-lg-2 col-sm-2 control-label">Country</label>
+                        <div class="col-lg-4">
+                            <select class="form-control" id="country" name="country">
+                                <option value="0">---Select---</option>
+                                {% for country in country_list %}
+                                    <option value="{{ country.id }}">{{ country.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Supplier Name<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <label for="currency" class="col-lg-2 col-sm-2 control-label">Currency</label>
+                        <div class="col-sm-4">
+                            <select class="form-control" id="currency" name="currency">
+                                <option value="0">---Select---</option>
+                                {% for currency in currency_list %}
+                                    <option value="{{ currency.id }}">{{ currency.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+                        <label for="address" class="col-lg-2 col-sm-2 control-label">Address</label>
+                        <div class="col-lg-4">
+                            <textarea rows="3" class="form-control" id="address" name="address"></textarea>
+                        </div>
+                        <div>
+                            <label for="payment_mode" class="col-lg-2 col-sm-2 control-label">Payment Mode</label>
+                            <div class="col-sm-4">
+                                <select style="margin-bottom: 15px" class="form-control" id="payment_mode"
+                                        name="payment_mode">
+                                    <option value="0">---Select---</option>
+                                    {% for pay in payment_mode_list %}
+                                        <option value="{{ pay.id }}">{{ pay.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <label for="term" class="col-lg-2 col-sm-2 control-label">Payment
+                                Term</label>
+                            <div class="col-lg-4">
+                                <select class="form-control" id="term" name="term">
+                                    <option value="-1">---Select---</option>
+                                    {% for term in term_list %}
+                                        <option value="{{ term.id }}">{{ term.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="ship_info_1" class="control-label col-lg-2">Remarks</label>
+                        <div class="col-lg-4">
+                            <textarea class="form-control " rows="3" id="ship_info_1" name="ship_info_1"></textarea>
+                        </div>
+                        <div>
+
+                            <label style="margin-bottom: 15px" for="credit_limit"
+                                   class="col-lg-2 col-sm-2 control-label">Credit Limit</label>
+                            <div style="margin-bottom: 15px" class="col-sm-4">
+                                <input type="number" step="0.01" class="form-control" id="credit_limit"
+                                       name="credit_limit">
+                            </div>
+                            <div class="col-lg-6"></div>
+                            <label for="ship_via" class="col-lg-2 col-sm-2 control-label">Ship Via</label>
+                            <div class="col-lg-4">
+                                <input type="text" class="form-control" id="ship_via" name="ship_via">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="tax" class="control-label col-lg-6">
+                            <strong>Contact Info</strong></label>
+
+                        <label for="tax" class="col-lg-2 col-sm-2 control-label">Tax
+                            Code</label>
+                        <div class="col-lg-4">
+                            <select class="form-control" id="tax" name="tax">
+                                <option value="0">---Select---</option>
+                                {% for tax in tax_list %}
+                                    <option value="{{ tax.id }}">{{ tax.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="contact_attention" class="col-lg-2 col-sm-2 control-label">Attention</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="contact_attention" name="contact_attention">
+                        </div>
+                        <label for="account_set" class="col-lg-2 col-sm-2 control-label">Account
+                            Set</label>
+                        <div class="col-lg-4">
+                            <select class="form-control" id="account_set" name="account_set">
+                                <option value="0">---Select---</option>
+                                {% for account in account_set %}
+                                    <option value="{{ account.id }}">{{ account.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    {#                    <div class="form-group ">#}
+                    {#                        <label for="ship_info_2" class="control-label col-lg-2">Ship info 2</label>#}
+                    {#                        <div class="col-lg-10">#}
+                    {#                            <textarea class="form-control " id="ship_info_2" name="ship_info_2"></textarea>#}
+                    {#                        </div>#}
+                    {#                    </div>#}
+
+
+                    <div class="form-group">
+                        <label style="display: none" for="contact_name"
+                               class="col-lg-2 col-sm-2 control-label">Name</label>
+                        <div style="display: none" class="col-lg-4">
+                            <input type="text" class="form-control" id="contact_name" name="contact_name">
+                        </div>
+                        <label for="contact_designation" class="col-lg-2 col-sm-2 control-label">Designation</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="contact_designation" name="contact_designation">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact_phone" class="col-lg-2 col-sm-2 control-label">Telephone</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="contact_phone" name="contact_phone">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact_fax" class="col-lg-2 col-sm-2 control-label">Fax</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="contact_fax" name="contact_fax">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact_company_name" style="display: none" class="col-lg-2 col-sm-2 control-label">Company
+                            Name</label>
+                        <div class="col-lg-4" style="display: none">
+                            <input type="text" class="form-control" id="contact_company_name"
+                                   name="contact_company_name">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="display: none">
+                        <label for="contact_email" class="col-lg-2 col-sm-2 control-label">Email</label>
+                        <div class="col-lg-4">
+                            <input type="email" class="form-control" id="contact_email" name="contact_email">
+                        </div>
+                        <label for="contact_web" class="col-lg-2 col-sm-2 control-label">Web</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="contact_web" name="contact_web">
+                        </div>
+                    </div>
+                    <div class="form-group" style="display: none">
+                        <label for="contact_address" class="col-lg-2 col-sm-2 control-label">Address</label>
+                        <div class="col-lg-10">
+                            <textarea class="form-control" rows="4" id="contact_address"
+                                      name="contact_address"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group" style="display: none">
+                        <label for="remark" class="col-lg-2 col-sm-2 control-label">Remark</label>
+                        <div class="col-lg-10">
+                            <textarea class="form-control" rows="4" id="remark" name="remark"></textarea>
+                        </div>
+                    </div>
+                    <!-- <div class="form-group">
+                        <label for="chkActive" class="col-lg-2 col-sm-2 control-label"></label>
+                        <div class="col-lg-10">
+                            <div class="checkbox checkbox-primary">
+                                <input name="chkActive" id="chkActive" class="styled" type="checkbox" checked/>
+                                <label for="chkActive">
+                                    Active
+                                </label>
+                            </div>
+                        </div>
+                    </div> -->
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" name="btnSave" class="btn btn-success">Save</button>
+                            {#                            <a class="btn btn-default" href="{% url 'supplier_list' %}">Cancel</a>#}
+                            <a class="btn btn-default" href="{{ request.session.url_referer }}">Cancel</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </form>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="application/javascript" src="{% static 'js/ga.js' %}"></script>
+{% endblock %}

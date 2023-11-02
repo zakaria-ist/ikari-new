@@ -1,0 +1,37 @@
+from django.conf.urls import url
+from inventory import views
+
+urlpatterns = [
+    url(r'^$', views.transaction_code_list, name='index'),
+    url(r'^transaction_code_list/$', views.transaction_code_list, name='transaction_code_list'),
+    url(r'^trans_code_list_by/(?P<menu_type>.*)/$', views.trans_code_list_by, name='trans_code_list_by'),
+    url(r'^load_transaction_code_list/(?P<menu_type>.*)/$', views.load_transaction_code_list, name='load_transaction_code_list'),
+    url(r'^reset_transaction_code_list/(?P<menu_type>.*)/$', views.reset_transaction_code_list, name='reset_transaction_code_list'),
+    url(r'^file_control/$', views.load_file_control, name='load_file_control'),
+    url(r'^load_location_list/$', views.load_location_list, name='load_location_list'),
+    url(r'^load_stock_transaction_items_list/$', views.load_stock_transaction_items_list,
+        name='load_stock_transaction_items_list'),
+    url(r'^item_per_detail/(?P<item_id>.*)/$', views.detail_item,name='detail_item'),
+    
+    url(r'^item_by_loc/$', views.item_detail_loc,name='item_detail_loc'),
+    url(r'^transaction_code_add/(?P<menu_type>\d+)/$', views.transaction_code_add, name='transaction_code_add'),
+    url(r'^transaction_code_edit/(?P<trans_code_id>\d+)/(?P<menu_type>\d+)/$', views.transaction_code_edit,
+        name='transaction_code_edit'),
+    url(r'^transaction_code_delete/(?P<trans_code_id>\d+)/(?P<menu_type>\d+)/$', views.transaction_code_delete,
+        name='transaction_code_delete'),
+    url(r'^stock_transaction_list/$', views.stock_transaction_list, name='stock_transaction_list'),
+    url(r'^load_stock_transaction_list/$', views.load_stock_transaction_list, name='load_stock_transaction_list'),
+    url(r'^stock_transaction_add/(?P<is_send>\d+)/$', views.stock_transaction_add, name='stock_transaction_add'),
+    url(r'^stock_transaction_edit/(?P<stock_trans_id>\d+)/(?P<is_send>\d+)/$', views.stock_transaction_edit,
+        name='stock_transaction_edit'),
+    url(r'^stock_transaction_delete/(?P<stock_trans_id>\d+)/$', views.stock_transaction_delete,
+        name='stock_transaction_delete'),
+    url(r'^search_transaction_code/$', views.search_transaction_code, name='search_transaction_code'),
+    url(r'^is_trn_code_exist/$', views.is_trn_code_exist, name='is_trn_code_exist'),
+    url(r'^search_location_code/$', views.search_location_code, name='search_location_code'),
+    url(r'^print/stock/(?P<report_code>\d+)/$', views.print_stock_reports, name='print_stock_reports'),
+    url(r'^inv_daily_closing/$', views.inv_daily_closing, name='inv_daily_closing'),
+    url(r'^inv_monthly_closing/$', views.inv_monthly_closing, name='inv_monthly_closing'),
+    url(r'^repost/$', views.repost_stock, name='repost_stock'),
+    url(r'^detail_stocktransaction/(?P<stock_trans_id>.*)/(?P<loc_id>.*)/$', views.detailStock, name='detailStock'),
+]

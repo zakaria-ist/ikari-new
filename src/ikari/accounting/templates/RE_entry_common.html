@@ -1,0 +1,140 @@
+{% load schedule %}
+    <!-- <div class="panel-body"> -->
+        <div class="form-group">
+            <label for="entry_num" class="col-lg-2 col-sm-2 control-label">Entry Code</label>
+            <div class="col-lg-2 col-sm-2">
+                {% if rec_entry %}
+                    <input class="form-control  text-center" id="id_re_code" name="re_code" type="text" value="{{rec_entry.code}}" required readonly>
+                {% else %}
+                    <input class="form-control  text-center" id="id_re_code" name="re_code" type="text" value="{{entry_no}}" required readonly>
+                {% endif %}
+            </div>
+            <label for="entry_desc" class="col-lg-offset-1 col-sm-offset-1 col-lg-2 col-sm-2 control-label">Entry Description</label>
+            <div class="col-lg-4 col-sm-4">
+                <input class="form-control sended fieldset hdrdata" id="id_re_description" name="re_description" type="text" value="{{rec_entry.re_description}}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="schedule_code" class="col-lg-2 col-sm-2 control-label">Schedule Code
+                <span class="span-required">(*)</span>
+            </label>
+            <div class="col-lg-2 col-sm-2">
+                <input class="form-control  text-center" id="id_schedule_code" name="schedule_code" type="text" value="{{rec_entry.schedule.code}}" required>
+            </div>
+            <input name="schedule_id" id="schedule_id" class="hide" type="number" value="{{rec_entry.schedule_id}}"/>
+            <div class="col-lg-1 col-sm-1">
+                <button id="btnSearchSchedule" type="button" class="btn btn-info fieldset" data-toggle="modal" href="#scheduleModal">
+                    <i class="fa fa-search"></i>
+                </button>
+            </div>
+            <label for="schedule_desc" class="col-lg-2 col-sm-2 control-label">Schedule Desc</label>
+            <div class="col-lg-4 col-sm-4">
+                <input class="form-control sended fieldset hdrdata" id="id_schedule_desc" name="schedule_desc" type="text" value="{{rec_entry.schedule.description}}" disabled>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="document_date" class="col-lg-2 col-md-1 control-label">Start Date</label>
+            <div class="col-lg-2 col-md-2">
+                <input class="form-control form-control-inline input-medium default-date-picker fieldset hdrdata" data-date-format="dd-mm-yyyy"
+                    id="start_date" name="start_date" required="required" type="text" {% if rec_entry %} value="{{rec_entry.start_date}}" {% else %} value="{% now "SHORT_DATETIME_FORMAT" %}" {% endif %}>
+            </div>
+            <div class="col-lg-1 col-sm-1 control-label checkbox checkbox-primary" style="margin-left:15px">
+                <input name="is_expire" id="is_expire" class="styled fieldset" type="checkbox"/>
+                <label for="is_expire">Expire</label>
+            </div>
+            <div class="" id="expire_date_div">
+                <label for="document_date" class="col-lg-2 col-md-1 control-label" style="margin-left:-15px">Expire Date</label>
+                <div class="col-lg-2 col-md-2">
+                    <input class="form-control form-control-inline input-medium default-date-picker fieldset hdrdata" data-date-format="dd-mm-yyyy"
+                        id="expire_date" name="expire_date" type="text" value="{{rec_entry.expire_date}}">
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="run_date" class="col-lg-2 col-md-1 control-label">Last Run</label>
+            <div class="col-lg-2 col-md-2">
+                <input class="form-control form-control-inline input-medium default-date-picker fieldset hdrdata" data-date-format="dd-mm-yyyy"
+                    id="run_date" name="run_date" type="text" value="{{rec_entry.run_date}}" disabled="disabled">
+            </div>
+            <div class="col-lg-1 col-sm-1 control-label checkbox checkbox-primary" style="margin-left:15px">
+                <input name="is_active" id="is_active" class="styled fieldset" type="checkbox" {% if not rec_entry %} checked {% endif %}/>
+                <label for="is_active">Active</label>
+            </div>
+            <label for="maintained_date" class="col-lg-2 col-md-1 control-label" style="margin-left:-15px">Last Maintained</label>
+            <div class="col-lg-2 col-md-2">
+                <input class="form-control form-control-inline input-medium default-date-picker fieldset hdrdata" data-date-format="dd-mm-yyyy"
+                    id="maintained_date" name="maintained_date" required="required" type="text" value="{{rec_entry.maintained_date}}" disabled="disabled">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="exch_rate_type" class="col-lg-2 col-md-2 control-label">Exchange Rate</label>
+            <div class="col-lg-2 col-sm-2 control-label radio-inline" style="">
+                <input class="form-control sended" id="id_exch_rate_type" name="exch_rate_type" type="text" value="Current Rate" disabled="disabled">
+            </div>
+        </div>
+        <hr style="margin: 0px -15px 15px -15px;" />  
+    <!-- </div> -->
+
+
+    <!-- Start of modal schedule_code -->
+    <div class="modal fade" id="scheduleModal" tabindex="-1" role="dialog"
+         aria-labelledby="scheduleModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Schedule List</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="schedule-code-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Schedule Code</th>
+                                                    <th>Description</th>
+                                                    <th>Recurring Period</th>
+                                                    <th>Frequency</th>
+                                                    <th>Days</th>
+                                                    <th class="hide_column">Select</th>
+                                                </tr>
+                                                </thead>
+                                                {% for schedule in schedule_list %}
+                                                    <tr>
+                                                        <td class="text-left">{{ schedule.code }}</td>
+                                                        <td class="text-left">{{ schedule.description }}</td>
+                                                        <td class="text-left">{{ schedule.recur_period|return_period }}</td>
+                                                        <td class="text-left">{{ schedule|return_frequency }}</td>
+                                                        <td class="text-left">{{ schedule|return_day }}</td>
+                                                        <td class="hide_column"><input type="radio" name="schedule_chice"
+                                                                   id="{{ schedule.id }}"
+                                                                   class="call-checkbox"
+                                                                   value="{{ schedule.id }}">
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button data-dismiss="modal" class="btn btn-success" type="button" id="btnScheduleSelect">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- end of modal of modal schedule_code -->
+

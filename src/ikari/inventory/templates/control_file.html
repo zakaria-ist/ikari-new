@@ -1,0 +1,509 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    {% load humanize %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+{% endblock %}
+
+
+{% block inv_setting_a_active %}
+{% if menu_type == '1' %} {# TRN_CODE_TYPE_DICT['Inventory Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block ics_a_active %}
+{% if menu_type == '1' %} {# TRN_CODE_TYPE_DICT['Inventory Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block file_control_active %}
+{% if menu_type == '1' %} {# TRN_CODE_TYPE_DICT['Inventory Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block inv_setting_i_active %}
+{% if menu_type == '1' %} {# TRN_CODE_TYPE_DICT['Inventory Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                    <strong>Control File Setup</strong>
+            </header>
+            <form class="form-horizontal" action="{% url 'load_file_control' %}" role="form" method="post" onsubmit="return refresh_dates()">
+            <!-- <b> Page 1</b> -->
+            <div class="panel-body">
+                    {% csrf_token %}
+                    <div class="col-lg-6">
+                        <div class="form-group ">
+                            <label for="code" class="col-lg-4 col-sm-4 control-label">Company Name</label>
+                            <div class="col-lg-6">
+                                {{ form.name|default_if_none:"" }}
+                            </div>
+                        </div>
+                        <div class="form-group ">
+                            <label for="name" class="col-lg-4 col-sm-4 control-label">Company Address</label>
+                            <div class="col-lg-6">
+                                {{ form.address|default_if_none:"" }}
+                            </div>
+                        </div>
+                        <div class="form-group ">
+                            <label for="doc_type" class="col-lg-4 col-sm-4 control-label">Costing Method</label>
+                            <div class="col-lg-6">
+                                {{ form.costing_method }}
+                            </div>
+
+                        </div>
+                        <div class="form-group ">
+                            <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">Decimal Amount</label>
+                            <div class="col-lg-6">
+                                {{ form.decimal_amount }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="form-group ">
+                            <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">Fiscal Period</label>
+                            <div class="col-lg-6">
+                                {{ form.fiscal_period }}
+                                <input type="text" class="hide" name="fiscal_year" id="fiscal_year">
+                            </div>
+                        </div>
+                        <div class="form-group ">
+                            <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">Current Period</label>
+                            <div class="col-lg-6">
+                                {{ form.current_Period }}
+                                <input type="text" name="current_period_month" class="hide" id="current_period_month">
+                                <input type="text" class="hide" name="current_period_year" id="current_period_year">
+                            </div>
+                        </div>
+                        <div class="form-group ">
+                            <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">Currency</label>
+                            <div class="col-lg-6">
+                                <select class="form-control" id="currency" name="currency">
+                                {% for currency in currency_list %}
+                                    <option value="{{ currency.id }}"
+                                            {% if  currency.id == company.currency.id %}selected{% endif %}>
+                                        {{ currency.code }} - {{ currency.name }}</option>{% endfor %}
+                            </select>
+                            </div>
+                        </div>
+                        <div class="form-group ">
+                            <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">Daily Closing</label>
+                            <div class="col-lg-6">
+                                {{ form.closing_date }}
+                            </div>
+                        </div>
+                        <div class="form-group ">
+                            <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">Last Update</label>
+                            <div class="col-lg-6">
+                                {{ form.update_date }}
+                            </div>
+                        </div>
+                    </div>
+            </div>
+            <!-- <b> Page 2</b> -->
+            <div class="panel-body">
+                <div class="col-lg-6">
+                    <div class="form-group ">
+                        <label for="auto_generate" class="col-lg-4 col-sm-4 control-label"><b>Month</b></label>
+                        <div class="col-lg-6">
+                            <b> Closing Date</b>
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">January</label>
+                        <div class="col-lg-6">
+                            {{ form.cl_1 | default:"0"}}
+                            {{ form.op_1 }}
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">February</label>
+                        <div class="col-lg-6">
+                            {{ form.cl_2 | default:""}}
+                            {{ form.op_2 }}
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">March</label>
+                        <div class="col-lg-6">
+                            {{ form.cl_3 }}
+                            {{ form.op_3 }}
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">April</label>
+                        <div class="col-lg-6">
+                            {{ form.cl_4 }}
+                            {{ form.op_4 }}
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">May</label>
+                        <div class="col-lg-6">
+                            {{ form.cl_5 }}
+                            {{ form.op_5 }}
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">June</label>
+                        <div class="col-lg-6">
+                            {{ form.cl_6 }}
+                            {{ form.op_6 }}
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">July</label>
+                        <div class="col-lg-6">
+                            {{ form.cl_7 }}
+                            {{ form.op_7 }}
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">August</label>
+                        <div class="col-lg-6">
+                            {{ form.cl_8 }}
+                            {{ form.op_8 }}
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">September</label>
+                        <div class="col-lg-6">
+                            {{ form.cl_9 }}
+                            {{ form.op_9 }}
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">October</label>
+                        <div class="col-lg-6">
+                            {{ form.cl_10 }}
+                            {{ form.op_10 }}
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">November</label>
+                        <div class="col-lg-6">
+                            {{ form.cl_11 }}
+                            {{ form.op_11 }}
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">December</label>
+                        <div class="col-lg-6">
+                            {{ form.cl_12 }}
+                            {{ form.op_12 }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="form-group ">
+                        <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">&nbsp;</label>
+                        <div class="col-lg-4">
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">Item Code Size</label>
+                        <div class="col-lg-4">
+                            {{ form.code_size }}
+                        </div>
+                        <div class="col-lg-2"> <br>Character
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">Item Category Size</label>
+                        <div class="col-lg-4">
+                            {{ form.category_size }}
+                        </div>
+                        <div class="col-lg-2"> <br>Character
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">Item Extension Size</label>
+                        <div class="col-lg-4">
+                            {{ form.extent_item }}
+                        </div>
+                        <div class="col-lg-2"> <br>Character
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">&nbsp;</label>
+                        <div class="col-lg-4">
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">Item Group Code</label>
+                        <div class="col-lg-4">
+                            {{ form.group_item }}
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">Unit measure</label>
+                        <div class="col-lg-4">
+                            {{ form.uom_item }}
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">&nbsp;</label>
+                        <div class="col-lg-4">
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">Stock Take<br> Transaction Code </label>
+                        <div class="col-lg-4">
+                            {{ form.stock_take }}
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="auto_generate" class="col-lg-4 col-sm-4 control-label">Price decimal</label>
+                        <div class="col-lg-4">
+                            {{ form.price_decimal }}
+                        </div>
+                        <div class="col-lg-2"> <br>Digit
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-lg-12" style="text-align: center">
+                        <button type="submit" class="btn btn-success" id="save_control">Save</button>
+                        <a class="btn btn-default"
+                        href="{% url 'load_file_control' %}"
+                         >Cancel</a>
+                    </div>
+                </div>
+                
+            </div>
+            </form>
+        </section>
+    </div>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+        $(document).on('keyup', '.select2-selection.select2-selection--single', function (e) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if(keycode == '9'){
+                $(this).closest(".select2-container").siblings('select:enabled').select2('open');
+            }
+        });
+        $(document).ready(function () {
+            $('#id_name').focus();
+            var fiscal_period = $("#id_fiscal_period").val();
+            var fy = fiscal_period.split('-');
+            $("#fiscal_year").val(fy[1]);
+            var month_period_now = "{{company.current_period_month_ic}}";
+            if (month_period_now.length == 1) {
+                month_period_now = '0' + month_period_now;
+            }
+            var current_period_year = '{{ company.current_period_year_ic}}';
+
+            $('#id_current_Period').val(month_period_now+'-'+current_period_year);
+            $('#current_period_year').val(current_period_year);
+            $('#current_period_month').val(month_period_now);
+            $('#id_current_Period').datepicker({
+                format: "mm-yyyy",
+                startView: 1,
+                minViewMode: 1,
+                autoclose: true
+            });
+            $('#id_fiscal_period').datepicker({
+                format: "mm-yyyy",
+                startView: 1,
+                minViewMode: 1,
+                autoclose: true
+            });
+            
+            $('#currency').select2({
+                placeholder: "Select Country",
+            });
+            var start_date;
+            for(i=0; i<12; i++) {
+                $('#id_cl_'+i).bind('keyup', function (event) {
+                    if (event.which != 13) {
+                        temp_date = $(this).val();
+                        valid_date = moment(temp_date, "DD-MM-YYYY", true).isValid();
+                        if (valid_date) {
+                            start_date = temp_date;
+                        }
+                        return true;
+                    }
+                });
+                $('#id_cl_'+i).keydown(function(event){
+                    if (event.which == 13) {
+                        setTimeout(() => {
+                            $(this).datepicker('setDate', start_date);
+                            move_next_elem(this, 1);
+                        }, 100);
+                        return false;
+                    } else {
+                        adjust_input_date(this);
+                    }
+                });
+            }
+        });
+
+        $('#currency').on('select2:close', function () {
+            $('#id_cl_1').focus();
+        });
+
+        $('#id_current_Period').on('change', function() {
+
+            var id_current_Period = $("#id_current_Period").val();
+            var aa = id_current_Period.split('-');
+
+            $("#current_period_year").val(aa[1]);
+            $("#current_period_month").val(aa[0]);
+        });
+        $('#id_fiscal_period').on('change', function() {
+
+            var fiscal_period = $("#id_fiscal_period").val();
+            var fy = fiscal_period.split('-');
+            $("#fiscal_year").val(fy[1]);
+            
+            for(i=1; i<13; i++){
+                cl = $('#id_cl_'+i).val().split("-");
+                cl[2] = fy[1];
+                $('#id_cl_'+i).val(cl.join("-"));
+                op = $('#id_op_' + i).val().split("-");
+                op[0] = fy[1];
+                $('#id_op_' + i).val(op.join("-"));
+            }
+            
+        });
+
+        function refresh_dates(){
+            for (i = 1; i < 13; i++) {
+                 $('#id_cl_'+i).val($('#id_cl_'+i).val().split("-").reverse().join("-"));
+            }
+
+            $('#id_closing_date').val($('#id_closing_date').val().split("-").reverse().join("-"));
+            $('#id_update_date').val($('#id_update_date').val().split("-").reverse().join("-"));
+            $('#id_fiscal_period').val($('#id_fiscal_period').val().split("-").reverse().join("-") + '-01');
+            $('#id_fiscal_period').prop('disabled', false);
+            $('#id_closing_date').prop('disabled', false);
+
+            return true;
+        }
+        
+        
+        function dateView(date){
+            var pecahin = date.split('-');
+            var today = pecahin[2]+'-'+pecahin[1]+'-'+pecahin[0];
+            return today
+        }
+        function formatDate(date) {
+        var d = new Date(date),
+            month = '' + (d.getMonth() + 1),
+            day = '' + d.getDate(),
+            year = d.getFullYear();
+
+        if (month.length < 2) month = '0' + month;
+        if (day.length < 2) day = '0' + day;
+
+        return [year, month].join('-');
+        }
+        function monthly_close_date(date) {
+            var dt = date.split('-');
+            var yy = dt[0];
+            var mm = dt[1];
+            for (var i = 0; i <= 12; i++) {
+                var k = i ;
+                if (k < 10) k = '0'+i;
+                if (i <= mm){
+                    isi_date = getLastDateOfMonth(yy , i)+'-'+k+'-'+yy;
+                }else{
+                    isi_date = getLastDateOfMonth(yy-1 , i)+'-'+k+'-'+(yy-1);
+                }
+                $('#id_cl_'+k+'').val(dateView(isi_date)).trigger('change');
+             } 
+
+        }
+        function getLastDateOfMonth(Year,Month){
+            var v = new Date((new Date(Year, Month,1))-1)
+            return(v.getDate());
+        }
+
+        var year_period = moment().format("MM-YYYY");
+        $('#id_current_Period').bind('keyup', function (event) {
+            if (event.which != 13) {
+                temp_date = $(this).val();
+                valid_date = moment(temp_date, "MM-YYYY", true).isValid();
+                if (valid_date) {
+                    year_period = temp_date;
+                }
+                return true;
+            }
+        });
+        $('#id_current_Period').bind('keydown', function (event) {
+            if (event.which == 13) {
+                setTimeout(() => {
+                    $(this).val(moment(year_period, "MM-YYYY").format("MM-YYYY"));
+                    move_next_elem(this, 1);
+                }, 100);
+                return false;
+            } else {
+                adjust_input_month_year(this);
+            }
+        });
+        
+        $('#id_fiscal_period').bind('keyup', function (event) {
+            if (event.which != 13) {
+                temp_date = $(this).val();
+                valid_date = moment(temp_date, "MM-YYYY", true).isValid();
+                if (valid_date) {
+                    year_period = temp_date;
+                }
+                return true;
+            }
+        });
+        $('#id_fiscal_period').bind('keydown', function (event) {
+            if (event.which == 13) {
+                setTimeout(() => {
+                    $(this).val(moment(year_period, "MM-YYYY").format("MM-YYYY"));
+                    move_next_elem(this, 1);
+                }, 100);
+                return false;
+            } else {
+                adjust_input_month_year(this);
+            }
+        });
+
+        var year_period_day = moment().format("DD-MM-YYYY");
+        $('#id_closing_date').bind('keyup', function (event) {
+            if (event.which != 13) {
+                temp_date = $(this).val();
+                valid_date = moment(temp_date, "DD-MM-YYYY", true).isValid();
+                if (valid_date) {
+                    year_period_day = temp_date;
+                }
+                return true;
+            }
+        });
+        $('#id_closing_date').bind('keydown', function (event) {
+            if (event.which == 13) {
+                setTimeout(() => {
+                    $(this).datepicker('setDate', year_period_day);
+                    move_next_elem(this, 1);
+                }, 100);
+                return false;
+            } else {
+                adjust_input_date(this);
+            }
+        });
+
+    </script>
+    <!--external js of page-->
+{% endblock %}

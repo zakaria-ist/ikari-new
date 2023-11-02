@@ -1,0 +1,276 @@
+{# Show form Transaction #}
+<div class="modal fade" id="TransactionModal" role="dialog"
+     aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-lg"
+         style="width: 80%; padding-left: 10%; padding-right: 10%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-hidden="true">&times;</button>
+                <h4 class="modal-title"><strong>Transaction</strong></h4>
+            </div>
+            <div class="modal-body" style="padding-bottom: 0px!important; padding-left: 20px;">
+                <div class="form-group"></div>
+                <section class="panel" style="margin-bottom: 0px!important;">
+                    <div class="row">
+                        <div class="panel-body"
+                             style="padding: 0px!important; font-size: 14px!important;">
+                            <div class="adv-table" id="myDialog">
+                                <section id="newTransaction">
+                                    <div class="panel-body" style="text-align: left">
+                                        {% include 'modal_navigation.html' %}
+                                        <div class="form-group">
+                                            <span id="transaction_error" class="col-lg-4 col-sm-4 messages"
+                                                  style="font-size: 14.5px !important;"></span>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="id_distribution_code" class="col-lg-2 col-sm-2"
+                                                   style="padding-right: 0px;">Distribution
+                                                Code</label>
+                                            <div class="col-lg-3 col-sm-3">
+                                                <select name="distribution_code" id="id_distribution_code" class="form-control trs-field sended">
+                                                    <option value="" selected="selected">Select Distribution Code</option>
+                                                    {% for distribution_code in distribution_code_list %}
+                                                    <option value="{{distribution_code.id}}" data-gl-account="{{distribution_code.gl_account_id}}" data-name="{{distribution_code.name}}" data-tax_id="{{distribution_code.tax_id}}">{{distribution_code.code}}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-lg-1 col-sm-1">
+                                                <button id="" type="button" tabindex="-1" class="btn btn-info sended" data-toggle="modal"
+                                                        onclick="showDistributionModal()">
+                                                    <i class="fa fa-search"></i></button>
+                                            </div>
+                                            <div class="col-lg-6 col-sm-6">
+                                                <input class="form-control trs-field" type="text"
+                                                       name="distribution_desc"
+                                                       id="distribution_desc" disabled>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="account_code" class="col-lg-2 col-sm-2">Account Code</label>
+                                            <div class="col-lg-3 col-sm-3">
+                                                <select name="account_code" id="id_account_code" class="form-control trs-field sended">
+                                                    <option value="" selected="selected">Select Account</option>
+                                                    {% for account in account_list %}
+                                                    <option value="{{account.id}}" data-name="{{account.name}}">{{account.code}}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-lg-1 col-sm-1">
+                                                <button id="" type="button" tabindex="-1" class="btn btn-info sended"
+                                                        onclick="showAccountModal()">
+                                                    <i class="fa fa-search"></i></button>
+                                            </div>
+                                            <div class="col-lg-6 col-sm-6">
+                                                <input class="form-control trs-field" type="text" name="account_desc"
+                                                       id="account_desc" disabled>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="tax_code" class="col-lg-2 col-sm-2">Tax Code</label>
+                                            <div class="col-lg-5 col-sm-5">
+                                                <select name="tax" id="id_tax" class="form-control sended">
+                                                    {% comment %} <option value="0" data-rate="0.000000" selected="selected">Select Tax</option> {% endcomment %}
+                                                    {% for tax in tax_list %}
+                                                        <option value="{{ tax.id }}"
+                                                                data-rate="{{ tax.rate }}">{{ tax.name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-lg-5 col-sm-5 checkbox checkbox-primary" >
+                                                <input name="manual-tax" id="manual-tax" class="styled sended" type="checkbox">
+                                                <label for="manual-tax">
+                                                    Manual Tax Input
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom: 15px;">
+                                            <label class="col-lg-2 col-sm-2" for="amount">Amount</label>
+                                            <div class="col-lg-3 col-sm-3">
+                                                <input class="form-control trs-field text-right sended" type="text" name="amount"
+                                                       id="amount"
+                                                       required>
+                                            </div>
+                                            <div class="col-lg-3 checkbox checkbox-primary">
+                                                <input name="sample-checkbox" id="tax-checkbox" class="styled sended" type="checkbox">
+                                                <label for="tax-checkbox">
+                                                    Tax Included
+                                                </label>
+                                            </div>
+                                            <div class="col-lg-3 col-sm-1 checkbox checkbox-primary">
+                                                <input name="sample-checkbox" id="tax-only-checkbox" class="styled sended" type="checkbox">
+                                                <label for="tax-only-checkbox">
+                                                    Tax Amount Only
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div id="amount_detail" class="form-group">
+                                            <div class="col-lg-12 form-group">
+                                                <label class="col-lg-2 col-sm-2">Tax Base</label>
+                                                <div class="col-lg-3 col-sm-3" style="padding-right: 2px;padding-left: 20px;">
+                                                    <input class="form-control trs-field text-right sended" type="text" name="base_amount"
+                                                        id="base_amount" min="0" disabled>
+                                                </div>
+                                                <label class="col-lg-2 col-sm-2">Tax Reporting Amount</label>
+                                                <div class="col-lg-3 col-sm-3">
+                                                    <input class="form-control trs-field text-right sended" type="text" name="tax_report_amount"
+                                                        id="tax_report_amount" min="0" disabled>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-12 form-group">
+                                                <label class="col-lg-2 col-sm-2">Tax Amount</label>
+                                                <div class="col-lg-3 col-sm-3" style="padding-right: 2px;padding-left: 20px;">
+                                                    <input class="form-control trs-field text-right sended" type="text" name="tax_amount"
+                                                        id="tax_amount" min="0" disabled>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom: 15px;">
+                                            <label class="col-lg-2 col-sm-2" for="amount">Description</label>
+                                            <div class="col-lg-10 col-sm-10">
+                                                    <textarea class="form-control trs-field sended" name="description"
+                                                              id="description"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            <div class="modal-footer" style="text-align: center">
+                <button class="btn btn-default" type="button" data-dismiss="modal">Cancel
+                </button>
+                {% if journal.status != 2 %}
+                  <button class="btn btn-success sended" type="button" id="save-trs">Save</button>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+</div>
+{#End show form transaction#}
+
+
+{#Show table to search Distributtion#}
+<div class="modal fade" id="tableDistributionModal" tabindex="-1" role="dialog"
+     aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-lg"
+         style="width: 80%; padding-left: 10%; padding-right: 10%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-hidden="true">&times;</button>
+                <h4 class="modal-title"><strong>Distribution</strong></h4>
+            </div>
+            <div class="modal-body" style="padding-bottom: 0px!important; padding: 0 3%;">
+                <div class="form-group"></div>
+                <section class="panel" style="margin-bottom: 0px!important;">
+                    <div class="row">
+                        <div class="panel-body"
+                             style="font-size: 14px!important;">
+                            <div class="adv-table" id="myDialog">
+                                <table class="display table table-bordered table-striped header-fixed"
+                                       id="distribution-table" style="width: 100% !important;">
+                                    <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Name</th>
+                                        <th>GL Account</th>
+                                        <th>Select</th>
+                                    </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            <div class="modal-footer" style="text-align: center">
+                <button class="btn btn-default" type="button" data-dismiss="modal">Cancel
+                </button>
+                <button class="btn btn-success" type="button" data-dismiss="modal">Select</button>
+            </div>
+        </div>
+    </div>
+</div>
+{#End table to search Distribution#}
+
+{#Show table to search Account#}
+<div class="modal fade" id="tableAccountModal" tabindex="-1" role="dialog"
+     aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-lg"
+         style="width: 80%; padding-left: 10%; padding-right: 10%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-hidden="true">&times;</button>
+                <h4 class="modal-title"><strong>Account</strong></h4>
+            </div>
+            <div class="modal-body" style="padding-bottom: 0px!important; padding: 0 3%;">
+                <div class="form-group"></div>
+                <section class="panel" style="margin-bottom: 0px!important;">
+                    <div class="row">
+                        <div class="panel-body"
+                             style="font-size: 14px!important;">
+                            <div class="adv-table" id="myDialog">
+                                <table class="display table table-bordered table-striped header-fixed"
+                                       id="account-table-trs" style="width: 100% !important;">
+                                    <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Name</th>
+                                        <th>Account</th>
+                                        <th>Balance</th>
+                                        <th>Amount</th>
+                                        <th>Account Group</th>
+                                        <th>Select</th>
+                                    </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            <div class="modal-footer" style="text-align: center">
+                <button class="btn btn-default" type="button" data-dismiss="modal">Cancel
+                </button>
+                <button class="btn btn-success" type="button" data-dismiss="modal">Select</button>
+            </div>
+        </div>
+    </div>
+</div>
+{#End table to search Account#}
+
+{#Comfirm Delete tranasaction#}
+<div class="modal fade" id="comfirmDeleteTransactionModal" tabindex="-1" role="dialog"
+     aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-hidden="true">&times;</button>
+                <h4 class="modal-title"><strong>Delete Confirm Dialog</strong></h4>
+            </div>
+            <div class="modal-body" style="padding-bottom: 0px!important; margin: 5%;">
+                <form action="">
+                    <div class="form-group">
+                        <label>Are you sure want to delete?</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="text-align: center">
+                <button class="btn btn-default" type="button" data-dismiss="modal">No
+                </button>
+                <button class="btn btn-success" type="button" data-dismiss="modal" id="comfirm-yes">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+{#End Comfirm delete transaction#}

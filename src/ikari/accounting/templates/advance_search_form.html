@@ -1,0 +1,69 @@
+<div class="col-lg-12">
+    <section class="panel" style="margin-bottom: 0px;">
+        <div class="panel-body">
+            <form class="form-horizontal  tasi-form" action="#">
+                <div class="form-group">
+                    <label class="control-label col-md-3" id="lblCheckNo">Check/Payment
+                        No.</label>
+                    <div class="col-md-9">
+                        <select id="payment_check" multiple="multiple"
+                                style="width: 100%">
+                            {% for payment in payment_check_list %}
+                                <option value="{{ payment.id }}">{{ payment.payment_check_number }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label col-md-3" id="lblNumber">Vendor
+                        Number</label>
+                    <div class="col-md-9">
+                        <select id="vendor_customer" multiple="multiple"
+                                style="width: 100%">
+                            {% for vendor_customer in vendor_customer_list %}
+                                <option value="{{ vendor_customer.id }}">{{ vendor_customer.code }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label col-md-3" id="lblDate">Payment
+                        Date</label>
+                    <div class="col-md-9">
+                        <div class="input-group input-large"
+                             data-date-format="dd-mm-yyyy">
+                            <input type="text" class="form-control dpd1"
+                                   name="from">
+                            <span class="input-group-addon">To</span>
+                            <input type="text" class="form-control dpd2"
+                                   name="to">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label col-md-3" id="lblAmount">Payment
+                        Amount</label>
+                    <div class="col-md-9">
+                        <div class="input-group input-large">
+                            <input type="number" class="form-control"
+                                   id="from_amount"
+                                   name="from">
+                            <span class="input-group-addon">To</span>
+                            <input type="number" class="form-control"
+                                   id="to_amount"
+                                   name="to">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="btn btn-info"
+                            id="btnSearch">
+                        Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+
+

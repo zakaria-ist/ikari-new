@@ -1,0 +1,781 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <style type="text/css">
+      #dynamic-table {
+        table-layout: fixed;
+        width: 1600px !important;
+      }
+
+      .fa-minus-square {
+        color: red;
+      }
+
+      .fa-plus-square {
+        color: limegreen;
+      }
+
+      .fa-minus-square, .fa-plus-square {
+        font-size: 33px;
+        text-decoration: none;
+      }
+
+      .fa-minus-square:hover {
+        color: red
+      }
+
+      .fa-plus-square:hover {
+        color: limegreen
+      }
+
+      .button-wrapper {
+        width: 60%;
+        margin-left: auto;
+        margin-right: auto;
+        display: flex;
+        justify-content: space-between
+      }
+
+      .virtual_td {
+        vertical-align: middle !important
+      }
+      .hide_column {
+        display : none;
+      }
+      ::-webkit-scrollbar {
+        -webkit-appearance: none;
+        width: 7px;
+      }
+      ::-webkit-scrollbar-thumb {
+        border-radius: 4px;
+        background-color: rgba(0,0,0,.5);
+        -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+      }
+    </style>
+{% endblock %}
+{% block title %}G/L Create Revaluation Batch{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+
+{% block parent_GL_a_active %} active {% endblock %}
+{% block parent_GL_i_active %} active {% endblock %}
+{% block gl_revaluation_active %} active {% endblock %}
+{% block content %}
+	<div class="panel">
+		<div class="panel-heading">
+			<h4>G/L Create Revaluation Batch</h4>
+		</div>
+		<div class="panel-body">
+			<form id="frm_GL_revaluation" class="form-horizontal" action="{% url 'gl_revaluation' %}"
+				role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data">
+				{% csrf_token %}
+                <div class="form-group">
+                    <label for="batch_desc" class="col-lg-2 col-sm-2 control-label">Batch Description</label>
+                    <div class="col-lg-7 col-sm-7">
+                        <input id="txt_batch_desc" name="txt_batch_desc" type="text" class="form-control" value="{{ batch_desc_text }}" required="required">
+                    </div>
+                </div>
+                <hr />
+				<div id="curr_list" class="form-group">
+				  <div class="col-lg-12 col-sm-12">
+					<input type="text" class="hide" id="rev_list_data" name="rev_list_data">
+					<div class="table-responsive" style="overflow-x:scroll;">
+					    <table id="dynamic-table"  class="table table-striped table-bordered table-hover" style="width:100%" >
+					        <thead>
+					            <tr>
+					                <th style="display:table-cell; width: 60px;">R.Code</th>
+					                <th style="display:table-cell;">Curren</th>
+					                <th style="display:table-cell;">Acc.Fr</th>
+					                <th style="display:table-cell;">Acc.To</th>
+					                <th style="display:table-cell;">Year</th>
+					                <th style="display:table-cell;">P.Fr</th>
+					                <th style="display:table-cell;">P.To</th>
+					                <th style="display:table-cell;">J/E Date</th>
+					                <th style="display:table-cell;">Rev.Rate</th>
+					                <th style="display:table-cell;">Rate Date</th>
+					                <th style="display:table-cell;">Options</th>
+					                <th>ID</th>
+					                <th>exchange rate id</th>
+					            </tr>
+					        </thead>
+					        <tbody id="body">
+					            <tr>
+					                <td>
+					                    <select id="rev_code1"
+					                        class="form-control rev_code"
+					                        name="rev_code1"
+					                        style="display:table-cell;" required="required">
+					                        {% comment %} <option value="" selected="selected">Revaluation Code</option> {% endcomment %}
+					                        {% for rev_code in all_revaluation_code %}
+					                            <option value="{{rev_code.id}}">{{rev_code.code}}</option>
+					                        {% endfor %}
+					                    </select>
+					                </td>
+					                <td>
+					                    <select id="curr_code1"
+					                        class="form-control curr_code"
+					                        name="curr_code1"
+					                        style="display:table-cell; width:60px;" required="required">
+					                        {% comment %} <option value="" selected="selected">Currency</option> {% endcomment %}
+					                        {% for curr in all_currency %}
+					                            <option value="{{curr.id}}" data-rate="{{curr.rate}}" data-ratedate="{{curr.rate_date}}" data-exchrateid="{{curr.exchrateid}}">{{curr.code}}</option>
+					                        {% endfor %}
+					                    </select>
+					                </td>
+					                <td>
+					                    <select id="acc_from_1"
+					                        class="form-control acc_from"
+					                        name="acc_from_1"
+					                        style="display:table-cell; width:80px;">
+					                        <option value="" selected="selected">Account</option>
+					                        {% for acc in all_account %}
+					                        <option value="{{acc.account_segment}}">{{acc.code}}</option>
+					                        {% endfor %}
+					                    </select>
+					                </td>
+					                <td>
+					                    <select id="acc_to_1"
+					                        class="form-control acc_to"
+					                        name="acc_to_1"
+					                        style="display:table-cell; width:80px;">
+					                        <option value="" selected="selected">Account</option>
+					                        {% for acc in all_account %}
+					                        <option value="{{acc.account_segment}}">{{acc.code}}</option>
+					                        {% endfor %}
+					                    </select>
+					                </td>
+					                <td>
+                                    	<input id="fiscal_year_1" name="fiscal_year_1" type="text" class="form-control fiscal_year" style="width:60px"  value="{{ session_year }}">
+					                </td>
+					                <td>
+					                    <select id="period_from_1"
+					                        class="form-control period_from"
+					                        name="period_from_1"
+					                        style="display:table-cell; width:50px;" required="required">
+					                    </select>
+					                </td>
+					                <td>
+					                    <select id="period_to_1"
+					                        class="form-control period_to"
+					                        name="period_to_1"
+					                        style="display:table-cell; width:50px;" required="required">
+					                    </select>
+					                </td>
+					                <td>
+                            <input id="je_date_1" name="je_date_1" type="text" class="form-control je_date" style="display:table-cell; width: 100%;" value="{{ session_date }}">
+					                </td>
+					                <td>
+                            <div style="display:table-cell; width:230px;">
+    					                <input id="rate_1" style="display:table-cell; width:70%" name="rate_1" type="text" class="form-control rate" value="1.0000000000"></input>
+                              <button onclick='btnSearchExchangeRate(1)' type='button' style="display:table-cell; width:25%; color: #1569C7;" class='btn sended'>
+                                <i class='fa fa-search'> </i>
+                              </button>
+                            </div>
+					                </td>
+					                <td>
+					                    <input id="rate_date_1" name="rate_date_1" type="text" class="form-control rate_date default-date-picker" style="width: 100%;" value="{{ session_date }}">
+					                </td>
+					                <td class="button-column" style="display:table-cell;  width:80px;">
+					                    <div class="button-wrapper" style="cursor: pointer">
+                                            <a id="curr_del1" class="fa fa-minus-square curr_del" style="color: red"></a>
+  					                        <a id="curr_add1" class="fa fa-plus-square curr_add" style="color: limegreen"></a>
+                                        </div>
+					                </td>
+                                    <td><span id="id_1">1</span></td>
+                                    <td><span id="exchrateid_1">0</span></td>
+					            </tr>
+					        </tbody>
+					    </table>
+					</div>
+				  </div>
+				</div>
+				<div class="form-group bottom-group">
+                    <div class="col-lg-offset-2 col-lg-10">
+                        <button id="btnProcess" type="submit" name="btnSave" class="btn btn-success pull-right" onclick="SaveAnu()">Process</button>
+                    </div>
+                </div>
+			</form>
+		</div>
+	</div>
+    <div class="modal fade" id="ExchangeRateListModal" tabindex="-1" role="dialog"
+         aria-labelledby="AccountListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Exchange Rate</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div id="account_error" class="messages"
+                             style="font-size: 12.5px !important;"></div>
+                    </div>
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="exchange-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed table-hover">
+                                                <thead>
+                                                <tr>
+                                                    <th id="exc-from">From Currency</th>
+                                                    <th id="exc-to">To Currency</th>
+                                                    <th id="exc-date">Rate Date</th>
+                                                    <th id="exc-rate">Rate</th>
+                                                    <th id="exc-id">Id</th>
+                                                    <th></th>
+
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" onclick="changeExchangeRate()">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+<script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+<script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+<script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+<script src="{% static 'js/advanced-form-datepicker.js' %}?{% now 'H' %}"></script>
+<script src="{% static "js/select2/select2.js" %}"></script>
+<script type="text/javascript" src="{% static 'js/standard.js' %}"></script>
+
+<script type="text/javascript">
+	var picked_currency = [];
+
+	var PeriodList=[
+    	{id:1, text:'01'},
+    	{id:2, text:'02'},
+    	{id:3, text:'03'},
+    	{id:4, text:'04'},
+    	{id:5, text:'05'},
+    	{id:6, text:'06'},
+    	{id:7, text:'07'},
+    	{id:8, text:'08'},
+    	{id:9, text:'09'},
+    	{id:10, text:'10'},
+    	{id:11, text:'11'},
+    	{id:12, text:'12'}
+    ];
+
+    var data_revcodes = [];
+    {% for revcode in all_revaluation_code %}
+        var obj = {};
+        obj.id = "{{revcode.id}}";
+        obj.code = "{{revcode.code}}";
+        obj.name = "{{revcode.description}}";
+        data_revcodes.push(obj);
+    {% endfor %}
+
+    var data_currencies = [];
+    {% for curr in all_currency %}
+        var obj = {};
+        obj.id = "{{curr.id}}";
+        obj.code = "{{curr.code}}";
+        obj.name = "{{curr.name}}";
+        obj.symbol = "{{curr.symbol}}";
+        obj.update_date = "{{curr.update_date}}";
+        obj.rate = "{{curr.rate}}";
+        obj.rate_date = "{{curr.rate_date}}";
+        obj.exchrateid = "{{curr.exchrateid}}";
+        data_currencies.push(obj);
+    {% endfor %}
+
+    var data_acc = [];
+    {% for acc in all_account %}
+        var obj = {};
+        obj.id = "{{acc.account_segment}}";
+        obj.code = "{{acc.code}}";
+        obj.name = "{{acc.name}}";
+        data_acc.push(obj);
+    {% endfor %}
+
+    var fnRevCodeList = {
+        'revcode' : function(data, idx) {
+            if(data.length > 0) {
+                var options_string = '';
+                for (var i = 0; i<data.length; i++) {
+                    options_string += '<option value="' + data[i].id + '">'+ data[i].code + '</option>';
+                }
+                return '<select style="display:table-cell; width:100px;" data-index="'+idx+'" class="form-control rev_code" id="rev_code'+idx+'" name="rev_code'+idx+'" required>'+options_string+'</select>';
+            }
+        }
+    }
+
+    var fnCurrList = {
+        'curr' : function(data, idx) {
+            if(data.length > 0) {
+                var options_string = '';
+                for (var i = 0; i<data.length; i++) {
+                    options_string += '<option value="' + data[i].id + '" data-rate="'+data[i].rate+'" data-ratedate="'+data[i].rate_date+'" data-exchrateid="'+ data[i].exchrateid +'">'+ data[i].code + '</option>';
+                }
+                return '<select style="display:table-cell; width:60px;" data-index="'+idx+'" class="form-control curr_code" id="curr_code'+idx+'" name="curr_code'+idx+'" required>'+options_string+'</select>';
+            }
+        }
+    }
+
+    var fnAccList = {
+        'acc' : function(data, idx, tipe) {
+        	var string1 = (tipe=='1') ? 'acc_from_' : 'acc_to_';
+        	var string2 = (tipe=='1') ? 'acc_from' : 'acc_to';
+
+            if(data.length > 0) {
+                var options_string = '';
+                for (var i = 0; i<data.length; i++) {
+                    options_string += '<option value="' + data[i].id + '">'+ data[i].code + '</option>';
+                }
+                return '<select style="display:table-cell; width:80px;" data-index="'+idx+'" class="form-control '+ string2 +'" id="'+string1+idx+'" name="'+string1+idx+'"><option value="">Account</option>'+options_string+'</select>';
+            }
+        }
+    }
+
+    var fnFiscalYear = {
+        'year' : function(idx,p_fiscal_year) {
+        	return '<input style="display:table-cell; width:60px;" id="fiscal_year_'+idx+'" name="fiscal_year_'+idx+'" type="text" class="form-control fiscal_year"  value="'+p_fiscal_year+'">'
+        }
+    }
+
+    var fnPeriod= {
+        'period' : function(data, idx, tipe) {
+        	var string1 = (tipe=='1') ? 'period_from_' : 'period_to_';
+        	var string2 = (tipe=='1') ? 'period_from' : 'period_to';
+            var options_string = '';
+            for (var i = 0; i<data.length; i++) {
+            	if (0!=i){
+            		options_string += '<option value="' + data[i].id + '">'+ data[i].text + '</option>';
+            	}
+            }
+            return '<select style="display:table-cell; width:50px;" id="'+string1+idx+'" class="form-control '+ string2 +'" name="'+string1+idx+'"  required="required"><option value="1" selected="selected">01</option>'+options_string+'</select>';
+        }
+    }
+
+    var fnJEDate= {
+        'jedate' : function(idx,je_date) {
+        	return '<input style="display:table-cell; width: 100%;" id="je_date_'+idx+'" name="je_date_'+idx+'" type="text" class="form-control je_date" value="'+je_date+'">'
+        }
+    }
+
+    var fnRate= {
+        'rate' : function(idx) {
+            return "<div style='display:table-cell; width: 230px;'><input id='rate_"+idx+"' style='display:table-cell; width:70%' name='rate_"+idx+"' type='text'  class='form-control rate' value='1.000000'>&nbsp"+
+                    "<button onclick='btnSearchExchangeRate("+idx+")'type='button' style='display:table-cell; width:25%; color: #1569C7;' class='btn sended'><i class='fa fa-search'> </i></button></div>";
+        }
+    }
+
+    var vnow = '{% now "d-m-Y" %}';
+    var fnRateDate= {
+        'ratedate' : function(idx) {
+        	return '<input id="rate_date_'+idx+'" name="rate_date_'+idx+'" type="text" class="form-control rate_date" style="display:table-cell; width: 100%;" value="'+vnow+'">'
+        }
+    }
+
+    $(document).on('select2:close', '.rev_code', function (e) {
+        $(this).closest('tr').children('td').children('.curr_code').select2('open');
+    });
+    $(document).on('select2:close', '.curr_code', function (e) {
+        $(this).closest('tr').children('td').children('.acc_from').select2('open');
+    });
+    $(document).on('select2:close', '.acc_from', function (e) {
+        $(this).closest('tr').children('td').children('.acc_to').select2('open');
+    });
+    $(document).on('select2:close', '.acc_to', function (e) {
+        $(this).closest('tr').children('td').children('.fiscal_year').select();
+    });
+    $(document).on('select2:close', '.period_from', function (e) {
+        $(this).closest('tr').children('td').children('.period_to').select2('open');
+    });
+    $(document).on('select2:close', '.period_to', function (e) {
+        $(this).closest('tr').children('td').children('.je_date').select();
+    });
+    $(document).on('change', '.rate', function (e) {
+        $(this).closest('tr').children('td').children('.rate_date').select();
+    });
+    {% comment %} $(document).on('blur', '.rate_date', function (e) {
+        $(this).parent().next().find('.curr_add').trigger('click');
+    }); {% endcomment %}
+
+    $(document).ready(function () {
+        rowCount = $('#body > tr').length;
+
+        var datatbl = $('#dynamic-table').DataTable({
+            bFilter: false,
+            bLengthChange: false,
+            ordering: false,
+            bInfo: false,
+            bPaginate: false,
+            scrollX: true,
+            columnDefs: [
+                { width: "60px", "targets": 1 },
+                { width: "100px", "targets": 2 },
+                { width: "100px", "targets": 3 },
+                { width: "60px", "targets": 4 },
+                { width: "50px", "targets": 5 },
+                { width: "50px", "targets": 6 },
+                { width: "100px", "targets": 7 },
+                { width: "180px", "targets": 8 },
+                { width: "100px", "targets": 9 },
+                { width: "80px", "targets": 10 },
+                {
+                    className: "hide",
+                    targets: [11,12]
+                }
+            ]
+        });
+
+        $(".rev_code").select2({
+            placeholder: "R.Code",
+        });
+
+        $(".curr_code").select2({
+            placeholder: "Currency",
+        });
+
+        $(".acc_from").select2({
+            placeholder: "Acct",
+            allowClear: true
+        });
+
+        $(".acc_to").select2({
+            placeholder: "Acct",
+            allowClear: true
+        });
+
+        $(".period_from").select2({
+            placeholder: "0",
+            data: PeriodList,
+        });
+
+        $(".period_to").select2({
+            placeholder: "0",
+            data: PeriodList,
+        });
+
+        $(".period_from").val({{session_period}}).trigger('change');
+
+        $(".period_to").val({{session_period}}).trigger('change');
+
+        $('.je_date').datepicker({
+            format: 'dd-mm-yyyy',
+            autoclose: true
+        });
+        $('.je_date').datepicker('setDate', '{{session_date}}');
+
+        $( "#body" ).on( "change", ".fiscal_year", function() {
+            $('.fiscal_year').val($(this).val());
+        });
+
+
+        //validateDate('.je_date');
+        //validateDate('#rate_date_1');
+
+        $( "#body" ).on( "click", ".curr_add", function() {
+            var curr_code_val = $(this).closest('tr').children('td').children('.curr_code').val();
+            var fiscal_year_val = $(this).closest('tr').children('td').children('.fiscal_year').val();
+            var acc_from_val = $(this).closest('tr').children('td').children('.acc_from').val();
+            var acc_to_val = $(this).closest('tr').children('td').children('.acc_to').val();
+            var period_from_val = $(this).closest('tr').children('td').children('.period_from').val();
+            var period_to_val = $(this).closest('tr').children('td').children('.period_to').val();
+            var je_date = $(this).closest('tr').children('td').children('.je_date').val();
+            if (curr_code_val){
+                $('#curr_del'+rowCount).addClass('hide');
+                $('#curr_add'+rowCount).addClass('hide');
+                rowCount++;
+
+                datatbl.row.add([
+                    fnRevCodeList.revcode(data_revcodes, rowCount),
+                    fnCurrList.curr(data_currencies, rowCount),
+                    fnAccList.acc(data_acc, rowCount, '1'),
+                    fnAccList.acc(data_acc, rowCount, '2'),
+                    fnFiscalYear.year(rowCount,fiscal_year_val),
+                    fnPeriod.period(PeriodList, rowCount, '1'),
+                    fnPeriod.period(PeriodList, rowCount, '2'),
+                    fnJEDate.jedate(rowCount,je_date),
+                    fnRate.rate(rowCount),
+                    fnRateDate.ratedate(rowCount),
+                    '<div class="virtual_td"><div class="button-wrapper" style="cursor: pointer"><a id="curr_del'
+                      +rowCount+
+                      '" class="fa fa-minus-square curr_del"></a><a id="curr_add'
+                      +rowCount+
+                      '" class="fa fa-plus-square curr_add"></a></div></div>',
+                    '<span id="id_'+rowCount+'">'+rowCount+'</span>',
+                    '<span id="exchrateid_'+rowCount+'">0</span>'
+                ]).draw();
+
+                $(".rev_code").select2({
+				    placeholder: "R.Code",
+				});
+
+                $(".curr_code").select2({
+				    placeholder: "Currency",
+				});
+
+				$(".acc_from").select2({
+				    placeholder: "Acct",
+                    allowClear: true
+				});
+
+				$(".acc_to").select2({
+				    placeholder: "Acct",
+                    allowClear: true
+				});
+
+				$(".period_from").select2({
+		            placeholder: "0",
+		            data: PeriodList,
+		        });
+
+		        $(".period_to").select2({
+		            placeholder: "0",
+		            data: PeriodList,
+		        });
+
+                $("#period_from_"+rowCount).val({{session_period}}).trigger('change');
+
+                $("#period_to_"+rowCount).val({{session_period}}).trigger('change');
+
+		        $('.je_date').datepicker({
+		            format: 'dd-mm-yyyy',
+		            autoclose: true
+		        });
+                $('#je_date_'+rowCount).datepicker('setDate', '{{session_date}}');
+            } else {
+                alert("You must fill all input field !");
+            }
+        });
+
+        $( "#body" ).on( "click", ".curr_del", function() {
+            if (rowCount>1){
+                $('#curr_del'+rowCount).addClass('hide');
+                $('#curr_add'+rowCount).addClass('hide');
+                rowCount--;
+                datatbl.row( $(this).parents('tr') ).remove().draw();
+                $('#curr_del'+rowCount).removeClass('hide');
+                $('#curr_add'+rowCount).removeClass('hide');
+            } else {
+                var today = new Date();
+                var dd = today.getDate();
+                var mm = today.getMonth()+1; //January is 0!
+                var yyyy = today.getFullYear();
+                if(dd<10)  dd='0'+dd
+                if(mm<10) mm='0'+mm
+                today = yyyy+'-'+mm+'-'+dd;
+                $(".curr_code").val("").trigger("change");
+                $(".acc_from").val("").trigger("change");
+                $(".acc_to").val("").trigger("change");
+                $(".fiscal_year").val(yyyy);
+                $(".period_from").val("1").trigger("change");
+                $(".period_to").val("1").trigger("change");
+                $(".je_date").datepicker('setDate', today)
+                $(".rate").val("1.0000000000");
+                $(".rate_date").datepicker('setDate', today);
+            }
+        });
+
+        $("#body").on('change', '.curr_code, .period_to, .fiscal_year', function(){
+            var nRow = rowCount;
+        	var this_id = $(this).closest('tr').find('.curr_code').val();
+        	var rate = $(this).closest('tr').children('td').children('.curr_code').select2().find(":selected").data('rate');
+        	var rate_date = $(this).closest('tr').children('td').children('.curr_code').select2().find(":selected").data('ratedate');
+        	var exchrateid = $(this).closest('tr').children('td').children('.curr_code').select2().find(":selected").data('exchrateid');
+            var year = $(this).closest('tr').find('.fiscal_year').val();
+            var month = $(this).closest('tr').find('.period_to').val();
+            var $rate = $(this).closest('tr').find('.rate');
+            var $rate_date = $(this).closest('tr').find('.rate_date');
+            if (exchrateid=='None'){
+                exchrateid=0;
+            }
+            if (month==12){
+                year++;
+                month=1;
+            }
+            else{
+                month++;
+            }
+            $.getJSON("{% url 'ExchangeRateDay__asJson' 'curr_id' 'date' %}".replace('curr_id', this_id).replace('date', year + '-' + month), function(data) {
+                $rate.val(data.rate);
+                $rate_date.val(data.exchange_date.split("-").reverse().join("-"));
+                $('#exchrateid_'+nRow).text(data.id);
+                picked_currency.push(this_id);
+            });
+        });
+
+        var je_date = moment().format("DD-MM-YYYY");
+        var rate_date = moment().format("DD-MM-YYYY");
+        $( "#body" ).on('keydown', '.je_date', function (event) {
+            if (event.which == 13) {
+                $(this).datepicker('setDate', moment(je_date, "DD-MM-YYYY").format("DD-MM-YYYY"));
+                move_next_elem(this, 1);
+                return false;
+            } else {
+                adjust_input_date(this);
+            }
+        });
+        $( "#body" ).on('keyup', '.je_date', function (event) {
+            if (event.which != 13) {
+                var temp_date = $(this).val();
+                var valid_date = moment(temp_date, "DD-MM-YYYY", true).isValid();
+                if (valid_date) {
+                    je_date = temp_date;
+                }
+                return true;
+            }
+        });
+        $( "#body" ).on('keydown', '.rate_date', function (event) {
+            if (event.which == 13) {
+                $(this).datepicker('setDate', moment(rate_date, "DD-MM-YYYY").format("DD-MM-YYYY"));
+                move_next_elem(this, 1);
+                return false;
+            } else {
+                adjust_input_date(this);
+            }
+        });
+        $( "#body" ).on('keyup', '.rate_date', function (event) {
+            if (event.which != 13) {
+                var temp_date = $(this).val();
+                var valid_date = moment(temp_date, "DD-MM-YYYY", true).isValid();
+                if (valid_date) {
+                    rate_date = temp_date;
+                }
+                return true;
+            }
+        });
+        setTimeout(() => {
+            $('#txt_batch_desc').select();
+        }, 100)
+    });
+
+
+    function SaveAnu(){
+        $("#frm_GL_revaluation").submit(function(e){
+            var array = [];
+            var nRow = rowCount;
+
+            for (i=1; i<=nRow; i++){
+                var acc_from = $('#acc_from_'+i+' option:eq(1)').val();
+                var acc_to = $('#acc_to_'+i+' option:last').val();
+                if ($('#acc_from_'+i+' option:selected').text() == 'Account') {
+                    acc_from = $('#acc_from_'+i+' option:eq(1)').val();
+                } else {
+                    acc_from = $('#acc_from_'+i+' option:selected').val();
+                }
+                if ($('#acc_to_'+i+' option:selected').text() == 'Account') {
+                    acc_to = $('#acc_to_'+i+' option:last').val();
+                } else {
+                    acc_to = $('#acc_to_'+i+' option:selected').val();
+                }
+                revaluation_list = {};
+                revaluation_list.rev_code_id = $('#rev_code'+i).val();
+                revaluation_list.curr_id = $('#curr_code'+i).val();
+                revaluation_list.acc_id_1 = acc_from;
+                revaluation_list.acc_id_2 = acc_to;
+                revaluation_list.fiscal_year = $('#fiscal_year_'+i).val();
+                revaluation_list.period_from = $('#period_from_'+i).val();
+                revaluation_list.period_to = $('#period_to_'+i).val();
+                revaluation_list.je_date = $('#je_date_'+i).val().split("-").reverse().join("-");
+                revaluation_list.rate = $('#rate_'+i).val();
+                revaluation_list.rate_date = $('#rate_date_'+i).val().split("-").reverse().join("-");
+                revaluation_list.idx = $('#id_'+i).text();
+                revaluation_list.exchrateid = $('#exchrateid_'+i).text();
+                array.push(revaluation_list);
+            }
+            $('#rev_list_data').val(JSON.stringify(array));
+            $('#btnProcess').prop('disabled', true);
+
+        })
+    }
+
+    var selected_row;
+    function btnSearchExchangeRate(row_id) {
+        selected_row = row_id;
+        if($('#curr_code'+row_id).val() == ''){
+            $('#btnSearchExchangeRate').prop('disabled', false);
+            $("#ExchangeRateListModal").modal("hide");
+
+        }else{
+            $("#ExchangeRateListModal").modal("show");
+            rowCount = $('#body > tr').length;
+            $('#exchange-table').DataTable().destroy();
+            $('#exchange-table').dataTable({
+                "iDisplayLength": 10,
+                //"bLengthChange": false,
+                "order": [[2, "desc"]],
+                "serverSide": true,
+                "ajax": {
+                "type": "POST",
+                "url": "/accounting/exchange_rate_list/",
+                "data": function (d) {
+                        d.csrfmiddlewaretoken = $('input[name="csrfmiddlewaretoken"]').val();
+                        d.currency_id = $('#curr_code'+row_id).val();
+                    }
+                },
+                "columns": [
+                    {"data": "from_currency", "sClass": "text-left"},
+                    {"data": "to_currency", "sClass": "text-left"},
+                    {"data": "exchange_date", "sClass": "text-left"},
+                    {"data": "rate", "sClass": "text-left"},
+                    {"data": "id", "sClass": "text-left hide"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "sClass": "hide_column",
+                        "render": function (data, type, full, meta) {
+                            return '<input type="radio" name="exchange-choices" id="' +
+                                full.id + '" class="call-checkbox" value="' + meta.row + '">';
+                        }
+                    }
+                ]
+            });
+            setTimeout(() => {
+                $('#exchange-table').DataTable().columns.adjust();
+            }, 300);
+        }
+    }
+
+    $('#exchange-table').on( 'draw.dt', function () {
+        selectTableRow('#exchange-table', 5);
+        $("input[type='radio']").each(function () {
+            $(this).closest('tr').css('background-color', '#f9f9f9');
+        });
+    });
+
+    function changeExchangeRate() {
+        var row = $("input[name='exchange-choices']:checked").val();
+        if (row) {
+            table = $('#exchange-table').DataTable();
+            id_exchange = table.cell(row, $("#exc-id").index()).data();
+            rate = table.cell(row, $("#exc-rate").index()).data();
+            rate_date = table.cell(row, $("#exc-date").index()).data();
+            if (selected_row) {
+                $("#rate_date_"+selected_row).val(rate_date);
+                $("#rate_"+selected_row).val(rate);
+            }
+            $("#ExchangeRateListModal").modal("hide");
+        }
+        else {
+            $("#account_error").text("Please choose 1 account");
+        }
+    }
+</script>
+{% endblock %}

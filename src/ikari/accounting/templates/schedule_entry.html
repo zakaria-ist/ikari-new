@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    {% load humanize %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <style>
+        .hide_column {
+            display: none;
+        }
+        .divTable{
+            display: table;
+            width: 100%;
+        }
+        .divTableRow {
+            display: table-row;
+        }
+        .divTableCell {
+            border: 0px;
+            display: table-cell;
+            padding: 0px 3px 0px 0px;
+        }
+        .radio-inline ul li {
+            display: inline-block;
+            padding-right: 15px;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}
+    Schedule Entry
+{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block parent_com_a_active %}active{% endblock %}
+{% block se_active %}active{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                {% if schedule.id %}
+                    Edit Schedule
+                {% else %}
+                    Schedule Entry
+                {% endif %}
+            </header>
+            <div class="panel-body">
+                <form class="form-horizontal"
+                        {% if schedule.id %}
+                      action="{% url 'edit_schedule_entry' schedule.id %}"
+                        {% else %}
+                      action="{% url 'add_schedule_entry' %}"
+                        {% endif %}
+                      role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data" id="formscheduleentry">
+                    
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label for="code" class="col-lg-2 col-sm-2 control-label">Schedule code</label>
+                        <div class="col-lg-2 col-sm-2">
+                          {{ form.code }}
+                        </div>
+                       
+                        <label for="description" class="col-lg-2 col-sm-2 control-label">Description</label>
+                        <div class="col-lg-5 col-sm-5">
+                            {{ form.description }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="recur_period" class="col-lg-2 col-md-1 control-label">Recurring Period</label>
+                        <div class="col-lg-10 col-sm-10 control-label radio-inline" style="">
+                            {{ form.recur_period }}
+                        </div>
+                    </div>
+                    <div class="form-group daily_div">
+                        <label for="frequency" class="col-lg-12 col-md-12 control-label">Frequency</label>
+                        <hr/>
+                        <ul id="id_daily_freq">
+                            <div class="row">
+                                <div class="col-lg-offset-1 col-lg-1 col-md-offset-1 col-md-1">
+                                    <li>
+                                        <label for="id_daily_freq_0"> Every</label>
+                                            <!-- <input id="id_daily_freq_0" name="daily_freq" type="radio" value="0"> Every</label> -->
+                                    </li>
+                                </div>
+                                <div class="col-lg-2 col-md-2">
+                                    {{ form.daily_frequency}}
+                                </div>
+                                <div class="col-lg-2 col-md-2">
+                                    <label> Days</label>
+                                </div>
+                            </div>
+                            <br/>
+                            <!-- <div class="row">
+                                <div class="col-lg-offset-1 col-lg-5" >
+                                    <li>
+                                        <label for="id_daily_freq_1">
+                                            <input id="id_daily_freq_1" name="daily_freq" type="radio" value="1"> These Week Days</label>
+                                    </li>
+                                    <div class="col-lg-8 col-md-8" style="margin-left:40%;">
+                                        {{ form.week_days}}
+                                    </div>
+                                </div>
+                            </div> -->
+                        </ul>
+                    </div>
+                    <div class="form-group weekly_div">
+                        <label for="frequency" class="col-lg-12 col-md-12 control-label">Frequency</label>
+                        <hr/>
+                        <div class="row">
+                            <label class="col-lg-offset-1 col-md-offset-1 col-lg-2 col-md-2">Every </label>
+                            <div class="col-lg-2 col-md-2">
+                                {{ form.weekly_frequency}}
+                            </div>
+                            <div class="col-lg-2 col-md-2">
+                                <label> Weeks</label>
+                            </div>
+                        </div>
+                        <br/>
+                        <div class="row">
+                            <label class="col-lg-offset-1 col-md-offset-1 col-lg-2 col-md-2">Day of Week</label>
+                            <div class="col-lg-4 col-md-4" >
+                                {{ form.week_day}}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group monthly_div">
+                        <label for="frequency" class="col-lg-12 col-md-12 control-label">Frequency</label>
+                        <hr/>
+                        <ul id="id_month_freq">
+                            <div class="row">
+                                <label class="col-lg-offset-1 col-md-offset-1 col-lg-1 col-md-1 ">Every </label>
+                                <div class="col-lg-2 col-md-2">
+                                    {{ form.monthly_frequency}}
+                                </div>
+                                <div class="col-lg-7 col-md-7">
+                                    <label>months</label>
+                                </div>
+                            </div>
+                            <br/>
+                            <div class="row">
+                                <div class="col-lg-offset-1 col-lg-1 col-md-offset-1 col-md-1">
+                                    <label for="id_month_freq_0">On</label>
+                                </div>
+                                <div class="col-lg-2 col-md-2">
+                                        {{ form.monthly_frequency_choice}}
+                                </div>
+                                <div class="col-lg-7 col-md-7">
+                                        <label>day</label>
+                                </div>
+                            </div>
+                            <br/>
+                        </ul>
+                    </div>
+                    <div class="form-group yearly_div">
+                        <label for="frequency" class="col-lg-12 col-md-12 control-label">Frequency</label>
+                        <hr/>
+                        <ul id="id_year_freq">
+                            <div class="row">
+                                <label class="col-lg-offset-1 col-md-offset-1 col-lg-1 col-md-1">Every </label>
+                                <div class="col-lg-2 col-md-2">
+                                    {{ form.year_months_choice}}
+                                </div>
+                            </div>
+                            <br/>
+                            <div class="row">
+                                <div class="col-lg-offset-1 col-lg-1 col-md-offset-1 col-md-1">
+                                    <label for="id_year_freq_0">On</label>
+                                </div>
+                                <div class="col-lg-2 col-md-2">
+                                        {{ form.year_monthly_frequency_choice}}
+                                </div>
+                                <div class="col-lg-7 col-md-7">
+                                        <label>day</label>
+                                </div>
+                            </div>
+                            <br/>
+                        </ul>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-lg-offset-5 col-lg-6">
+                            <button type="submit" class="btn btn-primary sended" id="btnSaveSchedule" name="btnSave" onclick="SaveData()">Save</button>
+                            <a class="btn btn-default" href="{% url 'list_schedule_entries' %}">Cancel</a>
+                        </div>
+                    </div>
+
+                    <hr style="margin: 0px -15px 15px -15px;" />
+            </form>
+        </div>
+    </section>
+    </div>          
+
+{% endblock %}
+
+{% block extrafoot %}
+{% load staticfiles %}
+<!-- Datatables -->
+<script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+<script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+<script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+<script src="{% static 'js/advanced-form-datepicker.js' %}?{% now 'H' %}"></script>
+<!-- Jquery UI -->
+<script src="{% static "js/select2/select2.js" %}"></script>
+<!-- <script type="application/javascript" src="{% static 'js/accounting/journal_GL.js' %}"></script> -->
+<script type="text/javascript">
+    $(document).ready(function(){
+        var frequency_date = "{{schedule.frequency_date}}";
+        var frequency_month = "{{schedule.frequency_month}}";
+        $('#id_monthly_frequency_choice').val(frequency_date);
+        $('#id_year_months_choice').val(frequency_month);
+        $('#id_year_monthly_frequency_choice').val(frequency_date);
+        var recuring_period = $('input[name=recur_period]:checked').val();
+        if(recuring_period) {
+            setFrequencyView(recuring_period);
+        } else {
+            $('#id_recur_period_0').attr('checked', 'checked');
+            setFrequencyView('0');
+        }
+        $('input[name=recur_period]').on('change', function(e){
+            recuring_period = $('input[name=recur_period]:checked').val();
+            setFrequencyView(recuring_period);
+        }); 
+
+        var daily_freq_radio = '{{schedule.daily_choice}}';
+        if(daily_freq_radio == 0 && daily_freq_radio != ''){
+            $('#id_daily_freq_'+ daily_freq_radio).attr('checked', 'checked');
+            setDailyFrequencyView(daily_freq_radio.toString());
+        }
+        $('input[name=daily_freq]').on('change', function(e){
+            daily_freq_radio = $('input[name=daily_freq]:checked').val();
+            setDailyFrequencyView(daily_freq_radio);
+        });
+
+        var week_day = '{{schedule.frequency_weekday_index}}';
+        $('#id_week_day_'+week_day).attr('checked', 'checked');
+
+        var monthly_freq_radio = '{{schedule.monthly_choice}}';
+        if(monthly_freq_radio){
+            $('#id_month_freq_'+ monthly_freq_radio).attr('checked', 'checked');
+            setMonthlyFrequencyView(monthly_freq_radio);
+        }
+        $('input[name=month_freq]').on('change', function(e){
+            monthly_freq_radio = $('input[name=month_freq]:checked').val();
+            setMonthlyFrequencyView(monthly_freq_radio);
+        });
+
+
+        var yearly_freq_radio = '{{schedule.yearly_choice}}';
+        if(yearly_freq_radio){
+            $('#id_year_freq_'+ yearly_freq_radio).attr('checked', 'checked');
+            setYearlyFrequencyView(yearly_freq_radio);
+        }
+        $('input[name=year_freq]').on('change', function(e){
+            monthly_freq_radio = $('input[name=year_freq]:checked').val();
+            setYearlyFrequencyView(yearly_freq_radio);
+        });
+
+        $('#id_monthly_frequency_choice').select2();
+        $('#id_year_monthly_frequency_choice').select2();
+        $('#id_year_months_choice').select2();
+    });
+
+    $(document).on("input", ".schedule_frequency", function() {
+        let temp_str = this.value.replace(/[^0-9]/g,'');
+        //if (temp_str.length > 2) {
+            //temp_str = temp_str.slice(0, -1);
+        //}
+        this.value = temp_str;
+    });
+
+    $(document).on("input", ".schedule_code", function() {
+        let temp_str = this.value.replace(/[^0-9a-zA-Z]/g,'');
+        this.value = temp_str;
+    });
+
+    function setYearlyFrequencyView(yearly_freq_radio) {
+        if('0' == yearly_freq_radio) {
+            $('#id_year_monthly_week_choice').attr('disabled', true);
+            $('#id_year_week_days_choice').attr('disabled', true);
+            $('#id_year_monthly_frequency_choice').attr('disabled', false);
+        } else {
+            $('#id_year_monthly_week_choice').attr('disabled', false);
+            $('#id_year_week_days_choice').attr('disabled', false);
+            $('#id_year_monthly_frequency_choice').attr('disabled', true);
+        }
+    }
+
+    function setMonthlyFrequencyView(monthly_freq_radio) {
+        if('0' == monthly_freq_radio) {
+            $('#id_monthly_week_choice').attr('disabled', true);
+            $('#id_week_days_choice').attr('disabled', true);
+            $('#id_monthly_frequency_choice').attr('disabled', false);
+        } else {
+            $('#id_monthly_week_choice').attr('disabled', false);
+            $('#id_week_days_choice').attr('disabled', false);
+            $('#id_monthly_frequency_choice').attr('disabled', true);
+        }
+    }
+
+    function setSemiMonthFrequencyView(semi_month_freq_radio) {
+        console.log(semi_month_freq_radio);
+        if('0' == semi_month_freq_radio) {
+            $('#id_semi_monthly_frequency_1st').attr('disabled', false);
+            $('#id_semi_monthly_frequency_2nd').attr('disabled', true);
+        } else {
+            $('#id_semi_monthly_frequency_1st').attr('disabled', true);
+            $('#id_semi_monthly_frequency_2nd').attr('disabled', false);
+        }
+    }
+
+    function setDailyFrequencyView(daily_freq_radio) {
+        if('0' == daily_freq_radio) {
+            $('input[name=week_days]').attr('disabled', true);
+            $('#id_daily_frequency').attr('disabled', false);
+        } else {
+            $('input[name=week_days]').attr('disabled', false);
+            $('#id_daily_frequency').attr('disabled', true);
+        }
+    }
+
+    function setFrequencyView(recuring_period) {
+        switch(recuring_period){
+            case '0':
+                $('.daily_div').show();
+                $('.weekly_div').hide();
+                $('.semi_monthly_div').hide();
+                $('.monthly_div').hide();
+                $('.yearly_div').hide();
+                break;
+            case '1':
+                $('.daily_div').hide();
+                $('.weekly_div').show();
+                $('.semi_monthly_div').hide();
+                $('.monthly_div').hide();
+                $('.yearly_div').hide();
+                break;
+            case '2':
+                $('.daily_div').hide();
+                $('.weekly_div').hide();
+                $('.semi_monthly_div').show();
+                $('.monthly_div').hide();
+                $('.yearly_div').hide();
+                break;
+            case '3':
+                $('.daily_div').hide();
+                $('.weekly_div').hide();
+                $('.semi_monthly_div').hide();
+                $('.monthly_div').show();
+                $('.yearly_div').hide();
+                break;
+            case '4':
+                $('.daily_div').hide();
+                $('.weekly_div').hide();
+                $('.semi_monthly_div').hide();
+                $('.monthly_div').hide();
+                $('.yearly_div').show();
+                break;
+            default:
+                console.log(recuring_period);    
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+  {% load staticfiles %}
+  <link href="{% static "css/table.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Account Set List{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block ar_account_set_active %}{% if account_set_type == '1' %}active{% endif %}{% endblock %}
+{% block ap_account_set_active %}{% if account_set_type == '2' %}active{% endif %}{% endblock %}
+{% block parent_AR_a_active %}{% if account_set_type == '1' %}active{% endif %}{% endblock %}
+{% block parent_AR_i_active %}{% if account_set_type == '1' %}active{% endif %}{% endblock %}
+{% block parent_AP_a_active %}{% if account_set_type == '2' %}active{% endif %}{% endblock %}
+{% block parent_AP_i_active %}{% if account_set_type == '2' %}active{% endif %}{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    Account Set List
+                    <span class="tools pull-right">
+                        {% if request.session.staff_admin %}
+                            <a class="btn btn-success start" href="{% url 'account_set_add' account_set_type %}">
+                                <i class="glyphicon glyphicon-plus"></i>
+                                <span>Add new</span>
+                            </a>
+                        {% endif %}
+                    </span>
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table table-responsive">
+                        <table class="display table table-bordered table-striped table-condensed table-hover"
+                               id="custom-table">
+                            <thead>
+                            <tr>
+                                <th>Update Date</th>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Control Account</th>
+                                <th>Currency Code</th>
+                                <th>Revaluation Account</th>
+                                {% if request.session.staff_admin %}
+                                    <th class="text-center">Edit</th>
+                                {% endif %}
+                            </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#custom-table').dataTable({
+                "order": [[1, "asc"]],
+                "serverSide": true,
+                "scrollX": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'AccountSet__asJson' account_set_type%}"
+                },
+                "columns": [
+                    {"data": "update_date", "width":"80px"},
+                    {"data": "code"},
+                    {"data": "name", "width":"200px"},
+                    {"data": "control_account", "width":"55px"},
+                    {"data": "currency_code", "width":"55px"},
+                    {"data": "revaluation_account", "class": "text-center", "width":"55px"},
+                    {% if request.session.staff_admin %}
+                        {
+                            "className": "text-center",
+                            "orderable": false,
+                            "data": null,
+                            "render": function (data, type, full, meta) {
+                                var button_edit = '<a href="/accounts/account-set/edit/' + full.id + '/" class="fa fa-pencil fa-lg btn btn-primary btn-sm"></a>'
+                                return button_edit;
+                            }
+                        }
+                    {% endif %}
+                ]
+            });
+            $('.dataTables_scrollHeadInner').attr('style', 'margin-left: auto !important; margin-right: auto !important');
+        });
+    </script>
+{% endblock %}

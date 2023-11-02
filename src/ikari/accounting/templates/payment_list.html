@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+{% endblock %}
+
+{% block title %}
+{% if journal_type == '4' %} {# TRANSACTION_TYPES['AP Payment'] #}
+    Payment List
+{% endif %}
+
+{% if journal_type == '3' %} {# TRANSACTION_TYPES['AR Receipt'] #}
+    Receipt List{
+% endif %}
+{% endblock %}
+
+{% block parent_accounting_a_active %}
+    active
+{% endblock %}
+
+{% block parent_accounting_i_active %}active{% endblock %}
+
+{% block parent_AR_a_active %}
+{% if journal_type == '3' %} {# TRANSACTION_TYPES['AR Receipt'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_AR_i_active %}
+{% if journal_type == '3' %} {# TRANSACTION_TYPES['AR Receipt'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_AP_a_active %
+}{% if journal_type == '4' %} {# TRANSACTION_TYPES['AP Payment'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_AP_i_active %}
+{% if journal_type == '4' %} {# TRANSACTION_TYPES['AP Payment'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block ar_receipt_active %}
+{% if journal_type == '3' %} {# TRANSACTION_TYPES['AR Receipt'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block ap_payment_active %}
+{% if journal_type == '4' %} {# TRANSACTION_TYPES['AP Payment'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block content %}
+    <br/>
+    <input id="hdJournalType" type="hidden" value="{{ journal_type }}">
+    <div class="row">
+        <div class="col-sm-12">
+            {% if messages %}
+                <div id="message" class="col-lg-12 alert alert-info">
+                    {% for message in messages %}
+                        <strong id="me2">+ {{ message }}</strong><br>
+                    {% endfor %}
+                    <strong name="nomessage" id="nomessage" value=""></strong>
+                </div>
+            {% endif %}
+
+            <section class="panel">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="panel-body">
+                            <header class="panel-heading" style="font-size: 20px">
+                                {% if journal_type == '4' %} {# TRANSACTION_TYPES)['AP Payment'] #}
+                                    Payment List
+                                {% endif %}
+                                {% if journal_type == '3' %} {# TRANSACTION_TYPES['AR Receipt'] #}
+                                    Receipt List
+                                {% endif %}
+                                <span class="tools pull-right">
+                                    {% if journal_type == "3" %} {# TRANSACTION_TYPES['AR Receipt'] #}
+                                        <a class="btn btn-success start" href="{% url 'ar_receipt_add' 0 %}"> {# batch_id #}
+                                         <i class="glyphicon glyphicon-plus"></i>
+                                         <span>Add new</span>
+                                     </a>
+                                    {% elif journal_type == "4" %} {# TRANSACTION_TYPES['AP Payment'] #}
+                                        <a class="btn btn-success start" href="/accounting/add/APPayment/">
+                                         <i class="glyphicon glyphicon-plus"></i>
+                                         <span>Add new</span>
+                                     </a>
+                                    {% endif %}
+
+                                 </span>
+                            </header>
+                            <div class="adv-table">
+                                <table class="display table table-bordered table-striped table-condensed"
+                                       id="dynamic-table" style="width:100%">
+                                    <thead>
+                                    <tr>
+                                        <th>Update Date</th>
+                                        <th>ID</th>
+                                        <th>Trans. Number</th>
+                                        <th>Document Number</th>
+                                        <th>Payment Code</th>
+                                        {% if journal_type == '3' %} {# TRANSACTION_TYPES['AR Receipt'] #}
+                                            <th>Customer</th>
+                                        {% elif journal_type == '4' %} {# TRANSACTION_TYPES['AP Payment'] #}
+                                            <th>Supplier</th>
+                                        {% endif %}
+                                        <th>Payment Amount</th>
+                                        <th>Status</th>
+                                        <th class="text-center" style="min-width:90px!important;">Options</th>
+                                    </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#dynamic-table').dataTable({
+                "order": [[0, "desc"]],
+                "serverSide": true,
+                "scrollX": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'PaymentList__asJson' journal_type %}"
+                },
+                "columns": [
+                    {"data": "update_date"},
+                    {
+                        "data": "id",
+                        "visible": false,
+                    },
+                    {"data": "code"},
+                    {"data": "document_number"},
+                    {"data": "payment_code"},
+                    {"data": "cust_supp_name"},
+                    {"data": "payment_amount"},
+                    {
+                        "data": null,
+                        "render": function (data, type, row, meta) {
+                            if (row.status == '1') { /* STATUS_TYPE_DICT['Open'] */
+                                return '<span class="badge badge-sm label-inverse">Open</span>'
+                            }
+                            if (row.status == '2') { /* STATUS_TYPE_DICT['Posted'] */
+                                return '<span class="badge badge-sm label-success">Posted</span>'
+                            }
+                        }
+                    },
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, row, meta) {
+                            var btn =
+                                    '<div class="btn-group dropup">' +
+                                    '<button type="button"' +
+                                    'class="btn btn-primary btn-sm dropdown-toggle"' +
+                                    'data-toggle="dropdown" aria-haspopup="true"' +
+                                    'aria-expanded="false"' +
+                                    'style="min-width: 40px!important;">Action' +
+                                    '<span class="caret" style="margin-left:15px"></span>' +
+                                    '<span class="sr-only">Toggle Dropdown</span>' +
+                                    '</button>' +
+                                    '<ul class="dropdown-menu dropdown-menu-right">' +
+                                    '<li>';
+                            if (row.journal_type == 3) { /* TRANSACTION_TYPES['AR Receipt'] */
+                                btn = btn + '<li><a href="/accounting/ar_receipt_edit/' + row.id + '/0/">Edit</a>';
+                            } else if (row.journal_type == 4) { /* TRANSACTION_TYPES)['AP Payment'] */
+                                btn = btn + '<li><a href="/accounting/edit/AP/' + row.id + '/">Edit</a>';
+                            }
+
+                            btn = btn + '</ul/div>';
+                            return btn;
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+{% endblock %}
+
+

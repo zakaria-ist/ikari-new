@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html lang="en">
+<head>
+  <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.min.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap-reset.css' %}">
+    <!--external css-->
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/font-awesome/css/font-awesome.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/jquery-ui/jquery-ui-1.10.1.custom.css' %}">
+    <!-- Custom styles for this template -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}?{% now 'H' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style-responsive.css' %}"/>
+    <!-- Custom styles for checkbox -->
+    <link rel="stylesheet" href="{% static 'css/build.css' %}?{% now 'H' %}">
+    <!--right slidebar-->
+    <link href="{% static 'css/slidebars.css' %}" rel="stylesheet">
+    <!-- Datatables -->
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+
+    <!--fontsize -overwrites the fontsize, make sure this is always the last one!!-->
+    <link href="{% static 'css/fontsize.css' %}?{% now 'H' %}" rel="stylesheet">
+    <!-- For jQueri UI dialog -->
+    <link href="{% static 'css/pop-dialog.css' %}?{% now 'H' %}" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
+
+    {% block extrahead %}{% endblock %}
+    <title>{% block title %}Ikari Group{% endblock %}</title>
+</head>
+<body>
+<section id="container">
+    <!--header start-->
+    <header class="header white-bg">
+        <div class="sidebar-toggle-box">
+            <div class="fa fa-bars tooltips" data-placement="right" data-original-title="Toggle Navigation"></div>
+        </div>
+        <!--logo start-->
+        <a {% if 'all_sp' in request.session.permission_staff %}
+            href="{% url 'page_sp' %}"
+            {% elif 'all_acc' in  request.session.permission_staff %}
+            href="{% url 'page_acc' %}"
+            {% endif %}
+         class="logo">
+            {{ request.session.company_name }}
+        </a>
+        <!--logo end-->
+        {% if 'all_sp' in request.session.permission_staff %}
+            {% if not user.is_superuser %}
+                <a class="logo" style="margin-left: 12%; font-size: 16px;">
+                    S&P Processing Month : {{ request.session.currenct_sp_period }}
+                </a>
+            {% endif %}
+            {% if not user.is_superuser %}
+                {% if request.session.use_inventory %}
+                    <a class="logo" style="margin-left: 12%; font-size: 16px;">
+                        IC Processing Month : {{ request.session.currenct_ic_period }}
+                    </a>
+                {% endif %}
+            {% endif %}
+        {% elif 'all_acc' in  request.session.permission_staff %}
+            {% if not user.is_superuser %}
+                <a class="logo" style="margin-left: 20%; font-size: 16px;">
+                    Session Date : {{ request.session.session_date|date:"d-m-Y" }}
+                </a>
+            {% endif %}
+        {% endif %}
+        <div class="top-nav ">
+            <!--search & user info start-->
+            <ul class="nav pull-right top-menu">
+                <li>
+                    <input type="text" class="form-control search" placeholder="Search">
+                </li>
+                <!-- user login dropdown start-->
+                <li class="dropdown">
+                    <a data-toggle="dropdown" class="dropdown-toggle" href="#">
+                        <img alt="" src="{% static 'img/login-icon.png' %}">
+                        <span class="username">{{ user.username }}</span>
+                        <b class="caret"></b>
+                    </a>
+                    <ul class="dropdown-menu extended logout">
+                        <div class="log-arrow-up"></div>
+                        {% if not user.is_superuser %}
+                            <li><a href="{% url 'company_profile' %}"><i class=" fa fa-suitcase"></i>Company</a></li>
+                            <li><a href="{% url 'user_profile' %}"><i class="fa fa-cog"></i> Profile</a></li>
+                        {% endif %}
+                        <li><a href="{% url 'logout_user' %}"><i class="fa fa-key"></i> Log Out</a></li>
+                    </ul>
+                </li>
+                <!-- user login dropdown end -->
+            </ul>
+            <!--search & user info end-->
+        </div>
+    </header>
+    <!--header end-->
+
+    <!--sidebar start-->
+    <aside>
+        <div id="sidebar" class="nav-collapse ">
+            <!-- sidebar menu start-->
+            <ul class="sidebar-menu" id="nav-accordion">
+                {% if request.session.staff_admin or user.is_superuser %}
+                    {% if 'all_acc' in request.session.permission_staff %}
+                        <li class="sub-menu">
+                            <a href="javascript:;" class="{% block parent_system_setting_a_active %}{% endblock %}">
+                                <i class="fa fa fa-cogs fa-fw {% block parent_system_setting_i_active %}{% endblock %}"></i>
+                                Global System Settings
+                            </a>
+                            <ul class="sub">
+                                <li class="{% block currency_active %}{% endblock %}">
+                                    <a href="{% url 'currency_list' %}">Currencies</a>
+                                </li>
+                                <li class="{% block country_active %}{% endblock %}">
+                                    <a href="{% url 'country_list' %}">Countries</a>
+                                </li>
+                                {% comment %} <li class="{% block fix_real_outs_amount_ap %}{% endblock %}">
+                                    <a href="{% url 'fix_real_outs_amount' 'AP' %}" onclick="showBusy()">Fix AP Outstanding</a>
+                                </li>
+                                <li class="{% block fix_real_outs_amount_ar %}{% endblock %}">
+                                    <a href="{% url 'fix_real_outs_amount' 'AR' %}" onclick="showBusy()">Fix AR Outstanding</a>
+                                </li>
+                                <li class="{% block fix_payments_outs_amount_ap %}{% endblock %}">
+                                    <a href="{% url 'fix_payments_outs_amount' 'AP' None %}" onclick="showBusy()">Fix AP Aging</a>
+                                </li>
+                                <li class="{% block fix_payments_outs_amount_ar %}{% endblock %}">
+                                    <a href="{% url 'fix_payments_outs_amount' 'AR' None %}" onclick="showBusy()">Fix AR Aging</a>
+                                </li>
+                                <li class="{% block fix_ar_adjustments %}{% endblock %}">
+                                    <a href="{% url 'fix_ar_adjustments' %}" onclick="showBusy()">Fix AR Adjustments</a>
+                                </li>
+                                <li class="{% block fix_journal_year_period %}{% endblock %}">
+                                    <a href="{% url 'fix_journal_year_period' %}" onclick="showBusy()">Fix Journals Period-Year</a>
+                                </li> {% endcomment %}
+                                {% comment %} <li class="{% block trans_method_active %}{% endblock %}">
+                                    <a href="{% url 'trans_method_list' %}">Payment Mode</a>
+                                </li> {% endcomment %}
+                            </ul>
+                        </li>
+                    {% endif %}
+                    {% if 'all_acc' in request.session.permission_staff or 'all_sp' in request.session.permission_staff %}
+
+                    {% else %}
+                        <li class="sub-menu">
+                            <a href="javascript:;" class="{% block parent_company_a_active %}{% endblock %}">
+                                <i class="fa fa-building-o fa-fw {% block parent_company_i_active %}{% endblock %}"></i>
+                                Company
+                            </a>
+                            <ul class="sub">
+                                {% if user.is_superuser %}
+                                    <li class="{% block company_active %}{% endblock %}">
+                                        <a href="{% url 'company_list' %}">Companies </a>
+                                    </li>
+                                {% endif %}
+                                {% if not user.is_superuser %}
+                                    <li class="{% block company_profile_active %}{% endblock %}">
+                                        <a href="{% url 'company_profile' %}">Company Profile </a>
+                                    </li>
+                                {% endif %}
+                                {% if user.is_superuser or request.session.staff_admin %}
+                                    <li class="{% block staff_active %}{% endblock %}">
+                                        <a href="{% url 'staff_list' %}">Staffs </a>
+                                    </li>
+                                    <li class="{% block group_active %}{% endblock %}">
+                                        <a href="{% url 'load_group_list' %}">Permission Group</a>
+                                    </li>
+                                {% endif %}
+
+                            </ul>
+                        </li>
+                    {% endif %}
+                {% endif %}
+
+                {% if not user.is_superuser %}
+                    {% if 'all_sp' in request.session.permission_staff %}
+                        {% if request.session.use_inventory %}
+                            <li class="sub-menu">
+                                <a href="javascript:;" class="{% block inv_setting_a_active %}{% endblock %}">
+                                    <i class="fa fa-truck fa-fw {% block inv_setting_i_active %}{% endblock %}"></i>
+                                    Inventory Control
+                                </a>
+
+                                <ul class="sub">
+                                    <li class="sub-menu">
+                                        <a href="javascript:;" class="{% block inv_document_entry_a_active %}{% endblock %}">
+                                            <i class="fa fa-pencil fa-fw {% block inv_document_entry_i_active %}{% endblock %}"></i>
+                                            Document Entry
+                                        </a>
+                                        <ul class="sub">
+                                            <li class="{% block inv_stock_transaction_active %}{% endblock %}">
+                                                <a href="{% url 'stock_transaction_list' %}">
+                                                Stock Transaction
+
+                                            </a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    {% if request.session.staff_admin %}
+                                        <li class="sub-menu">
+                                            <a href="javascript:;" class="{% block ics_a_active %}{% endblock %}">
+                                                <i class="fa fa-indent fa-fw {% block ics_i_active %}{% endblock %}"></i>
+                                                Master Data Setup
+                                            </a>
+                                            <ul class="sub">
+                                                <li class="{% block file_control_active %}{% endblock %}">
+                                                    <a href="{% url 'load_file_control' %}">Control</a>
+                                                </li>
+                                                <li class="{% block item_active %}{% endblock %}">
+                                                    <a href="{% url 'item_list' %}">Item</a>
+                                                </li>
+                                                <li class="{% block inv_category_active %}{% endblock %}">
+                                                    <a href="{% url 'inv_category_list' %}">Item Group</a>
+                                                </li>
+                                                <li class="{% block location_active %}{% endblock %}">
+                                                    <a href="{% url 'location_list' %}">Location</a>
+                                                </li>
+                                                <li class="{% block stock_location_active %}{% endblock %}">
+                                                    <a href="{% url 'load_stock_list' 0 %}"> Location Stock</a> {# loc_id #}
+                                                </li>
+                                                <li class="{% block item_measure_active %}{% endblock %}">
+                                                    <a href="{% url 'measure_list' %}">Measurement</a>
+                                                </li>
+                                                <li class="{% block inv_transaction_active %}{% endblock %}">
+                                                    <a href="{% url 'transaction_code_list' %}">Transaction Code</a>
+                                                </li>
+                                            </ul>
+                                        </li>
+
+                                        <li class="sub-menu">
+                                            <a href="javascript:;" class="{% block ics_r_a_active %}{% endblock %}">
+                                                    <i class="fa fa-sign-in fa-fw {% block ics_r_i_active %}{% endblock %}"></i>
+                                                    Processing
+                                                </a>
+                                            <ul class="sub">
+                                                {% comment %} <li class="{% block repost_stock %}{% endblock %}">
+                                                    <a href="{% url 'repost_stock' %}">Re-post Stock</a>
+                                                </li> {% endcomment %}
+                                                <li class="{% block inv_daily_closing_active %}{% endblock %}">
+                                                    <a href="{% url 'inv_daily_closing' %}">Daily Closing</a>
+                                                </li>
+                                                <li class="{% block inv_closing_active %}{% endblock %}">
+                                                    <a href="{% url 'monthly_closing' '1' %}">Month End Closing</a> {# TRN_CODE_TYPE_DICT['Inventory Code'] #}
+                                                </li>
+                                                <li class="{% block inv_fiscal_active %}{% endblock %}">
+                                                    <a href="{% url 'fiscal_calendars' request.user.last_login.year '0' %}">Fiscal Calendar</a> {# PAGE_TYPE['Inventory'] #}
+                                                </li>
+                                            </ul>
+                                        </li>
+
+{#                                        <li class="sub-menu">#}
+{#                                            <a href="javascript:;" class="{% block code_ics_a_active %}{% endblock %}">#}
+{#                                                <i class="fa fa-gear fa-fw {% block code_ics_i_active %}{% endblock %}"></i>#}
+{#                                                Inventory Code#}
+{#                                            </a>#}
+{#                                            <ul class="sub">#}
+{#                                                <li class="{% block item_measure_active %}{% endblock %}">#}
+{#                                                    <a href="{% url 'measure_list' %}">Measurement</a>#}
+{#                                                </li>#}
+{#                                                <li class="{% block inv_transaction_active %}{% endblock %}">#}
+{#                                                    <a href="{% url 'transaction_code_list' %}">Transaction Code</a>#}
+{#                                                </li>#}
+{#                                                <li class="{% block inv_category_active %}{% endblock %}">#}
+{#                                                    <a href="{% url 'inv_category_list' %}">Item Group</a>#}
+{#                                                </li>#}
+{#                                            </ul>#}
+{#                                        </li>#}
+                                        {% endif %}
+
+                                    {% comment %} <li class="{% block inv_report_active %}{% endblock %}">
+                                        <a href="{% url 'print_stock_reports' %}">
+                                        <i class="fa fa-book fa-fw"></i>
+                                        Reports</a>
+                                    </li> {% endcomment %}
+                                    <li class="sub-menu">
+                                    <a href="javascript:;" class="{% block inv_report_active %}{% endblock %}"> {# ORDER_TYPE['Undefined'], order_id, PRINT_TYPES['Print Preview'] #}
+                                    <i class="fa fa-book fa-fw {% block inv_report_i_active  %}{% endblock %}"></i>
+                                    Reports</a>
+                                    <ul class="sub">
+                                        <li class="{% block inv_report_li_active %}{% endblock %}">
+                                            <a href="{% url 'print_stock_reports' request.session.stk_report_list.0.0 %}">{{request.session.stk_report_list.0.1}}</a>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                </ul>
+                            </li>
+                        {% endif %}
+                        <li class="sub-menu">
+                            <a href="javascript:;" class="{% block parent_order_a_active %}{% endblock %}">
+                                <i class="fa fa-exchange fa-fw {% block parent_order_i_active %}{% endblock %}"></i>
+                                Sale & Purchase
+                            </a>
+                            <ul class="sub">
+                                <li class="sub-menu">
+                                    <a href="javascript:;" class="{% block document_entry_a_active %}{% endblock %}">
+                                        <i class="fa fa-pencil fa-fw {% block document_entry_i_active %}{% endblock %}"></i>
+                                        Document Entry
+                                    </a>
+                                    <ul class="sub">
+                                        <li class="{% block order_sale_active %}{% endblock %}">
+                                            <a href="{% url 'order_list' '1' %}">Sale Order</a> {# ORDER_TYPE['SALES ORDER'] #}
+                                        </li>
+                                        <li class="{% block order_purchase_active %}{% endblock %}">
+                                            <a href="{% url 'order_list' '2' %}">Purchase Order</a> {# ORDER_TYPE['PURCHASE ORDER'] #}
+                                        </li>
+                                        <li class="{% block order_good_receive_active %}{% endblock %}">
+                                            <a href="{% url 'order_list' '5' %}">Good Receive</a> {# ORDER_TYPE['PURCHASE INVOICE'] #}
+                                        </li>
+                                        <li class="{% block order_delivery_invoice_active %}{% endblock %}">
+                                            <a href="{% url 'order_list' '6' %}">DO / Invoice</a> {# ORDER_TYPE['SALES INVOICE'] #}
+                                        </li>
+{#                                        <li class="{% block order_sale_note_active %}{% endblock %}">#}
+{#                                            <a href="{% url 'order_list' '10' %}">Sales Db Note/Cr Note</a>#} {# ORDER_TYPE['SALES CR DB NOTE'] #}
+{#                                        </li>#}
+{#                                        <li class="{% block order_purchase_note_active %}{% endblock %}">#}
+{#                                            <a href="{% url 'order_list' '9' %}">Purchase Db/Cr Note</a>#} {# ORDER_TYPE['PURCHASE CR DB NOTE'] #}
+{#                                        </li>#}
+                                    </ul>
+                                </li>
+                                {% if request.session.staff_admin %}
+                                    <li class="sub-menu">
+                                        <a href="javascript:;" class="{% block sp_setting_a_active %}{% endblock %}">
+                                            <i class="fa fa-gear fa-fw {% block sp_setting_i_active %}{% endblock %}"></i>
+                                            Master Data Setup
+                                        </a>
+                                        <ul class="sub">
+                                            <li class="{% block cost_center_sp_active %}{% endblock %}">
+                                                <a href="{% url 'cost_centers' %}">Cost Center</a>
+                                            </li>
+                                            <li class="{% block country_sp_active %}{% endblock %}">
+                                                <a href="{% url 'list_country' %}">Country</a>
+                                            </li>
+                                            <li class="{% block currency_sp_active %}{% endblock %}">
+                                                <a href="{% url 'curr_list' %}">Currency</a>
+                                            </li>
+                                            <li class="sub-menu">
+                                                <a href="javascript:;" class="{% block customer_a_active %}{% endblock %}">
+                                                    <i class="fa fa-users fa-fw {% block customer_i_active %}{% endblock %}"></i>
+                                                    Customer
+                                                </a>
+                                                <ul class="sub">
+                                                    <li class="{% block customer_active %}{% endblock %}">
+                                                        <a href="{% url 'customer_list' %}">Customer List</a>
+                                                    </li>
+                                                    <li class="{% block part_sale_active %}{% endblock %}">
+                                                        <a href="{% url 'part_sale_list' %}">Part Sale Price </a>
+                                                    </li>
+                                                    <li class="{% block payment_code_spar_active %}{% endblock %}">
+                                                        <a href="{% url 'payment_codes_list' '1' %}">Payment Code</a>
+                                                    </li>
+                                                    <li class="{% block sale_nember_active %}{% endblock %}">
+                                                        <a href="{% url 'trans_code_list_by' '2' %}">Sale Number</a> {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+                                                    </li>
+                                                </ul>
+                                            </li>
+                                            <li class="{% block delivery_active %}{% endblock %}">
+                                                <a href="{% url 'delivery_list' %}">Delivery Information</a>
+                                            </li>
+                                            <li class="sub-menu">
+                                                <a href="javascript:;" class="{% block supplier_a_active %}{% endblock %}">
+                                                    <i class="fa fa-users fa-fw {% block supplier_i_active %}{% endblock %}"></i>
+                                                    Supplier
+                                                </a>
+                                                <ul class="sub">
+                                                    <li class="{% block supplier_active %}{% endblock %}">
+                                                        <a href="{% url 'supplier_list' %}">Supplier List</a>
+                                                    </li>
+                                                    <li class="{% block part_purchase_active %}{% endblock %}">
+                                                        <a href="{% url 'purchase_item_list' %}">Part Purchase Price</a>
+                                                    </li>
+                                                    <li class="{% block payment_code_spap_active %}{% endblock %}">
+                                                        <a href="{% url 'payment_codes_list' '2' %}">Payment Code</a>
+                                                    </li>
+                                                    <li class="{% block purchase_nember_active %}{% endblock %}">
+                                                        <a href="{% url 'trans_code_list_by' '3' %}">Purchase Number</a> {# TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+                                                    </li>
+                                                </ul>
+                                            </li>
+                                            <!-- <li class="{% block sale_exchange_active %}{% endblock %}">
+                                                <a href="{% url 'exchange_rate_list' '2' %}">Sale Exchange File</a>
+                                            </li>
+                                            <li class="{% block purchase_exchange_active %}{% endblock %}">
+                                                <a href="{% url 'exchange_rate_list' '3' %}">Purchase Exchange File</a>
+                                            </li> -->
+                                            <li class="{% block tax_master_active %}{% endblock %}">
+                                                <a href="{% url 'tax_list' %}">Tax Code</a>
+                                            </li>
+                                            <li class="{% block part_group_sp_active %}{% endblock %}">
+                                                <a href="{% url 'category_list' %}">Part Group</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="sub-menu">
+                                        <a href="javascript:;" class="{% block processing_a_active %}{% endblock %}">
+                                            <i class="fa fa-sign-in fa-fw {% block processing_i_active %}{% endblock %}">
+
+                                            </i>
+                                            Processing
+                                        </a>
+                                        <ul class="sub">
+                                            <li class="{% block sp_month_closing_active %}{% endblock %}">
+                                                <a href="{% url 'monthly_closing' '2' %}">Month End Closing</a> {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+                                            </li>
+                                            <li class="{% block sp_fiscal_active %}{% endblock %}">
+                                                <a href="{% url 'fiscal_calendars' request.user.last_login.year '1' %}">Fiscal Calendar</a> {# PAGE_TYPE['S&P'] #}
+                                            </li>
+                                            <li class="{% block sp_update_delivery_date_active %}{% endblock %}">
+                                                <a href="{% url 'update_delivery_date' %}">Update Delivery Date</a>
+                                            </li>
+                                            <li class="{% block sp_update_item_price %}{% endblock %}">
+                                                <a href="{% url 'update_item_price' %}">Update Item Price</a>
+                                            </li>
+                                            <li class="{% block update_do_supplier %}{% endblock %}">
+                                                <a href="{% url 'update_do_supplier' %}" onclick="showBusy()">Update D/O Suppliers Info</a>
+                                            </li>
+                                            <li class="{% block export_part_sales_price %}{% endblock %}">
+                                                <a href="{% url 'export_part_sales_price' %}" onclick="showBusy()">Export Part Sales Price</a>
+                                            </li>
+                                            <li class="{% block export_part_purchase_price %}{% endblock %}">
+                                                <a href="{% url 'export_part_purchase_price' %}" onclick="showBusy()">Export Part Purchase Price</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    {% comment %} <li class="sub-menu">
+                                        <a href="javascript:;" class="{% block code_sp_a_active %}{% endblock %}">
+                                            <i class="fa fa-gear fa-fw {% block code_sp_i_active %}{% endblock %}"></i>
+                                            Sales Purchase Code
+                                        </a>
+                                        <ul class="sub">
+
+                                        </ul>
+                                    </li> {% endcomment %}
+                                {% endif %}
+                                <li class="sub-menu">
+                                    <a href="javascript:;" class="{% block order_report_active %}{% endblock %}"> {# ORDER_TYPE['Undefined'], order_id, PRINT_TYPES['Print Preview'] #}
+                                    <i class="fa fa-book fa-fw {% block order_report_i_active %}{% endblock %}"></i>
+                                    Reports</a>
+                                    <ul class="sub">
+                                        {% for report in request.session.report_list %}
+                                            {% if report.1 == 'Order Issued Report' %}
+                                                 <li class="{% block rp_order_issued_report_block %}{% endblock %}">
+                                                    <a href="{% url 'view_report' 0 0 0 report.0 %}">{{report.1}}</a>
+                                                </li>
+                                            {% elif report.1 == 'Delivery Schedule' %}
+                                                <li class="{% block rp_delivery_schedule_block %}{% endblock %}">
+                                                    <a href="{% url 'view_report' 0 0 0 report.0 %}">{{report.1}}</a>
+                                                </li>
+                                            {% elif report.1 == 'Goods Receive' %}
+                                                <li class="{% block rp_goods_receive_block %}{% endblock %}">
+                                                    <a href="{% url 'view_report' 0 0 0 report.0 %}">{{report.1}}</a>
+                                                </li>
+                                            {% elif report.1 == 'Listing' %}
+                                                <li class="{% block rp_listing_block %}{% endblock %}">
+                                                    <a href="{% url 'view_report' 0 0 0 report.0 %}">{{report.1}}</a>
+                                                </li>
+                                            {% elif report.1 == 'Monthly Gross Profit' %}
+                                                <li class="{% block rp_monthly_gross_profit_block %}{% endblock %}">
+                                                    <a href="{% url 'view_report' 0 0 0 report.0 %}">{{report.1}}</a>
+                                                </li>
+                                            {% elif report.1 == 'Monthly Purchase Reports' %}
+                                                <li class="{% block rp_monthly_purchase_preports_block %}{% endblock %}">
+                                                    <a href="{% url 'view_report' 0 0 0 report.0 %}">{{report.1}}</a>
+                                                </li>
+                                            {% elif report.1 == 'Monthly Sales Reports' %}
+                                                <li class="{% block rp_monthly_sales_preports_block %}{% endblock %}">
+                                                    <a href="{% url 'view_report' 0 0 0 report.0 %}">{{report.1}}</a>
+                                                </li>
+                                            {% elif report.1 == 'Order Entry Check List' %}
+                                                <li class="{% block rp_order_entry_check_list_block %}{% endblock %}">
+                                                    <a href="{% url 'view_report' 0 0 0 report.0 %}">{{report.1}}</a>
+                                                </li>
+                                            {% elif report.1 == 'Outstanding P/O Balance' %}
+                                                <li class="{% block rp_outstanding_po_balance_block %}{% endblock %}">
+                                                    <a href="{% url 'view_report' 0 0 0 report.0 %}">{{report.1}}</a>
+                                                </li>
+                                            {% elif report.1 == 'Outstanding S/O Balance' %}
+                                                <li class="{% block rp_outstanding_so_balance_block %}{% endblock %}">
+                                                    <a href="{% url 'view_report' 0 0 0 report.0 %}">{{report.1}}</a>
+                                                </li>
+                                            {% elif report.1 == 'Outstanding Stock Balance' %}
+                                                <li class="{% block rp_outstanding_stock_balance_block %}{% endblock %}">
+                                                    <a href="{% url 'view_report' 0 0 0 report.0 %}">{{report.1}}</a>
+                                                </li>
+                                            {% elif report.1 == 'P/O and Goods Receive Matching' %}
+                                                <li class="{% block rp_po_good_receive_matching_block %}{% endblock %}">
+                                                    <a href="{% url 'view_report' 0 0 0 report.0 %}">{{report.1}}</a>
+                                                </li>
+                                            {% elif report.1 == 'S/O and Sales Invoice Matching' %}
+                                                <li class="{% block rp_so_good_receive_matching_block %}{% endblock %}">
+                                                    <a href="{% url 'view_report' 0 0 0 report.0 %}">{{report.1}}</a>
+                                                </li>
+                                            {% elif report.1 == 'Sales Analysis' %}
+                                                <li class="{% block rp_sales_analysis_block %}{% endblock %}">
+                                                    <a href="{% url 'view_report' 0 0 0 report.0 %}">{{report.1}}</a>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                    {% endif %}
+
+                    {% if 'all_acc' in request.session.permission_staff %}
+                        <li class="sub-menu">
+                            <a href="javascript:;" class="{% block parent_accounting_a_active %}{% endblock %}">
+                                <i class="fa fa-dollar fa-fw {% block parent_accounting_i_active %}{% endblock %}"></i>
+                                Accounting
+                            </a>
+                            <ul class="sub">
+                                <li class="sub-menu">
+                                    <a href="javascript:;" class="{% block account_setting_a_active %}{% endblock %}">
+                                        <i class="fa fa-cog fa-fw {% block account_setting_i_active %}{% endblock %}"></i>
+                                        Account Settings
+                                    </a>
+                                    <ul class="sub">
+                                        <li class="{% block revaluation_code_active %}{% endblock %}">
+                                            <a href="{% url 'revaluation_code_list' %}">Revaluation Code</a>
+                                        </li>
+                                        <li class="{% block segment_active %}{% endblock %}">
+                                            <a href="{% url 'segment_list' %}">Segment Code</a>
+                                        </li>
+                                        <li class="{% block account_type_active %}{% endblock %}">
+                                            <a href="{% url 'account_type_list' %}">Account Group</a>
+                                        </li>
+                                        <li class="sub-menu {% block account_active %}{% endblock %}">
+                                            <a href="{% url 'account_list' %}">Account Code</a>
+                                        </li>
+                                        <li class="sub-menu {% block account_history_active %}{% endblock %}">
+                                            <a href="{% url 'account_history_list_default' %}">Accounts History</a>
+                                        </li>
+                                        <li class="sub-menu {% block account_transaction_active %}{% endblock %}">
+                                            <a href="{% url 'account_transaction_list_default' %}">Accounts Transaction</a>
+                                        </li>
+                                        <li class="{% block bank_active %}{% endblock %}">
+                                            <a href="{% url 'bank_list' %}">Bank Code </a>
+                                        </li>
+                                        <li class="{% block exchange_rate_active %}{% endblock %}">
+                                            <a href="{% url 'exchange_rate_list' '4' %}">Exchange Rates</a> {# TRN_CODE_TYPE_DICT['Accounting'] #}
+                                        </li>
+                                        {% comment %} <li class="{% block rpt_acct_group_active %}{% endblock %}">
+                                            <a href="{% url 'report_account_group' '0' %}"> {# REPORT_TEMPLATE_TYPES_DICT['Profit & Loss'] #}
+                                                Report Grouping
+                                            </a>
+                                        </li> {% endcomment %}
+
+                                    </ul>
+                                </li>
+                                <li class="sub-menu">
+                                    <a href="javascript:;" class="{% block parent_AP_a_active %}{% endblock %}">
+                                        <i class="fa fa-sign-out fa-fw {% block parent_AP_i_active %}{% endblock %}"></i>
+                                        Account Payable
+                                    </a>
+                                    <ul class="sub">
+                                        <li class="{% block ap_distribution_code_active %}{% endblock %}">
+                                            <a href="{% url 'dist_code_list' '2' %}">Distribution Code</a> {# DIS_CODE_TYPE_DICT['AP Distribution Code'] #}
+                                        </li>
+                                        <li class="{% block ap_account_set_active %}{% endblock %}">
+                                            <a href="{% url 'account_set_list' '2' %}">Account Set List</a> {# ACCOUNT_SET_TYPE_DICT['AP Account Set'] #}
+                                        </li>
+
+                                        <li class="{% block ap_vend_active %}{% endblock %}">
+                                            <a href="{% url 'print_vend_reports' %}">Vendor Reports</a>
+                                        </li>
+
+                                        <li class="{% block ap_vendor_active %}{% endblock %}">
+                                            <a href="{% url 'acc_vendor_list' %}">Vendor List</a>
+                                        </li>
+                                        <li class="{% block ap_invoice_active %}{% endblock %}">
+                                            <a href="{% url 'batch_list' '2' %}">Invoice Batch List</a> {# TRANSACTION_TYPES['AP Invoice'] #}
+                                        </li>
+                                        <li class="{% block ap_payment_active %}{% endblock %}">
+                                            <a href="{% url 'batch_list' '4' %}">Payment Batch List</a> {# TRANSACTION_TYPES['AP Payment'] #}
+                                        </li>
+                                        <li class="{% block post_batches_ap %}{% endblock %}">
+                                            <a href="{% url 'post_batches' 'AP' %}">Post Batches</a>
+                                        </li>
+                                        <li class="{% block ap_revaluation_active %}{% endblock %}">
+                                            <a href="{% url 'revaluation' 'AP' %}">Revaluation</a>
+                                        </li>
+                                        <li class="{% block ap_rev_report_active %}{% endblock %}">
+                                            <a href="{% url 'revaluation_report' 'AP' %}">Revaluation Report</a>
+                                        </li>
+                                        <li class="{% block ap_report_active %}{% endblock %}">
+                                            <a href="{% url 'print_AP_reports' %}">Reports</a>
+                                        </li>
+                                        <li class="{% block ap_settings_active %}{% endblock %}">
+                                            <a href="{% url 'ap_gl_integration' %}">GL Integration</a>
+                                        </li>
+                                        <li class="{% block ap_options_active %}{% endblock %}">
+                                            <a href="{% url 'ap_options' %}">AP Options</a>
+                                        </li>
+                                        <li class="{% block payment_code_ap_active %}{% endblock %}">
+                                            <a href="{% url 'payment_codes_list' '2' %}">Payment Code</a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class="sub-menu">
+                                    <a href="javascript:;" class="{% block parent_AR_a_active %}{% endblock %}">
+                                        <i class="fa fa-sign-in fa-fw {% block parent_AR_i_active %}{% endblock %}"></i>
+                                        Account Receivable
+                                    </a>
+                                    <ul class="sub">
+                                        <li class="{% block ar_distribution_code_active %}{% endblock %}">
+                                            <a href="{% url 'dist_code_list' '1' %}">Distribution Code</a> {# DIS_CODE_TYPE_DICT['AR Distribution Code'] #}
+                                        </li>
+                                        <li class="{% block ar_account_set_active %}{% endblock %}">
+                                            <a href="{% url 'account_set_list' '1' %}">Account Set List</a> {# ACCOUNT_SET_TYPE_DICT['AR Account Set'] #}
+                                        </li>
+
+                                        <li class="{% block ar_cust_active %}{% endblock %}">
+                                            <a href="{% url 'print_customers_reports' %}">Customer Reports</a>
+                                        </li>
+                                        <li class="{% block ar_customer_active %}{% endblock %}">
+                                            <a href="{% url 'acc_customer_list' %}">Customer List</a>
+                                        </li>
+                                        <li class="{% block ar_invoice_active %}{% endblock %}">
+                                            <a href="{% url 'batch_list' '1' %}">Invoice Batch List</a> {# TRANSACTION_TYPES['AR Invoice'] #}
+                                        </li>
+                                        <li class="{% block ar_receipt_active %}{% endblock %}">
+                                            <a href="{% url 'batch_list' '3' %}">Receipt Batch List</a> {# TRANSACTION_TYPES['AR Receipt'] #}
+                                        </li>
+                                        <li class="{% block post_batches_ar %}{% endblock %}">
+                                            <a href="{% url 'post_batches' 'AR' %}">Post Batches
+                                            </a>
+                                        </li>
+                                        <li class="{% block ar_revaluation_active %}{% endblock %}">
+                                            <a href="{% url 'revaluation' 'AR' %}">Revaluation</a>
+                                        </li>
+                                        <li class="{% block ar_rev_report_active %}{% endblock %}">
+                                            <a href="{% url 'revaluation_report' 'AR' %}">Revaluation Report</a>
+                                        </li>
+                                        <li class="{% block ar_report_active %}{% endblock %}">
+                                            <a href="{% url 'print_AR_reports' %}">Reports</a>
+                                        </li>
+                                        <li class="{% block ar_settings_active %}{% endblock %}">
+                                            <a href="{% url 'ar_gl_integration' %}">GL Integration</a>
+                                        </li>
+                                        <li class="{% block ar_options_active %}{% endblock %}">
+                                            <a href="{% url 'ar_options' %}">AR Options</a>
+                                        </li>
+                                        <li class="{% block payment_code_ar_active %}{% endblock %}">
+                                            <a href="{% url 'payment_codes_list' '1' %}">Payment Code</a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class="sub-menu">
+                                    <a href="javascript:;" class="{% block parent_com_a_active %}{% endblock %}">
+                                        <i class="fa fa-cloud fa-fw {% block parent_com_i_active %}{% endblock %}"></i>
+                                        Common Services
+                                    </a>
+                                    <ul class="sub">
+                                        {% if request.session.staff_admin %}
+                                            <li class="{% block com_fiscal_active %}{% endblock %}">
+                                                <a href="{% url 'fiscal_calendars' request.user.last_login.year '2' %}">{# PAGE_TYPE['Accounting'] #}
+                                                    <i class="fa fa-calendar fa-fw"></i>Fiscal Calendar</a>
+                                            </li>
+                                        {% endif %}
+                                        {% comment %} <li class="{% block com_reverse_active %}{% endblock %}">
+                                            <a href="{% url 'reverse_transaction' %}">
+                                                Reverse Transaction</a>
+                                        </li> {% endcomment %}
+                                        <li class="{% block se_active %}{% endblock %}">
+                                            <a href="{% url 'list_schedule_entries' %}">Schedule Entry</a> {# Schedule Entry #}
+                                        </li>
+                                        <li class="{% block rec_ap_batch_active %}{% endblock %}">
+                                            <a href="{% url 'recurring_batch_list' '2' %}">Recurring AP Invoice Batches</a> 
+                                        </li>
+                                        <li class="{% block rec_ap_payment_batch_active %}{% endblock %}">
+                                            <a href="{% url 'recurring_batch_list' '4' %}">Recurring AP Payment Batches</a> 
+                                        </li>
+                                        <li class="{% block rec_ar_batch_active %}{% endblock %}">
+                                            <a href="{% url 'recurring_batch_list' '1' %}">Recurring AR Invoice Batches</a> 
+                                        </li>
+                                        <li class="{% block rec_ar_receipt_batch_active %}{% endblock %}">
+                                            <a href="{% url 'recurring_batch_list' '3' %}">Recurring AR Receipt Batches</a> 
+                                        </li>
+                                        <li class="{% block rec_gl_batch_active %}{% endblock %}">
+                                            <a href="{% url 'recurring_batch_list' '5' %}">Recurring GL Batches</a> 
+                                        </li>
+                                        {% comment %} <li class="{% block re_active %}{% endblock %}">
+                                            <a href="{% url 'list_recurring_entries' %}">Recurring Entry</a> {# Recurring Entry #}
+                                        </li> {% endcomment %}
+                                        {% comment %} <li class="{% block createmigration_active %}{% endblock %}">
+                                            <a href="{% url 'create_migration' %}">Migration</a>
+                                        </li> {% endcomment %}
+                                    </ul>
+                                </li>
+                                <li class="sub-menu">
+                                    <a href="javascript:;" class="{% block parent_GL_a_active %}{% endblock %}">
+                                        <i class="fa fa-book fa-fw {% block parent_GL_i_active %}{% endblock %}"></i>
+                                        General Ledger
+                                    </a>
+                                    <ul class="sub">
+                                        <li class="{% block gl_transaction_active %}{% endblock %}">
+                                            <a href="{% url 'batch_list' '5' %}">Transaction Entry</a> {# TRANSACTION_TYPES['GL'] #}
+                                        </li>
+                                        <li class="{% block gl_profit_loss_active %}{% endblock %}">
+                                            <a href="{% url 'print_Gl_profit_listing' %}">Profit & Loss</a>
+                                        </li>
+                                        <li class="{% block gl_balance_listing_active %}{% endblock %}">
+                                            <a href="{% url 'print_Gl_balance_listing' %}">Balance Sheet</a>
+                                        </li>
+                                        <li class="{% block gl_trial_balance_active %}{% endblock %}">
+                                            <a href="{% url 'print_Gl_trial_balance_listing' %}">Trial Balance</a>
+                                        </li>
+                                        <li class="{% block gl_transaction_listing_active %}{% endblock %}">
+                                            <a href="{% url 'print_Gl_transaction_listing' %}">Transaction Listing</a>
+                                        </li>
+                                        <li class="{% block post_batches_gl %}{% endblock %}">
+                                            <a href="{% url 'post_batches' 'GL' %}">Post Batches</a>
+                                        </li>
+                                        <li class="{% block gl_revaluation_active %}{% endblock %}">
+                                            <a href="{% url 'gl_revaluation' %}">Revaluation</a>
+                                        </li>
+                                        {% comment %} <li class="{% block gl_rev_report_active %}{% endblock %}">
+                                            <a href="{% url 'revaluation_report' 'GL' %}">Revaluation Report</a>
+                                        </li> {% endcomment %}
+                                        <li class="{% block y_e_closing_active %}{% endblock %}">
+                                            <a href="{% url 'monthly_closing' '4' %}">Year End Closing</a> {# TRN_CODE_TYPE_DICT['Accounting'] #}
+                                        </li>
+                                    </ul>
+                                </li>
+
+
+                                <li class="sub-menu">
+                                    <a href="javascript:;" class="{% block com_tax_services_a_active %}{% endblock %}">
+                                        <i class="fa fa-folder-o fa-fw {% block com_tax_services_i_active %}{% endblock %}"></i>
+                                        Tax Services</a>
+                                    <ul class="sub">
+                                        <li class="{% block com_tax_auth_active %}{% endblock %}">
+                                            <a href="{% url 'tax_authority_list' %}">Tax Authority</a>
+                                        </li>
+                                        <li class="{% block com_tax_group_active %}{% endblock %}">
+                                            <a href="{% url 'tax_group_list' %}">Tax Group</a>
+                                        </li>
+                                        <li class="{% block com_tax_tracking_active %}{% endblock %}">
+                                            <a href="{% url 'print_tax_tracking_rpt' %}">Tax Tracking</a>
+                                        </li>
+                                        <li class="{% block acc_tax_active %}{% endblock %}">
+                                            <a href="{% url 'acc_tax_list' %}">Tax Code</a>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                    {% endif %}
+                {% endif %}
+
+            </ul>
+        </div>
+    </aside>
+    <!--sidebar end-->
+
+
+    <!--main content start-->
+    <section id="main-content">
+        <section class="wrapper">
+            {% include "messages.html" %}
+            {% include "dialog.html" %}
+            <div id="loading"><img src="{% static 'img/loading.gif' %}" /></div>
+            <!-- Pop up dialog -->
+            <div id="dialog-ok-modal" title="Basic modal dialog" style="display: none;"></div>
+            <div id="dialog-yes-no-modal" title="Basic modal dialog" style="display: none;"></div>
+            {% block content %}{% endblock %}
+        </section>
+    </section>
+</section>
+<!--main content end-->
+
+</section>
+
+<!-- js placed at the end of the document so the pages load faster -->
+<script type="text/javascript" src="{% static 'js/jquery.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/bootstrap.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/jquery.dcjqaccordion.2.7.js' %}" class="include"></script>
+<script type="text/javascript" src="{% static 'js/jquery.scrollTo.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'assets/jquery-ui/jquery-ui-1.10.1.custom.min.js' %}"></script>
+{#<script type="text/javascript" src="{% static 'js/jquery.nicescroll.js' %}"></script>#}
+<script type="text/javascript" src="{% static 'js/respond.min.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+
+<!--common script for all pages-->
+<script type="text/javascript" src="{% static 'js/common/common-scripts.js' %}?{% now 'H' %}"></script>
+<script type="text/javascript" src="{% static 'js/ga.js' %}?{% now 'H' %}"></script>
+<script type="text/javascript" src="{% static 'js/common/form-component.js' %}?{% now 'H' %}"></script>
+<script type="text/javascript" src="{% static 'js/accounting/closing.js' %}?{% now 'H' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js"></script>
+
+<!-- Datatables -->
+<script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+<script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+
+<!--right slidebar-->
+<script src="{% static 'js/slidebars.min.js' %}"></script>
+<script>
+    if (window.sessionStorage.getItem('is_sidebar') == null || window.sessionStorage.getItem('is_sidebar') == undefined) {
+        window.sessionStorage.setItem('is_sidebar', '1');
+    }
+    is_sidebar = window.sessionStorage.getItem('is_sidebar');
+    if (is_sidebar == '1') {
+        $('#main-content').css({
+            'margin-left': '310px'
+        });
+        try{
+            if ( $.fn.DataTable.isDataTable( '.table' ) ) {
+                $('.table').DataTable().columns.adjust();
+            }
+        }
+        catch(error){
+            console.log(error);
+        }
+        $('#sidebar > ul').show();
+        $('#sidebar').css({
+            // 'margin-left': '0'
+            'display': 'block'
+        });
+        $("#container").removeClass("sidebar-closed");
+    } else if (is_sidebar == '0') {
+        $('#main-content').css({
+            'margin-left': '0px'
+        });
+        $('#sidebar').css({
+            // 'margin-left': '-310px'
+            'display': 'none'
+        });
+        try{
+            if ( $.fn.DataTable.isDataTable( '.table' ) ) {
+                $('.table').DataTable().columns.adjust();
+            }
+        }
+        catch(error){
+            console.log(error);
+        }
+        $('#sidebar > ul').hide();
+        $("#container").addClass("sidebar-closed");
+    }
+</script>
+
+{% block extrafoot %}{% endblock %}
+{% block js_link %}{% endblock %}
+{% block js %}{% endblock %}
+
+</body>
+</html>

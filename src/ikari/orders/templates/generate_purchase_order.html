@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Generate Purchase Orders{% endblock %}
+{% block parent_order_a_active %}active{% endblock %}
+{% block parent_order_i_active %}active{% endblock %}
+{% block document_entry_a_active %}active{% endblock %}
+{% block document_entry_i_active %}active{% endblock %}
+{% block order_sale_active %}active{% endblock %}
+
+{% block content %}
+    <br/>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="border-head">
+                <h3>Generate Purchase Orders</h3>
+            </div>
+        </div>
+    </div>
+    <section class="panel">
+        <form class="form-horizontal"
+              role="form"
+              method="post"
+              enctype="multipart/form-data" id="search-order-form" action="{% url 'search_sale_order' %}">
+            {% csrf_token %}
+            <div class="row" {% if sale_order_id != '0' %} style="display: none;" {% endif %}>
+                <div class="col-lg-12">
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <div class="row" style="padding-top:10px">
+                                <div class="col-lg-5">
+                                    <div class="col-lg-4">
+                                        <label class="control-label">From Sales Order</label>
+                                    </div>
+                                    <div class="col-lg-8">
+                                        <select id='from_so' name="from_so" class="form-control" required="required">
+                                            <option></option>
+                                            {% for so in so_list %}
+                                                <option value="{{so.order_id}}">{{so.order__document_number}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-lg-5">
+                                    <div class="col-lg-4">
+                                        <label class="control-label col-md-12">To Sales Order</label>
+                                    </div>
+                                    <div class="col-lg-8">
+                                        <select id='to_so' name="to_so" class="form-control" required="required">
+                                            <option></option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-lg-2">
+                                    <div class="form-group">
+                                        <div class=" col-lg-10">
+                                            <button id="check" class="btn btn-success">View</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <form class="form-horizontal" onsubmit="return checkForm(this);"
+              role="form"
+              method="post"
+              enctype="multipart/form-data" id="formMain" action="{% url 'generate_purchase_order' %}">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-lg-12">
+                    <section class="panel">
+                        <div class="panel-body">
+                            <div class="adv-table">
+                                <table class="display table table-bordered table-striped table-condensed"
+                                       id="purchase-order-table-info">
+                                    <thead>
+                                    <tr>
+                                        <th>Supplier</th>
+                                        <th>S.O Document Number</th>
+                                        <th>Order Date</th>
+                                        {% comment %} <th>Total</th> {% endcomment %}
+                                        <th style="display: none">Select</th>
+                                    </tr>
+                                    </thead>
+                                    {% if supplier_list %}
+                                        <tbody>
+                                        {% for e in supplier_list %}
+                                            <tr class="gradeX">
+                                                <td>{{ e.supplier__name }}</td>
+                                                <td>{{ e.order__document_number }}</td>
+                                                <td>{{ e.order__document_date }}</td>
+                                                {% comment %} <td>{{ e.supplier_total|floatformat:2 }}</td> {% endcomment %}
+                                                <td class="text-center" style="display: none">
+                                                    <input class="suppler-checkbox" type="checkbox" name="choices"
+                                                           id="{{ e.supplier_id }}"
+                                                           value="{{ e.supplier_id }}" checked>
+                                                    <input type="hidden" value="{{ e.order_id }}" name="sale_order_id"
+                                                           class="sale_order_id">
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    {% endif %}
+                                </table>
+                            </div>
+                            <input type="hidden" id="so_list" value="" name="so_list">
+                        </div>
+                    </section>
+                </div>
+                <div class="form-group bottom-group">
+                    <div class="col-lg-12 text-center">
+                        <button id="btnGenerate" name='btnSave' type="submit" class="btn btn-success"
+                                {% if supplier_list == None %}style="display: none" {% endif %}>Generate
+                        </button>
+                        <a class="btn btn-default" href="{% url 'order_list' 1 %}">Cancel</a> {# ORDER_TYPE['SALES ORDER'] #}
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </section>
+
+{% endblock %}
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script src="{% static 'js/order/generate_purchase_table_init.js' %?{% now 'H' %}"></script>
+
+    <script type="text/javascript">
+        (function(){
+            var so_list_enchanced = [];
+            {% for elem in so_list %}
+                var obj = {};
+                obj.id = "{{elem.order_id}}";
+                obj.document_number = "{{elem.order__document_number}}";
+                so_list_enchanced.push(obj);
+            {% endfor %}
+            var arrSaleOrders = [];
+
+            $('.sale_order_id').each(function () {
+                arrSaleOrders.push($(this).val());
+            });
+            $('#so_list').val(arrSaleOrders);
+
+            $(document).ready(function () {
+                var from_so = "{{from_so}}";
+                var to_so = "{{to_so}}";
+                var supplier_list = "{{ supplier_list }}";
+                $('#check').hide();
+                if(supplier_list.length > 2) {
+                    $('#btnGenerate').prop('disabled', false);
+                } else {
+                    $('#btnGenerate').prop('disabled', true);
+                }
+                if (to_so != 0) {
+                    for (var i in so_list_enchanced) {
+                        if (parseInt(so_list_enchanced[i].id,10)>=from_so){
+                            $("#to_so").append($('<option>', {value: so_list_enchanced[i].id, text: so_list_enchanced[i].document_number}));
+                        }
+                        $("#to_so").val(to_so);
+                    }
+                    if (from_so != 0) {
+                        $("#from_so").val(from_so);
+                    }
+                }
+                $('#from_so').select2({
+                    placeholder: "Select Sales Order",
+                });
+                $('#to_so').select2({
+                    placeholder: "Select Sales Order",
+                });
+                if (!$('#from_so').val()){
+                    $('#to_so').prop('disabled', true);
+                }
+            });
+
+            $('#to_so').change(function(){
+                $('#check').click();
+            });
+            $('#from_so').change(function(){
+                var selected_id = parseInt($(this).val(),10);
+                $('#to_so').prop('disabled', false);
+                $("#to_so").empty();
+                for (var i in so_list_enchanced) {
+                    if (parseInt(so_list_enchanced[i].id,10)>=selected_id){
+                        $("#to_so").append($('<option>', {value: so_list_enchanced[i].id, text: so_list_enchanced[i].document_number}));
+                    }
+                }
+                $('#to_so').val('').trigger('change');
+            });
+        }());
+
+        {% if messages %}
+            $('#btnGenerate').prop('disabled', true);
+        {% else %}
+            $('#btnGenerate').prop('disabled', false);
+        {% endif %}
+    </script>
+{% endblock %}

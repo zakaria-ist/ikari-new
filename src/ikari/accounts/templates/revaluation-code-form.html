@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    {% load humanize %}
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <style>
+        .hide_column {
+            display : none;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}{{ form_title }}{% endblock %}
+{% block revaluation_code_active %}active{% endblock %}
+{% block account_setting_a_active %}active{% endblock %}
+{% block account_setting_i_active %}active{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+
+{% block content %}
+<div class="col-lg-12">
+    <section class="panel">
+        <header class="panel-heading">
+            {{ form_title }}
+        </header>
+        <div class="panel-body">
+            <form id="revaluation-code-form" class="form-horizontal" action="{{ form_action }}" 
+                role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="code" class="col-lg-3 col-sm-3 control-label">
+                        Code<span class="span-required">(*)</span>
+                    </label>
+                    <div class="col-lg-2">
+                        {{ form.code }}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="code" class="col-lg-3 col-sm-3 control-label">
+                        Description<span class="span-required">(*)</span>
+                    </label>
+                    <div class="col-lg-9">
+                        {{ form.description }}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="code" class="col-lg-3 col-sm-3 control-label">
+                        Source Type<span class="span-required">(*)</span>
+                    </label>
+                    <div class="col-lg-2">
+                        {{ form.source_type }}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                        <div class="col-sm-12">
+                            Revaluation Account
+                        </div>
+                    </div>
+                    <div class="form-group divRevaluationAccount">
+                        <label for="id_revaluation_unrealized_gain" class="col-lg-3 col-sm-3 control-label">
+                            Unrealized Exchange Gain
+                        </label>
+                        <div class="col-lg-2 col-sm-2">
+                            <select class="form-control revaluation-account-select" tabindex="1" id="id_revaluation_unrealized_gain" name="revaluation_unrealized_gain">
+                                <option value="">Select Account</option>
+                                {% for account in account_list %}
+                                <option value="{{ account.id }}" data-name="{{ account.name }}" {% if revaluation_code.revaluation_unrealized_gain_id == account.id %}selected="selected"{% endif %}>{{ account.code }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-lg-1 col-sm-1">
+                            <button id="btnSearchAccountModal" tabindex="-1" type="button" class="btn btn-info searchAccountModal"
+                                    data-toggle="modal"
+                                    href="#RevaluationAccountListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                        <div class="col-lg-6 col-md-6">
+                            {{ form.revaluation_unrealized_gain_name }}
+                        </div>
+                    </div>
+                    <div class="form-group divRevaluationAccount">
+                        <label for="id_revaluation_unrealized_loss" class="col-lg-3 col-sm-3 control-label">
+                            Unrealized Exchange Loss
+                        </label>
+                        <div class="col-lg-2 col-sm-2">
+                            <select class="form-control revaluation-account-select" tabindex="1" id="id_revaluation_unrealized_loss" name="revaluation_unrealized_loss">
+                                <option value="">Select Account</option>
+                                {% for account in account_list %}
+                                <option value="{{ account.id }}" data-name="{{ account.name }}" {% if revaluation_code.revaluation_unrealized_loss_id == account.id %}selected="selected"{% endif %}>{{ account.code }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-lg-1 col-sm-1">
+                            <button id="btnSearchAccountModal" tabindex="-1" type="button" class="btn btn-info searchAccountModal"
+                                    data-toggle="modal"
+                                    href="#RevaluationAccountListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                        <div class="col-lg-6 col-md-6">
+                            {{ form.revaluation_unrealized_loss_name }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-lg-offset-3 col-lg-9">
+                            <button type="submit" name="btnSave" id="btnSaveId" class="btn btn-success">Save</button>
+                            {% if 'accounts.delete_revaluationcode' in user.get_all_permissions and revaluation_code.id %}
+                                <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger">Delete</a>
+                            {% endif %}
+                            <a class="btn btn-default" href="{% url 'revaluation_code_list' %}">Cancel</a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+
+{% if 'accounts.delete_revaluationcode' in user.get_all_permissions and revaluation_code.id %}
+<div aria-hidden="true" aria-labelledby="deleteDialog" role="dialog" tabindex="-1" id="delete-dialog"
+class="modal fade">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content" style="top:33%; margin-left: auto; margin-right: auto;">
+            <div class="modal-header">
+                <button aria-hidden="true" data-dismiss="modal" class="close" tabindex="-1" type="button">×</button>
+                <h4 class="modal-title">Delete Confirm Dialog</h4>
+            </div>
+            <div class="modal-body">
+                <form role="form" action="{% url 'revaluation_code_delete' revaluation_code.id %}" method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                    </div>
+                    <button type="submit" class="btn btn-success">OK</button>
+                    <a class="btn btn-default" data-dismiss="modal">Cancel</a>
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="modal fade" id="RevaluationAccountListModal" tabindex="-1" role="dialog"
+aria-labelledby="RevaluationAccountListModal"
+aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Search Account</h4>
+            </div>
+            <div class="modal-body">
+            <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                <section class="panel">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="panel-body" style="padding: 0px!important; font-size: 12.5px !important;">
+                                <div class="adv-table">
+                                    <table id="revaluation-account-table" style="width: 100% !important;" class="display table table-bordered table-striped table-condensed">
+                                        <thead>
+                                            <tr>
+                                                <th>Account Code</th>
+                                                <th>Account Name</th>
+                                                <th>Account Type</th>
+                                                <th>Balance Type</th>
+                                                <th>Account Group</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            <div class="modal-footer">
+                <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                <button class="btn btn-success" type="button" id="btnRevaluationAccountSelect">Select</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+
+    <script type="text/javascript">
+         $(document).on('focus', '.select2-selection.select2-selection--single', function (e) {
+            $(this).closest(".select2-container").siblings('select:enabled').select2('open');
+        });
+        $(document).ready(function () {
+
+            $('#id_source_type').select2({
+                placeholder: "Select Source Type",
+            });
+
+            $('#id_revaluation_unrealized_gain').select2({
+                placeholder: "Select Account",
+            });
+
+            $('#id_revaluation_unrealized_loss').select2({
+                placeholder: "Select Account",
+            });
+
+            $('.revaluation-account-select').on('change', function() {
+                var $selected = $(this).find('option:selected');
+                $(this).closest('.divRevaluationAccount').find('input[type="text"]').val($selected.attr('data-name'));
+
+            });
+
+            $('#id_description').focus();
+
+            $('#id_source_type').on('select2:close', function (e)
+            {
+               $('#id_revaluation_unrealized_gain').focus();
+            });
+
+             $('#id_revaluation_unrealized_gain').on('select2:close', function (e)
+            {
+               $('#id_revaluation_unrealized_loss').focus();
+            });
+
+             $('#id_revaluation_unrealized_loss').on('select2:close', function (e)
+            {
+               $('#btnSaveId').focus();
+            });
+        });
+
+        $('#revaluation-account-table').on( 'draw.dt', function () {
+            selectTableRow('#revaluation-account-table', 5);
+            $("input[type='radio']").each(function () {
+                $(this).closest('tr').css('background-color', '#f9f9f9');
+            });
+        });
+
+        /* Search Account button*/
+        $('.searchAccountModal').on('click', function () {
+            var datatbl = $('#revaluation-account-table').DataTable();
+            var $selectAccount = $(this).closest('.divRevaluationAccount').find('select');
+            var $textAccount = $(this).closest('.divRevaluationAccount').find('input');
+
+            var $modalTarget = !$(this).data('target') ? $($(this).attr('href')) : $($(this).data('target'));
+            var $modalBtnSelect = $modalTarget.find('#btnRevaluationAccountSelect');
+
+            $modalBtnSelect.attr('data-select', $selectAccount.attr('id'));
+            $modalBtnSelect.attr('data-text', $textAccount.attr('id'));
+
+            datatbl.destroy();
+            $('#revaluation-account-table').dataTable({
+                "iDisplayLength": 10,
+                //"bLengthChange": false,
+                "order": [[0, "desc"]],
+                "serverSide": true,
+                "ajax": {
+                    "url": "/customers/account_list/"
+                },
+                "columns": [
+                    {"data": "code", "sClass": "text-left"},
+                    {"data": "name", "sClass": "text-left"},
+                    {"data": "account_type", "sClass": "text-left"},
+                    {"data": "balance_type", "sClass": "text-left"},
+                    {"data": "account_group", "sClass": "text-left hide_column"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "sClass": "hide_column",
+                        "render": function (data, type, full, meta) {
+                            return '<input type="radio" name="revaluation-account-choices" id="' +
+                                    full.id + '" class="call-checkbox" value="' + meta.row + '">';
+                        }
+                    }
+                ],
+                "initComplete": function( settings, json ) {
+                    if ($selectAccount.val() != '') {
+                        $('#revaluation-account-table input[id="' + $selectAccount.val() + '"]').attr('checked', 'checked');
+                    }
+
+                }
+            });
+
+
+            $('#btnRevaluationAccountSelect').off('click').on('click', function () {
+
+                var item_select_id = $("input[name='revaluation-account-choices']:checked").attr('id');
+                var nRow = $("input[name='revaluation-account-choices']:checked").parents('tr')[0];
+                var jqInputs = $('td', nRow);
+
+                $selectAccount.find('option:selected').removeAttr('selected');
+                $selectAccount.find('option[value=' + item_select_id + ']').attr('selected', 'selected');
+                $selectAccount.val(item_select_id);
+
+                $selectAccount.trigger('change');
+
+                $textAccount.val(jqInputs[1].innerText);
+
+                $(this).attr('data-dismiss', 'modal');
+            });
+
+        });
+    </script>
+{% endblock %}

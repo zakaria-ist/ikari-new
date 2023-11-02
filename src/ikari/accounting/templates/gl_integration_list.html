@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <link href="{% static "css/table.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}GL Integration{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+
+{% block parent_AP_a_active %}{% if type == 'AP' %}active{% endif %}{% endblock %}
+{% block parent_AP_i_active %}{% if type == 'AP' %}active{% endif %}{% endblock %}
+{% block ap_settings_active %}{% if type == 'AP' %}active{% endif %}{% endblock %}
+
+{% block parent_AR_a_active %}{% if type == 'AR' %}active{% endif %}{% endblock %}
+{% block parent_AR_i_active %}{% if type == 'AR' %}active{% endif %}{% endblock %}
+{% block ar_settings_active %}{% if type == 'AR' %}active{% endif %}{% endblock %}
+
+{% block content %}
+    <div class="panel">
+        <header class="panel-heading">
+            {% if type == 'AP' %}
+               AP G/L Integration Settings
+            {% else %}
+               AR G/L Integration Settings
+            {% endif %}
+        </header>
+        <div class="panel-body">
+            {% csrf_token %}
+            <div id="content">
+                <ul id="tabs" class="nav nav-tabs" data-tabs="tabs"
+                    style="padding-left: 20px; margin-left: 18px; margin-right: 24px;">
+                    <li {% if active_tab_index == '0' %}class="active"{% else %}class=""{% endif %}>
+                        <a href="#trx_tab" data-toggle="tab">Transactions</a>
+                    </li>
+                    <li {% if active_tab_index == '1' %}class="active"{% else %}class=""{% endif %}>
+                        <a href="#intgr_tab" data-toggle="tab">Integrations</a>
+                    </li>
+                </ul>
+
+                <div id="my-tab-content" class="tab-content">
+                    <div id="trx_tab"
+                        {% if active_tab_index == '0' %}class="tab-pane active"
+                        {% else %}class="tab-pane"{% endif %}>
+                        <div class="adv-table table-responsive">
+                            <table class="display table table-bordered table-striped table-condensed"
+                                    id="dynamic-table" style="width:100%">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    {% comment %} <th>Update Date</th> {% endcomment %}
+                                    <th>Transaction Type</th>
+                                    <th>G/L Transaction Field</th>
+                                    <th>Current Selection</th>
+                                    <th class="text-center" style="min-width:90px!important;">Options</th>
+                                </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="intgr_tab"
+                        {% if active_tab_index == '1' %}class="tab-pane active"
+                        {% else %}class="tab-pane"{% endif %}>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}
+
+{% block js %}
+<script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+<script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+<script src="{% static "js/select2/select2.js" %}"></script>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        var source_type = "{{type}}";
+        var dttbl = $('#dynamic-table').DataTable({
+            //"order": [[ 1, "desc" ]],
+            iDisplayLength: 50,
+            "searching": false,
+            "bPaginate": true,
+            "serverSide": true,
+            "scrollX": true,
+            stateSave: true,
+            "ajax": {
+                "url": "{% url 'GLIntegrtionList__asJson' type %}"
+            },
+            "columns": [
+                {"data": "id", "class":"hidden"},
+                //{"data": "update_date"},
+                {"data": "transaction_type", "orderable": false},
+                {"data": "transaction_field", "orderable": false},
+                {"data": "example", "orderable": false,},
+                {
+                    "sClass": "text-center",
+                    "orderable": false,
+                    "data": null,
+                    "render": function (data, type, row, meta) {
+                        var btn =
+                                '<div class="btn-group dropdown">' +
+                                '<button type="button"' +
+                                'class="btn btn-primary btn-sm dropdown-toggle"' +
+                                'data-toggle="dropdown" aria-haspopup="true"' +
+                                'aria-expanded="false"' +
+                                'style="min-width: 40px!important;">Action' +
+                                '<span class="caret" style="margin-left:15px;"></span>' +
+                                '<span class="sr-only">Toggle Dropdown</span>' +
+                                '</button>' +
+                                '<ul class="dropdown-menu dropdown-menu-right">' +
+                                '<li>';
+                        btn += '<a href="/accounting/gl_integration/edit/' + row.id + '/' + source_type + '/">Edit</a>';
+                        btn += '</li></ul/div>';
+                        return btn;
+                    }
+                }
+            ]
+        });
+    });
+</script>
+{% endblock %}

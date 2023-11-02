@@ -1,0 +1,555 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <!-- <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/> -->
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <!-- <link href="{% static "css/table.css" %}" rel="stylesheet"> -->
+    <style type="text/css">
+      #dynamic-table{
+        table-layout: fixed;
+        width: 1300px !important;
+      }
+
+      td{
+        vertical-align: baseline !important;
+      }
+      .hide_column {
+        display : none;
+      }
+    </style>
+{% endblock %}
+{% block title %}
+    {% if type_transaction == 'AP' %}
+        A/P Revaluation
+    {% else %}
+        A/R Revaluation
+    {% endif %}
+{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+
+{% block parent_AP_a_active %}{% if type_transaction == 'AP' %} active {% endif %}{% endblock %}
+{% block parent_AP_i_active %}{% if type_transaction == 'AP' %} active {% endif %}{% endblock %}
+{% block ap_revaluation_active %}{% if type_transaction == 'AP' %} active {% endif %}{% endblock %}
+{% block parent_AR_a_active %}{% if type_transaction == 'AR' %} active {% endif %}{% endblock %}
+{% block parent_AR_i_active %}{% if type_transaction == 'AR' %} active {% endif %}{% endblock %}
+{% block ar_revaluation_active %}{% if type_transaction == 'AR' %} active {% endif %}{% endblock %}
+{% block content %}
+	<div class="panel">
+		<div class="panel-heading">
+			<h4>
+                {% if type_transaction == 'AP' %}
+                    A/P Revaluation
+                {% else %}
+                    A/R Revaluation
+                {% endif %}
+            </h4>
+		</div>
+		<div class="panel-body">
+			<form id="frm_GL_revaluation" class="form-horizontal" action="{% url 'revaluation' type_transaction %}"
+				role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data">
+				{% csrf_token %}
+				<div id="curr_list" class="form-group">
+				  <div class="col-lg-12 col-sm-12">
+					<input type="text" class="hide" id="rev_curr_list_data" name="rev_curr_list_data">
+					<div class="table-responsive" style="overflow-x:auto;">
+					    <table id="dynamic-table" style="width:100%" class="table table-striped table-bordered">
+					        <thead id='header'>
+					            <tr>
+					                <th id='header'>Currency</th>
+                                    <th id='header'>Revaluation Date</th>
+					                <th id='header'>Rate Date</th>
+                                    <th id='header'>Exchange Rate</th>
+					                <th id='header'>Options</th>
+					                <th id='header'>ID</th>
+                                    <th id='header'>exchange rate id</th>
+					                <th id='header'>currcode</th>
+					            </tr>
+					        </thead>
+					        <tbody id="body">
+					            <tr>
+					                <td>
+					                    <select id="curr_code1"
+					                        class="form-control curr_code"
+					                        name="curr_code1"
+					                        style="display:table-cell; width:100%" required="required">
+					                        {% comment %} <option value="" selected="selected">Currency</option> {% endcomment %}
+					                        {% for curr in all_currency %}
+					                            <option value="{{curr.id}}" data-currcode="{{curr.code}}" data-rate="{{curr.rate}}" data-ratedate="{{curr.rate_date}}" data-exchrateid="{{curr.exchrateid}}">{{curr.code}}</option>
+					                        {% endfor %}
+					                    </select>
+					                </td>
+                                    <td>
+                                        <input id="je_date_1" name="je_date_1" type="text" class="form-control je_date" style="display:table-cell; width:100%"  value="{{ session_date }}">
+                                    </td>
+                                    <td>
+                                        <input id="rate_date_1" name="rate_date_1" type="text" class="form-control rate_date" style="display:table-cell; width:100%" value="">
+                                    </td>
+                                    <td>
+                                        <div style="display:table-cell; width:100%">
+                                            <input id="rate_1" name="rate_1" type="number" class="form-control rate" min="0.0000000001" step="0.0000000001" placeholder="1.0000000000" style="display:table-cell; width:70%" required="true">
+                                            <button onclick='btnSearchExchangeRate(1)'
+                                            type='button' style="display:table-cell; width:20%; color: #1569C7;"
+                                            class='btn btn-default sended'>
+                                            <i class='fa fa-search'> </i>
+                                            </button>
+                                        </div>
+                                    </td>
+					                <td>
+					                    <a id="curr_del1" class="btn btn-white fa fa-minus curr_del"></a>
+					                    <a id="curr_add1" class="btn btn-white fa fa-plus curr_add"></a>
+					                </td>
+                                    <td><span id="id_1">1</span></td>
+                                    <td><span id="exchrateid_1">0</span></td>
+                                    <td><span id="currcode1">0</span></td>
+					            </tr>
+					        </tbody>
+					    </table>
+					</div>
+				  </div>
+				</div>
+				<div class="form-group bottom-group">
+                    <div class="col-lg-offset-2 col-lg-10">
+                        <button id="btnProcess" type="submit" name="btnSave" class="btn btn-success pull-right" onclick="SaveAnu()">Process</button>
+                    </div>
+                </div>
+			</form>
+		</div>
+	</div>
+    <div class="panel">
+        <div class="panel-body">
+            <header class="panel-heading" style="font-size: 20px">
+                Revaluation History
+                {% csrf_token %}
+            </header>
+            <div class="adv-table">
+                <table class="display table table-bordered table-striped table-condensed"
+                        id="history-table" style="width:100%">
+                    <thead>
+                    <tr>
+                        <th>Revaluation Date</th>
+                        <th>Currency</th>
+                        <th>Posting Seq.</th>
+                        <th>Posting Date</th>
+                        <th>Rate Date</th>
+                        <th>Exchange Rate</th>
+                        {% comment %} <th class="text-center" style="min-width:90px!important;">Options</th> {% endcomment %}
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="ExchangeRateListModal" tabindex="-1" role="dialog"
+         aria-labelledby="AccountListModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Exchange Rate</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div id="account_error" class="messages"
+                             style="font-size: 12.5px !important;"></div>
+                    </div>
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style=" padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="exchange-table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th style="width: 150px!important" id="exc-from">From Currency</th>
+                                                        <th id="exc-to">To Currency</th>
+                                                        <th id="exc-date">Rate Date</th>
+                                                        <th id="exc-rate">Rate</th>
+                                                        <th id="exc-id">Id</th>
+                                                        <th></th>
+                                                    </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" onclick="changeExchangeRate()">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+<script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}">
+        $('.sorting_disabled').addClass('sorting_1').removeClass('sorting_disabled');
+        $('.sorting_1').css('max-width: 20%;');
+</script>
+<script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+<!-- <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script> -->
+<!-- <script src="{% static 'js/advanced-form-datepicker.js' %}?{% now 'H' %}"></script> -->
+<script src="{% static "js/select2/select2.js" %}"></script>
+<!-- <script ty></script> -->
+<script type="text/javascript">
+    var data_currencies = [];
+    {% for curr in all_currency %}
+        var obj = {};
+        obj.id = "{{curr.id}}";
+        obj.code = "{{curr.code}}";
+        obj.name = "{{curr.name}}";
+        obj.symbol = "{{curr.symbol}}";
+        obj.update_date = "{{curr.update_date}}";
+        obj.rate = "{{curr.rate}}";
+        // obj.rev_rate = "{{curr.rev_rate}}";
+        obj.rate_date = "{{curr.rate_date}}";
+        obj.exchrateid = "{{curr.exchrateid}}";
+        data_currencies.push(obj);
+    {% endfor %}
+
+    var fnCurrList = {
+        'curr' : function(data, idx) {
+            if(data.length > 0) {
+                var options_string = '';
+                for (var i = 0; i<data.length; i++) {
+                    options_string += '<option value="' + data[i].id + '" data-currcode="'+data[i].code+'" data-rate="'+data[i].rate+'" data-ratedate="'+data[i].rate_date+'" data-exchrateid="'+ data[i].exchrateid +'">'+ data[i].code + '</option>';
+                }
+                return '<select data-index="'+idx+'" class="form-control curr_code" id="curr_code'+idx+'" name="curr_code'+idx+'" required>'+options_string+'</select>';
+            }
+        }
+    }
+
+    var fnRevDate= {
+        'revdate' : function(idx,date_rev) {
+            return '<input id="je_date_'+idx+'" name="je_date_'+idx+'" type="text" class="form-control je_date" style="display:table-cell; width:100%" value="'+date_rev+'" > '
+        }
+    }
+
+
+    var fnRateDate= {
+        'ratedate' : function(idx) {
+        	return '<input id="rate_date_'+idx+'" name="rate_date_'+idx+'" type="text" class="form-control rate_date" style="display:table-cell; width:100%" value="">'
+        }
+    }
+
+    var fnRate= {
+        'rate' : function(idx) {
+            return "<div style='display:table-cell; width: 100%'>"+
+                                           "<input id='rate_"+idx+"' name='rate_"+idx+"' type='number' class='form-control rate' style='display:table-cell; width:70%' min='0.0000000001' step='0.0000000001' placeholder='1.0000000000' required='true'>&nbsp"+
+                                           "<button onclick='btnSearchExchangeRate("+idx+")' type='button' style='display:table-cell; width:20%; color: #1569C7;' class='btn btn-default sended'><i class='fa fa-search'></i></button>"+
+                                        "</div>";
+        }
+    }
+
+    $(document).ready(function () {
+        var dttbl = $('#history-table').DataTable({
+                "order": [[ 0, "desc" ]],
+                "serverSide": true,
+                "scrollX": true,
+                "ajax": {
+                    "url": "{% url 'RevaluationList__asJson' type_transaction %}"
+                },
+                "columns": [
+                    {"data": "revaluation_date"},
+                    {"data": "currency"},
+                    {"data": "posting_sequence"},
+                    {"data": "posting_date"},
+                    {"data": "rate_date"},
+                    {"data": "exchange_rate"},
+
+                    {% comment %} {
+                        "sClass": "text-center",
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, row, meta) {
+                            var btn =
+                                    '<div class="btn-group">' +
+                                    '<button type="button"' +
+                                    'onclick="selectRow('+ row.currency + ',' + row.revaluation_date + ',' + row.rate_date + ',' + row.exchange_rate +')"' +
+                                    'class="btn btn-primary btn-sm dropdown-toggle"' +
+                                    'data-toggle="dropdown" aria-haspopup="true"' +
+                                    'aria-expanded="false"' +
+                                    'style="min-width: 40px!important;">Select' +
+                                    '</button></div>';
+                            return btn;
+                        }
+                    } {% endcomment %}
+                ]
+            });
+
+
+        //$( "#body" ).on( "change", ".je_date", function() {
+        //    $('.je_date').val($(this).val());
+        //});
+
+        // $('.je_date').datepicker({
+        //     format: 'dd-mm-yyyy',
+        //     autoclose: true
+        // });
+        var je_date = moment().format("DD-MM-YYYY");
+        var rate_date = moment().format("DD-MM-YYYY");
+        $( "#body" ).on('keydown', '.je_date', function (event) {
+            if (event.which == 13) {
+                $(this).val(moment(je_date, "DD-MM-YYYY").format("DD-MM-YYYY"));
+                $(this).closest('tr').find('.rate_date').select();
+                return false;
+            } else {
+                adjust_input_date(this);
+            }
+        });
+        $( "#body" ).on('keyup', '.je_date', function (event) {
+            if (event.which != 13) {
+                var temp_date = $(this).val();
+                var valid_date = moment(temp_date, "DD-MM-YYYY", true).isValid();
+                if (valid_date) {
+                    je_date = temp_date;
+                }
+                return true;
+            }
+        });
+        $( "#body" ).on('keydown', '.rate_date', function (event) {
+            if (event.which == 13) {
+                $(this).val(moment(rate_date, "DD-MM-YYYY").format("DD-MM-YYYY"));
+                $(this).closest('tr').find('.rate').select();
+                return false;
+            } else {
+                adjust_input_date(this);
+            }
+        });
+        $( "#body" ).on('keyup', '.rate_date', function (event) {
+            if (event.which != 13) {
+                var temp_date = $(this).val();
+                var valid_date = moment(temp_date, "DD-MM-YYYY", true).isValid();
+                if (valid_date) {
+                    rate_date = temp_date;
+                }
+                return true;
+            }
+        });
+
+        rowCount = $('#body > tr').length;
+        if($('#curr_code'+rowCount).val() == ''){
+            $('#btnSearchExchangeRate').prop('disabled', false);
+            $("#ExchangeRateListModal").modal("hide");
+        }
+        var datatbl = $('#dynamic-table').DataTable({
+            bFilter: false,
+            bLengthChange: false,
+            ordering: false,
+            bInfo: false,
+            bPaginate: false,
+            columnDefs: [
+                { width: "15%", "targets": 0 },
+                { width: "15%", "targets": 1 },
+                { width: "15%", "targets": 2 },
+                { width: "20%", "targets": 3 },
+                { width: "35%", "targets": 4 },
+                {
+                    className: "hide",
+                    targets: [5,6,7]
+                }
+            ]
+        });
+
+        $(".curr_code").select2({
+            placeholder: "Currency",
+        });
+
+        $( "#body" ).on( "click", ".curr_add", function() {
+            var curr_code_val = $(this).closest('tr').children('td').children('.curr_code').val();
+            var date_rev = $(this).closest('tr').children('td').children('.je_date').val();
+            if (curr_code_val){
+                $('#curr_del'+rowCount).addClass('hide');
+                $('#curr_add'+rowCount).addClass('hide');
+                rowCount++;
+                datatbl.row.add([
+                    fnCurrList.curr(data_currencies, rowCount),
+                    fnRevDate.revdate(rowCount,date_rev),
+                    fnRateDate.ratedate(rowCount),
+                    fnRate.rate(rowCount),
+                    '<a id="curr_del'+rowCount+'" class="btn btn-white fa fa-minus curr_del"></a><a id="curr_add'+rowCount+'" class="btn btn-white fa fa-plus curr_add"></a>',
+                    '<span id="id_'+rowCount+'">'+rowCount+'</span>',
+                    '<span id="exchrateid_'+rowCount+'">0</span>',
+                    '<span id="currcode'+rowCount+'">0</span>'
+                ]).draw();
+
+                $("#curr_code"+rowCount).select2({
+				    placeholder: "Currency",
+				});
+                $("#curr_code"+rowCount).select2('open');
+
+                // $('.je_date').datepicker({
+                //     format: 'dd-mm-yyyy',
+                //     autoclose: true
+                // });
+            } else {
+                alert("Please fill Currency !");
+            }
+        });
+
+        $( "#body" ).on( "click", ".curr_del", function() {
+            if (rowCount>1){
+                $('#curr_del'+rowCount).addClass('hide');
+                $('#curr_add'+rowCount).addClass('hide');
+                rowCount--;
+                datatbl.row( $(this).parents('tr') ).remove().draw();
+                $('#curr_del'+rowCount).removeClass('hide');
+                $('#curr_add'+rowCount).removeClass('hide');
+            } else {
+                $(".curr_code").val("").trigger("change");
+            }
+        });
+
+        $("#body").on('change', '.curr_code, .je_date', function(){
+            var nRow = rowCount;
+        	var this_id = $(this).closest('tr').find('.curr_code').val();
+        	var rate = $(this).closest('tr').children('td').children('.curr_code').select2().find(":selected").data('rate');
+        	var rate_date = $(this).closest('tr').children('td').children('.curr_code').select2().find(":selected").data('ratedate');
+            var exchrateid = $(this).closest('tr').children('td').children('.curr_code').select2().find(":selected").data('exchrateid');
+            var je_date = $(this).closest('tr').find('.je_date').val().split("-").reverse();
+            var year = je_date[0];
+            var month = je_date[1];
+            var $rate = $(this).closest('tr').find('.rate');
+            var $rate_date = $(this).closest('tr').find('.rate_date');
+            var $select = $(this).closest('tr').find('.curr_code option:selected');
+            if (exchrateid=='None'){
+                exchrateid=0;
+            }
+            if (month==12){
+                year++;
+                month=1;
+            }
+            else{
+                month++;
+            }
+            $.getJSON("{% url 'ExchangeRateDay__asJson' 'curr_id' 'date' %}".replace('curr_id', this_id).replace('date', year + '-' + month), function(data) {
+                var currcode = $select.data('currcode');
+                $rate.val(data.rate);
+                $rate_date.val(data.exchange_date.split("-").reverse().join("-"));
+                $('#exchrateid_'+nRow).text(data.id);
+                $('#currcode'+nRow).text(currcode);
+            });
+        });
+
+        $('.curr_code').select2('open');
+    });
+
+    $(document).on('select2:close', '.curr_code', function (e) {
+        $(this).closest('tr').children('td').children('.je_date').select();
+    });
+
+    function SaveAnu(){
+        $("#frm_GL_revaluation").submit(function(e){
+            var array = [];
+            var nRow = rowCount;
+            for (i=1; i<=nRow; i++){
+                var rev_date = $('#je_date_'+i).val().split("-").reverse().join("-");
+                var rate_date = $('#rate_date_'+i).val();
+                if (rate_date == undefined || rate_date == ''){
+                    rate_date = new Date().toISOString().slice(0, 10);
+                } else {
+                    rate_date = rate_date.split("-").reverse().join("-");
+                }
+                revaluation_list = {};
+                revaluation_list.curr_id = $('#curr_code'+i).val();
+                revaluation_list.rate_date = rate_date;
+                revaluation_list.rate = $('#rate_'+i).val();
+                revaluation_list.idx = $('#id_'+i).text();
+                revaluation_list.exchrateid = $('#exchrateid_'+i).text();
+                revaluation_list.curr_code = $('#currcode'+i).text();
+                revaluation_list.rev_date = rev_date;
+                array.push(revaluation_list);
+            }
+            $('#rev_curr_list_data').val(JSON.stringify(array));
+            $('#btnProcess').prop('disabled', true);
+        })
+    }
+
+    $('#exchange-table').on( 'draw.dt', function () {
+        selectTableRow('#exchange-table', 5);
+        $("input[type='radio']").each(function () {
+            $(this).closest('tr').css('background-color', '#f9f9f9');
+        });
+    });
+
+    function btnSearchExchangeRate(row_id) {
+        if($('#curr_code'+row_id).val() == ''){
+            $('#btnSearchExchangeRate').prop('disabled', false);
+            $("#ExchangeRateListModal").modal("hide");
+
+        }else{
+            $("#ExchangeRateListModal").modal("show");
+            rowCount = $('#body > tr').length;
+            $('#exchange-table').DataTable().destroy();
+            $('#exchange-table').dataTable({
+                "iDisplayLength": 10,
+                scrollX: true,
+                scrollY: '50vh',
+                scrollCollapse: true,
+                "order": [[2, "desc"]],
+                "serverSide": true,
+                "ajax": {
+                "type": "POST",
+                "url": "/accounting/exchange_rate_list/",
+                "data": function (d) {
+                        d.csrfmiddlewaretoken = $('input[name="csrfmiddlewaretoken"]').val();
+                        d.currency_id = $('#curr_code'+row_id).val();
+                    }
+                },
+                "columns": [
+                    {"data": "from_currency", "sClass": "text-left"},
+                    {"data": "to_currency", "sClass": "text-left"},
+                    {"data": "exchange_date", "sClass": "text-left"},
+                    {"data": "rate", "sClass": "text-left"},
+                    {"data": "id", "sClass": "text-left hide"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "sClass": "hide_column",
+                        "render": function (data, type, full, meta) {
+                            return '<input type="radio" name="exchange-choices" id="' +
+                                full.id + '" class="call-checkbox" value="' + meta.row + '">';
+                        }
+                    }
+                ]
+            });
+            setTimeout(() => {
+                $('#exchange-table').DataTable().columns.adjust();
+            }, 300);
+        }
+    }
+
+    function changeExchangeRate() {
+        rowCount = $('#body > tr').length;
+
+        var row = $("input[name='exchange-choices']:checked").val();
+        if (row) {
+            table = $('#exchange-table').DataTable();
+            id_exchange = table.cell(row, $("#exc-id").index()).data();
+            rate = table.cell(row, $("#exc-rate").index()).data();
+            rate_date = table.cell(row, $("#exc-date").index()).data();
+
+            $("#rate_date_"+rowCount).val(rate_date);
+            $("#rate_"+rowCount).val(rate);
+            $('#exchrateid_'+rowCount).text(id_exchange);
+            $("#ExchangeRateListModal").modal("hide");
+        }
+        else {
+            $("#account_error").text("Please choose 1 account");
+        }
+    }
+</script>
+{% endblock %}

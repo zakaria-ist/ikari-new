@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+  {% load staticfiles %}
+  <link href="{% static "css/table.css" %}" rel="stylesheet">
+
+{% endblock %}
+
+{% block title %}Vendor List{% endblock %}
+{% block ap_vendor_active %}active{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block parent_AP_a_active %}active{% endblock %}
+{% block parent_AP_i_active %}active{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    Vendor List
+                    <span class="tools pull-right">
+                     {% if request.session.staff_admin %}
+                         <a class="btn btn-success start" href="{% url 'acc_Vendor_add' %}">
+                             <i class="glyphicon glyphicon-plus"></i>
+                             <span>Add new</span>
+                         </a>
+                     {% endif %}
+                </span>
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table">
+                        <table class="display table table-bordered table-striped table-condensed table-hover"
+                               id="custom-table" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Update Date</th>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Account Code</th>
+                                <th>Currency Code</th>
+                                <th>Tax Code</th>
+                                <th>Payment Mode</th>
+                                <!-- <th class="text-center">Active</th> -->
+                                {% if request.session.staff_admin %}
+                                    <th class="text-center">Edit</th>
+                                {% endif %}
+                            </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#custom-table').dataTable({
+                "order": [[1, "asc"]],
+                "serverSide": true,
+                "scrollX": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'AcountSupplierList__asJson' %}"
+                },
+                "columns": [
+                    {"data": "update_date", "width": "8%"},
+                    {"data": "customer_code"},
+                    {"data": "customer_name", "width": "15%"},
+                    {"data": "account_set"},
+                    {"data": "currency_code"},
+                    {"data": "tax_code"},
+                    {"data": "payment_mode"},
+                    {% if request.session.staff_admin %}
+                        {
+                            "className": "text-center",
+                            "orderable": false,
+                            "data": null,
+                            "render": function (data, type, full, meta) {
+                                var button_edit = '<a href="../acc_edit/' + full.id + '/" class="fa fa-pencil fa-lg btn btn-primary btn-sm"></a>'
+                                return button_edit;
+                            }
+                        }
+                    {% endif %}
+                ]
+            });
+        });
+    </script>
+{% endblock %}

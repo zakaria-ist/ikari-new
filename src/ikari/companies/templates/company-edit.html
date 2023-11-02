@@ -1,0 +1,623 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-fileupload/bootstrap-fileupload.css' %}"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}Edit Company {% endblock %}
+
+{% block company_profile_active %}
+{% if menu_type == '0' %} {# TRN_CODE_TYPE_DICT['Global'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_company_a_active %}
+{% if menu_type == '0' %} {# TRN_CODE_TYPE_DICT['Global'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_company_i_active %}
+{% if menu_type == '0' %} {# TRN_CODE_TYPE_DICT['Global'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block inv_setting_a_active %}
+{% if menu_type == '1' %} {# TRN_CODE_TYPE_DICT['Inventory Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block ics_a_active %}
+{% if menu_type == '1' %} {# TRN_CODE_TYPE_DICT['Inventory Code'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block file_access_active %}
+{% if menu_type == '1' %} {# TRN_CODE_TYPE_DICT['Inventory Code] #}
+    active
+{% endif %}
+{% endblock %}
+
+
+{% block control_file_active %}
+{% if menu_type == '2' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_a_active %}
+{% if menu_type == '2' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_i_active %}
+{% if menu_type == '2' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_order_i_active %}
+{% if menu_type == '2' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_order_a_active %}
+{% if menu_type == '2' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                Edit Company
+            </header>
+            <div class="panel-body">
+                <form action="{% url 'company_edit' company.id is_profile menu_type %}" class="form-horizontal" role="form"
+                      method="post"  onsubmit="return checkForm(this);"
+                      enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label class="control-label col-md-3">Image Logo</label>
+                        <div class="col-md-9">
+                            <div class="fileupload fileupload-new" data-provides="fileupload">
+                                <div class="fileupload-new thumbnail" style="width: 200px; height: 150px;">
+                                    {% if company.logo %}
+                                        <img src="{{ media_url }}{{ company.logo }}" alt="" name="logo" id="logo"/>
+                                    {% else %}
+                                        <img src="{% static 'img/no-image.png' %}" alt="" name="logo" id="logo"/>
+                                    {% endif %}
+                                </div>
+                                <div class="fileupload-preview fileupload-exists thumbnail"
+                                     style="max-width: 200px; max-height: 150px; line-height: 20px;"></div>
+                                <div>
+                                    <span class="btn btn-white btn-file">
+                                        <span class="fileupload-new"><i
+                                                class="fa fa-paper-clip"></i> Select image</span>
+                                        <span class="fileupload-exists"><i class="fa fa-undo"></i> Change</span>
+                                         <input id="company_logo" name="company_logo" type="file" class="default"/>
+                                    </span>
+                                    <a id="btnRemove" href="#" class="btn btn-danger fileupload-exists btnRemoveLogo"
+                                       data-dismiss="fileupload"><i
+                                            class="fa fa-trash"></i> Remove</a>
+                                    <input style="display: none;" name="rm_logo" class="hidethis">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Name<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-10">
+                            <input type="text" class="form-control" id="name" name="name" value="{{ company.name }}"
+                                   required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+
+                        <label for="company_no" class="col-lg-2 col-sm-2 control-label">GST Reg No</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="company_no" name="company_no"
+                                   value="{{ company.company_number }}">
+                        </div>
+                        <label for="country" class="col-lg-1 col-sm-1 control-label">Country</label>
+                        <div class="col-sm-5">
+                            <select class="form-control" id="country" name="country">
+                                {% for country in country_list %}
+                                    <option value="{{ country.id }}" data-currency="{{ country.currency_id }}"
+                                            {% if country.id == company.country_id %}selected{% endif %}>
+                                        {{ country.name }}</option>{% endfor %}
+                            </select>
+                            {% if not country_list %}
+                                <span class="messages">Country is empty. Please input Country!</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="postal_code" class="col-lg-2 col-sm-2 control-label">Postal Code</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="postal_code" name="postal_code"
+                                   value="{{ company.postal_code }}">
+                        </div>
+                        <label for="currency" class="col-lg-1 col-sm-1 control-label">Currency</label>
+                        <div class="col-sm-5">
+                            <select class="form-control" id="currency" name="currency">
+                                {% for currency in currency_list %}
+                                    <option value="{{ currency.id }}"
+                                            {% if currency.id == company.currency_id %}selected{% endif %}>
+                                        {{ currency.code }} - {{ currency.name }}</option>{% endfor %}
+                            </select>
+                            {% if not currency_list %}
+                                <span class="messages">Currency is empty. Please input Currency!</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="address" class="col-lg-2 col-sm-2 control-label">Address</label>
+                        <div class="col-lg-4">
+                            <textarea class="form-control" rows="3" name="address" id="address"
+                                      value="{{ company.address }}"></textarea>
+                        </div>
+                        <div>
+                            <label for="email" class="col-lg-1 col-sm-1 control-label">Email</label>
+                            <div style="margin-bottom: 15px" class="col-lg-5">
+                                <input type="email" class="form-control" id="email" name="email"
+                                   value="{{ company.email }}">
+                            </div>
+                            <label for="web" class="col-lg-1 col-sm-1 control-label">Web</label>
+                            <div class="col-lg-5">
+                                <input type="text" class="form-control" id="web" name="web" value="{{ company.web }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone" class="col-lg-2 col-sm-2 control-label">Phone</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="phone" name="phone" value="{{ company.phone }}">
+                        </div>
+                        <label for="fax" class="col-lg-1 col-sm-1 control-label">Fax</label>
+                        <div class="col-lg-5">
+                            <input type="text" class="form-control" id="fax" name="fax" value="{{ company.fax }}">
+                        </div>
+                    </div>
+                    {% if 'all_sp' in request.session.permission_staff %}
+                        <div class="form-group">
+                            {# header logo #}
+                            <label class="control-label col-lg-2 col-sm-2">Header Logo</label>
+                            <div class="col-md-4">
+                                <div class="fileupload fileupload-new" data-provides="fileupload">
+                                    <div class="fileupload-new thumbnail" style="width: 200px; height: 150px;">
+                                        {% if company.header_logo %}
+                                            <img src="{{ media_url }}{{ company.header_logo }}" alt="" name="header_logo"/>
+                                        {% else %}
+                                            <img src="{% static 'img/no-image.png' %}" alt="" name="header_logo"/>
+                                        {% endif %}
+                                    </div>
+                                    <div class="fileupload-preview fileupload-exists thumbnail"
+                                        style="max-width: 200px; max-height: 150px; line-height: 20px;"></div>
+                                    <div>
+                                        <span class="btn btn-white btn-file">
+                                            <span class="fileupload-new"><i
+                                                    class="fa fa-paper-clip"></i> Select image</span>
+                                            <span class="fileupload-exists"><i class="fa fa-undo"></i> Change</span>
+                                            <input name="header_logo" type="file" class="default"/>
+                                        </span>
+                                        <a href="javascript:void(0)" class="btn btn-danger fileupload-exists btnRemoveLogo"
+                                        data-dismiss="fileupload"><i class="fa fa-trash"></i> Remove</a>
+                                        <input style="display: none;" name="rm_header_logo" class="hidethis">
+                                    </div>
+                                </div>
+                            </div>
+                            {# footer logo #}
+                            <label class="control-label col-lg-1 col-sm-1">Footer Logo</label>
+                            <div class="col-md-4">
+                                <div class="fileupload fileupload-new" data-provides="fileupload">
+                                    <div class="fileupload-new thumbnail" style="width: 200px; height: 150px;">
+                                        {% if company.footer_logo %}
+                                            <img src="{{ media_url }}{{ company.footer_logo }}" alt="" name="footer_logo"/>
+                                        {% else %}
+                                            <img src="{% static 'img/no-image.png' %}" alt="" name="footer_logo"/>
+                                        {% endif %}
+                                    </div>
+                                    <div class="fileupload-preview fileupload-exists thumbnail"
+                                        style="max-height: 150px; line-height: 20px;"></div>
+                                    <div>
+                                        <span class="btn btn-white btn-file">
+                                            <span class="fileupload-new"><i
+                                                    class="fa fa-paper-clip"></i> Select image</span>
+                                            <span class="fileupload-exists"><i class="fa fa-undo"></i> Change</span>
+                                            <input name="footer_logo" type="file" class="default"/>
+                                        </span>
+                                        <a href="javascript:void(0)" class="btn btn-danger fileupload-exists btnRemoveLogo"
+                                        data-dismiss="fileupload"><i class="fa fa-trash"></i> Remove</a>
+                                        <input style="display: none;" name="rm_footer_logo" class="hidethis">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if 'all_acc' in request.session.permission_staff %}
+                        <div class="form-group">
+                            <label for="remit_remark" class="col-lg-2 col-sm-2 control-label">Remit remark</label>
+                            <div class="col-lg-7">
+                                <textarea class="form-control" rows="10" name="remit_remark" id="remit_remark"
+                                value="">{% if company.remit_remark %}{{ company.remit_remark }}{% endif %}</textarea>
+                            </div>
+                        </div>
+                        {% comment %} <div class="form-group">
+                            <label class="col-lg-2 col-sm-2 control-label">Fiscal month/Year</label>
+                            <div class="col-lg-4">
+                                <input class="form-control form-control-inline" data-date-format="mm-yyyy" id="id_fiscal_Period" type="text" required="required">
+                                <input type="text" class="hide" name="fiscal" id="fiscal">
+                            </div>
+                        </div> {% endcomment %}
+                        <div class="form-group">
+                            {% comment %} <label class="col-lg-2 col-sm-2 control-label">Current Period</label> {% endcomment %}
+                            <label class="col-lg-2 col-sm-2 control-label">Fiscal month/Year</label>
+                            <div class="col-lg-4">
+                                <div id="from-container" class="dropup">
+                                    <div class="" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                        <input type="text" class="form-control text-center year-period" value="">
+                                    </div>
+                                    <div class="dropdown-menu" id="from_menu" aria-labelledby="dropdownMenu1">
+                                    <button type="button" style="border-color: transparent;" class="btn btn-white col-md-offset-2 col-md-2" onclick="changeYear('Prev')"><i class="fa fa-chevron-circle-left fa-2x"></i></button>
+                                        <div class="col-md-4">
+                                            <select class="form-control" name="f_year" id="f_year" class="form-control">
+                                                {% for year in fsc_years %}
+                                                    <option value="{{year}}">{{year}}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <button type="button" style="border-color: transparent;" class="btn btn-white col-md-2" onclick="changeYear('Next')"><i class="fa fa-chevron-circle-right fa-2x"></i></button>
+                                        <table class="table table-condensed table-hover table-striped" id="fromTable">
+                                            <thead>
+                                                <tr>
+                                                    <th id="period" class="th-fsc" style="width: 5%;">Prd.</th>
+                                                    <th id="start" class="th-fsc" style="width: 35%;">Start Date</th>
+                                                    <th id="end" class="th-fsc" style="width: 35%;">End Date</th>
+                                                    <th id="status" class="th-fsc" style="width: 25%;">Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="f">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                {% comment %} <input class="form-control form-control-inline " data-date-format="mm-yyyy" id="id_current_Period" type="text" required="required"> {% endcomment %}
+                                <input type="text" class="hide" name="current_period_month" id="current_period_month" value="{{company.current_period_month}}">
+                                <input type="text" class="hide" name="current_period_year" id="current_period_year" value="{{company.current_period_year}}">
+                                <input type="text" class="hide" name="fiscal" id="fiscal">
+                            </div>
+
+                            <label for="fiscal_period_number" class="col-lg-3 col-sm-3 control-label">Number of Fiscal Period</label>
+                            <div class="col-lg-2">
+                                <select class="form-control" id="fiscal_period_number" name="fiscal_period_number">
+                                        <option value="12"
+                                                {% if "12" == company.fiscal_period_number %}selected{% endif %}
+                                                > 12 </option>
+                                        <option value="13"
+                                                {% if "13" == company.fiscal_period_number %}selected{% endif %}
+                                                > 13 </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="rate_type" class="col-lg-2 col-sm-2 control-label">Default Rate Type</label>
+                            <div class="col-lg-4">
+                                <select class="form-control" id="rate_type" name="rate_type">
+                                    {% for type in rate_type %}
+                                        <option value="{{ type.0 }}"
+                                                {% if type.0 == company.rate_type %}selected
+                                                {% endif %}>
+                                            {{ type.0 }} - {{ type.1 }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="gain_loss_type" class="col-lg-2 col-sm-2 control-label">Gain/Loss Method</label>
+                            <div class="col-lg-4">
+                                <select class="form-control" id="gain_loss_type" name="gain_loss_type">
+                                    {% for type in gain_loss_type %}
+                                        <option value="{{ type.1 }}"
+                                                {% if type.1 == company.gain_loss_type|add:"0" %}selected
+                                                {% endif %}>
+                                            {{ type.0 }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    {% endif %}
+                    <div class="form-group">
+                        <label class="col-lg-2 col-sm-2 control-label">Last Update</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" disabled="true" value="{{ company.update_date }}">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="inputPassword1" class="col-lg-2 col-sm-2 control-label"></label>
+                        <div class="col-lg-2">
+                            <div class="checkbox checkbox-primary">
+                                <input name="IsActive" id="checkbox-03" class="styled" type="checkbox"
+                                       {% if company.is_active %}checked{% endif %}/>
+                                <label for="checkbox-03">
+                                    Active
+                                </label>
+                            </div>
+                        </div>
+                        {% if 'all_sp' in request.session.permission_staff %}
+                            <div class="col-lg-2">
+                                <div class="checkbox checkbox-primary">
+                                    <input name="IsUseInventnory" id="chkUseInventnory" class="styled" type="checkbox"
+                                        {% if company.is_inventory %}checked{% endif %}/>
+                                    <label for="chkUseInventnory">
+                                        Inventory
+                                    </label>
+                                </div>
+                            </div>
+                        {% endif %}
+                        {% if 'all_acc' in request.session.permission_staff %}
+                            <div class="col-lg-3">
+                                <div class="checkbox checkbox-primary">
+                                    <input name="multicurrency-checkbox" id="multicurrency-checkbox" class="styled" type="checkbox"
+                                        {% if company.is_multicurrency %}checked{% endif %}/>
+                                    <label for="multicurrency-checkbox">
+                                        Multicurrency
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-lg-2">
+                                <div class="checkbox checkbox-primary">
+                                    <input name="useSegment" id="useSegment" class="styled" type="checkbox" {% if company.use_segment %}checked{% endif %}/>
+                                    <label for="useSegment">
+                                        Segments
+                                    </label>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button id="btnSAVE" name="btnSave" type="submit" class="btn btn-success"
+                                    {% if not country_list or not currency_list %}
+                                    disabled {% endif %}>Save
+                            </button>
+                            {% if user.is_superuser %}
+                                <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger">Delete</a>
+                            {% endif %}
+                            {% if is_profile == 'true' %}
+                                {% if menu_type == '0' %} {# TRN_CODE_TYPE_DICT['Global'] #}
+                                <a type="submit" class="btn btn-default" href="{% url 'company_profile' %}">Cancel</a>
+                                {% else %}
+                                <a type="submit" class="btn btn-default" href="{% url 'control_file' %}">Cancel</a>
+                                {% endif %}
+
+                            {% else %}
+                                <a type="submit" class="btn btn-default" href="{% url 'company_list' %}">Cancel</a>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                </form>
+            </div>
+            <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+                 class="modal fade">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                            <h4 class="modal-title">Delete Confirm Dialog</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form role="form" action="{% url 'company_delete' company.id %}" method="post"
+                                  enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                                </div>
+                                <button type="submit" class="btn btn-success">OK</button>
+                                <a type="submit" class="btn btn-default"
+                                   href="{% url 'company_edit' company.id is_profile menu_type %}">Cancel</a>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="text/javascript" src="{% static 'assets/bootstrap-fileupload/bootstrap-fileupload.js' %}"></script>
+    <script type="application/javascript" src="{% static 'js/ga.js' %}?{% now 'H' %}"></script>
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+        var f_year = '';
+        var f_perd = '';
+        var fiscal_data = [];
+        $('a.btnRemoveLogo').click(function (event) {
+            $(this).parent().prev().find('img').attr('src', "{% static 'img/no-image.png' %}");
+            $(this
+                ).next().val("hide this");
+        });
+        $(document).ready(function () {
+            var date = '{{fsc_date}}';
+            date = date.split('-');
+            f_year = date[2];
+            f_perd = date[1];
+            date = date[1] + '-' + date[2];
+            $('#from-container input').val(date);
+            get_fiscal_data();
+            var current_period_year = "{{company.current_period_year}}";
+            var current_period_month = "{{company.current_period_month}}";
+
+            IsMultiCurrency = $('#multicurrency-checkbox').is(':checked');
+            if (IsMultiCurrency){
+                $('#multicurrency-checkbox').prop('disabled', true);
+            }
+
+            var fiscal = "{{company.fiscal_period}}";
+            if (fiscal != 'None'){
+                $('#fiscal').val(formatDate(fiscal))
+                $('#id_fiscal_Period').val(period(formatDate(fiscal)))
+            }
+            if (current_period_month != 'None') {
+                $('#current_period_month').val(current_period_month);
+                // $('#id_current_Period').val(current_period_year+'-'+current_period_month);
+                $('#id_current_Period').val(current_period_month+'-'+current_period_year);
+            }
+            if (current_period_year != 'None') {
+                $('#current_period_year').val(current_period_year);
+            }
+            {% comment %} $('#id_current_Period').datepicker({
+                format: "mm-yyyy",
+                startView: 1,
+                minViewMode: 1,
+                autoclose: true
+            });
+
+            $('#id_fiscal_Period').datepicker({
+                format: "mm-yyyy",
+                startView: 1,
+                minViewMode: 1,
+                autoclose: true
+            }); {% endcomment %}
+        });
+        function changeYear(to) {
+            var curr_year = $('#f_year option:selected').val();
+            var to_year = curr_year;
+            if (to == 'Next') {
+                to_year = parseInt(curr_year) + 1;
+            } else {
+                to_year = parseInt(curr_year) - 1;
+            }
+
+            fiscal_data.forEach(element => {
+                if(element.year == to_year) {
+                    $("#from-container select").val(to_year).trigger('change');
+                }
+            });
+        }
+        function get_fiscal_data() {
+            $.ajax({
+                type: "GET",
+                url: "/accounting/get_fiscal_data/",
+                success: function (data) {
+                    fiscal_data = data;
+                }
+            });
+        }
+        $('#dropdownMenu1').on('click', function(){
+            update_fiscal_table('#fromTable tbody', f_year, f_perd);
+            $("#from-container select").val(f_year);
+            $('#from_menu').addClass('show');
+        });
+
+        $("#from-container select").on('change', function(){
+            f_year = $(this).val();
+            $('#from-container input').val(f_perd + '-' + f_year);
+            $("#current_period_year").val(f_year);
+            $("#current_period_month").val(f_perd);
+            $("#fiscal").val(f_year + '-' + f_perd + '-01');
+            update_fiscal_table('#fromTable tbody', f_year, f_perd);
+        });
+        $(document).on('click', function(e){
+            if($(e.target).hasClass('year-period')) {
+                $('#from_menu').addClass('show');
+            } else {
+                if($(e.target).parent().parent().hasClass('dropdown-menu') == false) {
+                    $('#from_menu').removeClass('show');
+                }
+            }
+        });
+
+        function update_fiscal_table(selector, year, perd='1'){
+            $(selector).empty();
+            fiscal_data.forEach(element => {
+                if(element.year == year) {
+                    let tr = '<tr class="rows';
+                    if (parseInt(perd) == parseInt(element.period)) {
+                        tr += ' success';
+                    }
+                    tr += '"><td class="td-fsc">' + element.period + '</td>';
+                    tr += '<td class="td-fsc">' + element.start + '</td>';
+                    tr += '<td class="td-fsc">' + element.end + '</td>';
+                    tr += '<td class="td-fsc">' + element.status + '</td>';
+                    tr += '</tr>';
+                    $(selector).append(tr);
+
+                }
+            });
+        }
+
+        $(document).on("click","tr.rows", function(e){
+            if($(this).parent().hasClass('f')){
+                f_perd = $(this).find('td').eq(0).text();
+                $('#from-container input').val(f_perd + '-' + f_year);
+                $("#current_period_year").val(f_year);
+                $("#current_period_month").val(f_perd);
+                $("#fiscal").val(f_year + '-' + f_perd + '-01');
+                update_fiscal_table("#fromTable tbody", f_year, f_perd);
+                $('#from_menu').removeClass('show');
+            }
+        });
+
+        $('#id_current_Period').on('change', function() {
+            var id_current_Period = $("#id_current_Period").val();
+            var aa = id_current_Period.split('-');
+            $("#current_period_year").val(aa[1]);
+            $("#current_period_month").val(aa[0]);
+        });
+        $('#id_fiscal_Period').on('change', function() {
+            var id_current_Period = $("#id_fiscal_Period").val().split('-').reverse().join('-');
+            $("#fiscal").val(id_current_Period + '-01');
+        });
+        function formatDate(date) {
+        var d = new Date(date),
+            month = '' + (d.getMonth() + 1),
+            day = '' + d.getDate(),
+            year = d.getFullYear();
+
+        if (month.length < 2) month = '0' + month;
+        if (day.length < 2) day = '0' + day;
+
+        return [year, month , day].join('-');
+        }
+        function period(date){
+            var pecahin = date.split('-');
+            var today = pecahin[1]+'-'+pecahin[0];
+            return today
+        }
+        function dateView(date){
+            var pecahin = date.split('-');
+            var today = pecahin[2]+'-'+pecahin[1]+'-'+pecahin[0];
+            return today
+        }
+        $(document).ready(function () {
+            $('#country').select2();
+            $('#currency').select2();
+
+            $('#country').on('change',function(){
+                var curr_id = $(this).find(':selected').attr('data-currency');
+                $('#currency').val(curr_id).trigger('change');
+            });
+        });
+    </script>
+{% endblock %}

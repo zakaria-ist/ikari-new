@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <style type="text/css">
+        #myProgress {
+          width: 100%;
+          background-color: #ddd;
+        }
+        #myBar {
+          width: 0%;
+          height: 30px;
+          background-color: #098BAE;
+        }
+        .hide_column {
+          display : none;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}
+    {% if module_type == 'AR' %}A/R{% elif module_type == 'AP' %}A/P{% elif module_type == 'GL' %}G/L{% endif %} Post Batches
+{% endblock %}
+
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+
+{% block parent_AR_a_active %}
+{% if module_type == 'AR' %}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_AR_i_active %}
+{% if module_type == 'AR' %}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_AP_a_active %}
+{% if module_type == 'AP' %}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_AP_i_active %}
+{% if module_type == 'AP' %}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_GL_a_active %}
+{% if module_type == 'GL' %}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_GL_i_active %}
+{% if module_type == 'GL' %}
+    active
+{% endif %}
+{% endblock %}
+
+{% block post_batches_ar %}
+{% if module_type == 'AR' %}
+    active
+{% endif %}
+{% endblock %}
+
+{% block post_batches_ap %}
+{% if module_type == 'AP' %}
+    active
+{% endif %}
+{% endblock %}
+
+{% block post_batches_gl %}
+{% if module_type == 'GL' %}
+    active
+{% endif %}
+{% endblock %}
+
+{% block content %}
+    <section class="panel">
+        <div class="panel-heading">
+            <header style="font-size: 20px">
+            {% if module_type == 'AR' %}
+                A/R
+            {% elif module_type == 'AP' %}
+                A/P
+            {% elif module_type == 'GL' %}
+                G/L
+            {% endif %} Post Batches
+            </header>
+        </div>
+        <div class="panel-body">
+            <form id="frm_post_batches" class="form-horizontal" action="
+                {% if module_type == 'AR' %}
+                    {% url 'post_batches' 'AR' %}
+                {% elif module_type == 'AP' %}
+                    {% url 'post_batches' 'AP' %}
+                {% elif module_type == 'GL' %}
+                    {% url 'post_batches' 'GL' %}
+                {% endif %}" role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% if module_type != 'GL' %}
+                <div class="form-group">
+                    <div class="col-lg-12 control-label">Batch Type</div>
+                    <div class="col-lg-12">
+                        {% if module_type == 'AR' %}
+                        <div class="input-group control-label"><input name="batch_type_options" value="1" type="radio" checked> Invoice </div>
+                        <div class="input-group control-label"><input name="batch_type_options" value="3" type="radio"> Receipt </div>
+                        {% elif module_type == 'AP' %}
+                        <div class="input-group control-label"><input name="batch_type_options" value="2" type="radio" checked> Invoice </div>
+                        <div class="input-group control-label"><input name="batch_type_options" value="4" type="radio"> Payment </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <div class="col-lg-12 control-label">Post the Following Batches</div>
+                    <div class="col-lg-12">
+                        <div class="input-group control-label"><input name="post_options" value="1" type="radio"> All Batches </div>
+                        <div class="input-group control-label"><input name="post_options" value="2" type="radio" checked> Range </div>
+                    </div>
+                </div>
+
+                <div id="batch_selection" class="form-group hide" style="margin-left: 2px; margin-top: 0px">
+                    <label for="start_batch" class="col-lg-1 col-sm-1 control-label">From</label>
+                    <div class="col-lg-2 col-sm-2" style="margin-left: -30px">
+                        <input id="start_batch" name="start_batch" type="text" class="form-control" value="000001" maxlength="6" data-batch_id="1">
+                    </div>
+                    <div class="col-lg-1 col-sm-1">
+                        <button id="btnFindFirstBatch" type="button" class="btn btn-info" data-toggle="modal"
+                                href="#batchFinderModal"><i class="fa fa-search"></i></button>
+                    </div>
+                    <div class="col-lg-1"></div>
+                    <label for="end_batch" class="col-lg-1 col-sm-1 control-label">To</label>
+                    <div class="col-lg-2 col-sm-2" style="margin-left: -30px">
+                        <input id="end_batch" name="end_batch" type="text" class="form-control" value="999999" maxlength="6"  data-batch_id="999999">
+                    </div>
+                    <div class="col-lg-1 col-sm-1">
+                        <button id="btnFindLastBatch" type="button" class="btn btn-info" data-toggle="modal"
+                                href="#batchFinderModal"><i class="fa fa-search"></i></button>
+                    </div>
+                </div>
+
+                <input type="text" class="hide" id="selected_batch_type" name="selected_batch_type" value="">
+                <input type="text" class="hide" id="selected_post_option" name="selected_post_option" value="">
+                <input type="text" class="hide" id="first_batch" name="first_batch" value="">
+                <input type="text" class="hide" id="last_batch" name="last_batch" value="">
+                <input type="text" class="hide" id="post_state" name="post_state" value="">
+
+                <hr />
+                <div class="form-group">
+                    <div class="col-lg-12 col-sm-12">
+                        <button id="btnProcess" name="btnSave" type="button" class="btn btn-success pull-right" 
+                          onclick="confirm_post_batches()">
+                            {% if module_type == 'AR' %}Post Batches (A/R)
+                            {% elif module_type == 'AP' %}Post Batches (A/P)
+                            {% elif module_type == 'GL' %}Post Batches (G/L)
+                            {% endif %}
+                        </button>
+                    </div>
+                    <div id="div_progressbar">
+                        <label id="progress_status" class="col-lg-2 col-sm-2 control-label">Processing ... ( 0% )</label>
+                        <div class="col-lg-12 col-sm-12">
+                            <div id="myProgress" class="text-center">
+                              <div id="myBar"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- modal batch finder -->
+    <div class="modal fade" id="batchFinderModal" tabindex="-1" role="dialog"
+         aria-labelledby="batchFinderModal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Finder - Batches</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-right: 0px!important;margin-left: 0px!important;">
+                        <section class="panel">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="batch_list_table" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Batch Number</th>
+                                                    <th>Description</th>
+                                                    <th>Type</th>
+                                                    <th>Status</th>
+                                                    <th>Source Ledger</th>
+                                                    <th>Amount</th>
+                                                    <th>Select</th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-primary" type="button" id="btnSelectBatch">
+                            Select
+                        </button>
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- end of modal batch finder -->
+
+    {#notification#}
+    <div class="modal fade" id="notificationModal" tabindex="-1" role="dialog"
+         aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title"><strong><span id='notificationModal_title'>Notification Title</span></strong></h4>
+                </div>
+                <div class="modal-body" style="padding-bottom: 0px!important;">
+                    <div class="form-group">
+                        <div id="notificationModal_text1" class="text-left">Notification #1</div>
+                        <div id="notificationModal_text2" class="text-left">Notification #2</div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="text-align: center">
+                    <button id="notification_ok" class="btn btn-primary" type="button" data-dismiss="modal">Ok</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {#End notification#}
+
+    {# Comfirm before Post #}
+    <div class="modal fade" id="comfirmPostingModal" tabindex="-1" role="dialog"
+         aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title"><strong>Confirmation</strong></h4>
+                </div>
+                <div class="modal-body" style="padding-bottom: 0px!important;">
+                    <div class="form-group">
+                        <label>Are you sure want to continue ?</label>
+                        <label>This process cannot be undone </label>
+                    </div>
+                </div>
+                <div class="modal-footer" style="text-align: center">
+                    <button class="btn btn-default" type="button" data-dismiss="modal">No
+                    </button>
+                    <a>
+                        <button class="btn btn-success" id="comfirm-yes">Yes</button>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {# End Comfirm before Post #}
+{% endblock %}
+
+{% block js %}
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="application/javascript" src="{% static 'js/accounting/post_batches.js' %}?{% now 'H' %}"></script>
+    <script type="text/javascript">
+        var unpostd_batch = [];
+        {% for elem in batch_list %}
+            var obj = {};
+            obj.id = "{{elem.id}}";
+            obj.batch_no = "{{elem.batch_no}}";
+            obj.batch_type = "{{elem.batch_type}}";
+            obj.source_ledger = "{{elem.source_ledger}}";
+            obj.description = "{{elem.description}}";
+            unpostd_batch.push(obj);
+        {% endfor %}
+
+        var source_ledger = "{{module_type}}";
+        var batch_range_type = 1; //1:start_batch; 2:end_batch
+
+        jQuery(document).ready(function ($) {
+            $("#div_progressbar").hide();
+            $('#btnSelectBatch').on('click', function () {
+                var unposted_batch_table = $('#batch_list_table').DataTable();
+                var selectedRow = unposted_batch_table.$(".call-radio:checked", {"page": "all"});
+                var batch_no = leftPad(selectedRow[0].value,6);
+                if (batch_range_type==1){
+                    $('#start_batch').data('batch_id',selectedRow[0].id);
+                    $('#start_batch').val(batch_no);
+                } else {
+                    $('#end_batch').data('batch_id',selectedRow[0].id);
+                    $('#end_batch').val(batch_no);
+                }
+            });
+
+            if ($('input[name=post_options]:checked').val()=='1'){
+                $('#batch_selection').addClass('hide');
+            } else {
+                $('#batch_selection').removeClass('hide');
+            }
+        });
+    </script>
+{% endblock %}
+

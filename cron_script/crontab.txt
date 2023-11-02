@@ -1,0 +1,2 @@
+0 0 * * * /bin/bash /home/ec2-user/projects/ikari/cron_script/recurring_prod.sh
+0 3 * * * /bin/bash /home/ec2-user/projects/ikari-release/cron_script/recurring_rel.sh

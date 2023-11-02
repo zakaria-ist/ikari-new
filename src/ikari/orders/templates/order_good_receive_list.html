@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static 'assets/advanced-datatable/media/css/demo_page.css' %}" rel="stylesheet" type="text/css"/>
+    <link href="{% static 'assets/advanced-datatable/media/css/demo_table.css' %}" rel="stylesheet" type="text/css"/>
+    <link rel="stylesheet" href="{% static 'assets/data-tables/DT_bootstrap.css' %}" type="text/css"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+{% endblock %}
+
+{% block title %}Goods Receive List{% endblock %}
+{% block parent_order_a_active %}active{% endblock %}
+{% block parent_order_i_active %}active{% endblock %}
+{% block order_good_receive_active %}active{% endblock %}
+
+{% block content %}
+    <br/>
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <br/>
+                <form class="form-horizontal" action="{% url 'good_receive_list' %}" role="form" method="post"
+                      enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="panel-body">
+                                <div class="form-group">
+                                    <div class="col-lg-12 col-sm-12  text-center">
+                                        <div class="col-lg-4 col-sm-4"
+                                             style="text-align: center!important;">
+                                            <div class="input-group m-bot15">
+                                                <span class="input-group-addon">Doc Number</span>
+                                                {{ form.document_number|default_if_none:"" }}
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-3 col-sm-3">
+                                            <div class="input-group m-bot15" data-date-format="yyyy/mm/dd">
+                                                <span class="input-group-addon">From</span>
+                                                {{ form.date_from }}
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-3 col-sm-3">
+                                            <div class="input-group m-bot15" data-date-format="yyyy/mm/dd">
+                                                <span class="input-group-addon">To</span>
+                                                {{ form.date_to }}
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-2 col-sm-2">
+                                            <button type="submit" class="btn btn-success">Search</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </section>
+            <div class="container">
+                <div class="row">
+                    <div id="results"></div>
+                </div>
+            </div>
+
+            {% for message in messages %} 
+                <div class="alert alert-{{ message.tags }} alert-dismissible" role="alert"> 
+                    <button type="button" class="close" data-dismiss="alert"><span
+                            aria-hidden="true">&times;</span><span
+                            class="sr-only">Close</span></button>
+                          {{ message | safe }} 
+                </div> 
+            {% endfor %} 
+
+            <section class="panel">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="panel-body">
+                            <header class="panel-heading" style="font-size: 20px">Goods Receive List
+                                <span class="tools pull-right">
+                                    {% if 'orders.add_order' in user.get_all_permissions %}
+                                        <a class="btn btn-success start" href="{% url 'good_receive_new' 'N' %}">
+                                            <i class="glyphicon glyphicon-plus"></i>
+                                            <span>Add new</span>
+                                        </a>
+                                    {% endif %}
+                                 </span>
+                            </header>
+                            <div class="adv-table">
+                                <table class="display table table-bordered table-striped table-condensed"
+                                       id="dynamic-table" style="width:100%">
+                                    <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Status</th>
+                                        <th>Document Date</th>
+                                        <th>Document Number</th>
+                                        <th>Due Amount</th>
+                                        <th>Total</th>
+                                        <th>Update Date</th>
+                                        <th class="text-center">Options</th>
+                                    </tr>
+                                    </thead>
+                                    {% if gr_list %}
+                                        <tbody>
+                                        {% for e in gr_list %}
+                                            <tr class="gradeX">
+                                                <td>{{ e.id }}</td>
+                                                <td>
+                                                    {% if e.status.id == 1 %} {# ORDER_STATUS['Draft'] #}
+                                                        <span class="badge badge-sm label-inverse">{{ e.status.name }}</span>
+                                                    {% elif e.status.id == 2 %} {# ORDER_STATUS['Sent'] #}
+                                                        <span class="badge badge-sm label-success">{{ e.status.name }}</span>
+                                                    {% elif e.status.id == 3 %} {# ORDER_STATUS['Received'] #}
+                                                        <span class="badge badge-sm label-primary">{{ e.status.name }}</span>
+                                                    {% elif e.status.id == 4 %} {# ORDER_STATUS['Delivered'] #}
+                                                        <span class="badge badge-sm label-warning">{{ e.status.name }}</span>
+                                                    {% elif e.status.id == 6 %} {# ORDER_STATUS['Partial'] #}
+                                                        <span class="badge badge-sm label-label">{{ e.status.name }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ e.document_date }}</td>
+                                                <td>{{ e.document_number }}</td>
+                                                {% if order_type == '1' %} {# ORDER_TYPE['SALES ORDER'] #}
+                                                    <td> {{ e.customer.name }}  </td>
+                                                {% elif order_type == '2' %} {# ORDER_TYPE['PURCHASE ORDER'] #}
+                                                    <td> {{ e.supplier.name }}  </td>
+                                                {% endif %}
+                                                <td>{{ e.balance }} {{ e.currency.code }}</td>
+                                                <td>{{ e.total }} {{ e.currency.code }}</td>
+                                                <td>{{ e.update_date }}</td>
+                                                <td class="center" style="min-width:120px!important;">
+                                                    <div class="btn-group dropdown">
+                                                        <button type="button"
+                                                                class="btn btn-primary btn-sm dropdown-toggle"
+                                                                data-toggle="dropdown" aria-haspopup="true"
+                                                                aria-expanded="false"
+                                                                style="min-width: 40px!important;">Action
+                                                            <span class="caret" style="margin-left:15px"></span>
+                                                            <span class="sr-only">Toggle Dropdown</span>
+                                                        </button>
+                                                        <ul class="dropdown-menu dropdown-menu-right">
+                                                            <li>
+                                                                <a href="{% url 'good_receive_copy' e.id 0 %}">Copy</a> {# ORDER_STATUS['Undefined'] #}
+                                                            </li>
+                                                            <li role="separator" class="divider"></li>
+                                                            <li><a href="{% url 'order_view' e.id %}">View</a></li>
+                                                            <li>
+                                                                <a href="{% url 'good_receive_edit' e.id 'N' %}">Edit</a>
+                                                                <a href="{% url 'print_order' e.id %}">Print</a>
+                                                            </li>
+                                                            {% if e.status.id == 1 %} {# ORDER_STATUS['Draft'] #}
+                                                                <li><a data-toggle="modal" href="#delete-order-dialog"
+                                                                       class="delete-order"
+                                                                       data-id="{{ e.id }}">Delete</a></li>
+                                                            {% endif %}
+                                                        </ul>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    {% endif %}
+                                </table>
+                            </div>
+                            <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1"
+                                 id="delete-order-dialog"
+                                 class="modal fade">
+                                <div class="modal-dialog modal-sm">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button aria-hidden="true" data-dismiss="modal" class="close" type="button">
+                                                ×
+                                            </button>
+                                            <h4 class="modal-title">Delete Confirm Dialog</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form role="form"
+                                                  method="post"
+                                                  id="delete-order-form">
+                                                {% csrf_token %}
+                                                <div class="form-group">
+                                                    <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                                                </div>
+                                                <button type="submit" class="btn btn-success" id="btnDeleteOrder">OK
+                                                </button>
+                                                <button data-dismiss="modal" class="btn btn-default" type="button">
+                                                    Cancel
+                                                </button>
+                                            </form>
+                                            <input type="hidden" name="order_id" id="order_id" value=""/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="text/javascript" language="javascript"
+            src="{% static 'assets/advanced-datatable/media/js/jquery.dataTables.js' %}"></script>
+    <script type="text/javascript" src="{% static 'assets/data-tables/DT_bootstrap.js' %}"></script>
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}"></script>
+    <!--dynamic table initialization -->
+    <script src="{% static 'js/common/dynamic_table_init.js' %}?{% now 'H' %}"></script>
+    <script type="text/javascript">
+        $(document).on("click", ".delete-order", function () {
+            currentRow = $(this).parents('tr');
+            var order_id = $(this).data('id');
+            $(".modal-body #order_id").val(order_id);
+            $('#delete-order-dialog').modal('show');
+        });
+        $('#btnDeleteOrder').on('click', function () {
+            $.ajax({
+                method: "POST",
+                url: '/orders/order_delete/',
+                dataType: 'JSON',
+                data: {
+                    'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val(),
+                    'order_id': $('#order_id').val(),
+                },
+                success: function (json) {
+                    $('#delete-order-dialog').modal('hide');
+                    if (json.type == 'success') {
+                        $('#results').html("<div class='alert alert-success'>" +
+                                "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>×</button > " +
+                                "<span class='glyphicon glyphicon-ok'></span> <strong>Success Message</strong>" +
+                                "<hr class='message-inner-separator'>" +
+                                "<p>" + json.msg + "</p>");
+                    } else if (json.type == 'failed') {
+                        $('#results').html("<div class='alert alert-warning'>" +
+                                "<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>×</button > " +
+                                "<span class='glyphicon glyphicon-ok'></span> <strong>Warning Message</strong>" +
+                                "<hr class='message-inner-separator'>" +
+                                "<p>" + json.msg + "</p>");
+                    }
+                    location.reload();
+                },
+                error: function (xhr, errmsg, err) {
+                    $('#delete-order-dialog').modal('hide');
+                    $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: " + errmsg +
+                            " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                    console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+                }
+            });
+        });
+    </script>
+{% endblock %}

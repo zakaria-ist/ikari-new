@@ -1,0 +1,958 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <link href="{% static "css/table.css" %}" rel="stylesheet">
+    {% load humanize %}
+    <style type="text/css">
+        .not-use {
+            pointer-events: none;
+        }
+        .tunjukin {
+            cursor: pointer;
+        }
+
+        .header_wrapper {
+          display: flex;
+        }
+
+        .header_wrapper_inside {
+          display: flex;
+        }
+
+        .break-word {
+          word-wrap: break-word
+        }
+
+        .currency_width {
+          width: 8%;
+        }
+
+        .account_width {
+          width: 17%;
+        }
+
+        .description_width {
+          width: 20%;
+        }
+
+        .line_width {
+          width: 5%;
+        }
+
+        @media only screen and (max-width: 967px) {
+          .header_wrapper {
+            display: block !important;
+          }
+        }
+        .pad-right {
+            margin-right: 15px;
+        }
+        .pad-left {
+            margin-left: 15px;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}
+    {% if batch.batch_type == 1 %} {# TRANSACTION_TYPES['AR Invoice'] #}
+        A/R Invoice : batch #{{batch.batch_no}}
+    {% elif batch.batch_type == 2 %} {# TRANSACTION_TYPES['AP Invoice'] #}
+        A/P Invoice : batch #{{batch.batch_no}}
+    {% elif batch.batch_type == 3 %} {# TRANSACTION_TYPES['AR Receipt'] #}
+        A/R Receipt : batch #{{batch.batch_no}}
+    {% elif batch.batch_type == 4 %} {# TRANSACTION_TYPES['AP Payment'] #}
+        A/P Payment : batch #{{batch.batch_no}}
+    {% elif batch.batch_type == 5 %} {# TRANSACTION_TYPES['GL'] #}
+        G/L Entry : batch #{{batch.batch_no}}
+    {% endif %}
+{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+
+{% block parent_AR_a_active %}
+{% if batch.batch_type == 1 or batch.batch_type == 3 %} {# TRANSACTION_TYPES['AR Invoice'] or TRANSACTION_TYPES['AR Receipt']#}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_AR_i_active %}
+{% if batch.batch_type == 1 or batch.batch_type == 3 %} {# TRANSACTION_TYPES['AR Invoice'] or TRANSACTION_TYPES['AR Receipt']#}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_AP_a_active %}
+{% if batch.batch_type == 2 or batch.batch_type == 4 %} {# TRANSACTION_TYPES['AP Invoice'] or TRANSACTION_TYPES['AP Payment']#}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_AP_i_active %}
+{% if batch.batch_type == 2 or batch.batch_type == 4 %} {# TRANSACTION_TYPES['AP Invoice'] or TRANSACTION_TYPES['AP Payment']#}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_GL_a_active %}
+{% if batch.batch_type == 5 %} {# TRANSACTION_TYPES['GL'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_GL_i_active %}
+{% if batch.batch_type == 5 %} {# TRANSACTION_TYPES['GL'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block ar_invoice_active %}
+{% if batch.batch_type == 1 %} {# TRANSACTION_TYPES['AR Invoice'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block ap_invoice_active %}
+{% if batch.batch_type == 2 %} {# TRANSACTION_TYPES['AP Invoice'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block ar_receipt_active %}
+{% if batch.batch_type == 3 %} {# TRANSACTION_TYPES['AR Receipt'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block ap_payment_active %}
+{% if batch.batch_type == 4 %} {# TRANSACTION_TYPES['AP Payment'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block gl_transaction_active %}
+{% if batch.batch_type == 5 %} {# TRANSACTION_TYPES['GL'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block content %}
+    <br/>
+    <input id="hdJournalType" type="hidden" value="{{ journal_type }}">
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    Batch Information
+                    <span class="tools pull-right">
+                        <a href="javascript:;" class="fa fa-chevron-down"></a>
+                    </span>
+                </header>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="panel-body">
+                            <div class="form-group form-horizontal">
+                              <div class="col-lg-12 header_wrapper">
+                                  <div class="col-lg-3 header_wrapper_inside">
+                                    <label for="name" class="control-label"
+                                           style="font-weight: bold;">Batch Number : </label>
+                                    <div class="">
+                                        <label class="control-label">&nbsp&nbsp{{ batch.batch_no }}</label>
+                                    </div>
+                                  </div>
+                                  <div class="col-lg-9 header_wrapper_inside">
+                                    <label class=" control-label" style="font-weight: bold;">Description
+                                        : </label>
+                                    <div class="">
+                                        <label class="control-label">&nbsp&nbsp{{ batch.description }}</label>
+                                    </div>
+                                  </div>
+                                  <!-- <div class="col-lg-1 header_wrapper_inside">
+                                  </div> -->
+                              </div>
+                            </div>
+                            <div class="form-group form-horizontal">
+                                <div class="col-lg-12 header_wrapper">
+                                    <div class="header_wrapper_inside col-lg-3">
+                                      <label class="control-label" style="font-weight: bold;">Batch Date
+                                          : </label>
+                                      <div class="">
+                                          <label class="control-label">&nbsp&nbsp{{ batch_date }}</label>
+                                      </div>
+                                    </div>
+                                    <div class="header_wrapper_inside col-lg-4">
+                                      <label class="control-label" style="font-weight: bold;">No. of entries : </label>
+                                      <div class="">
+                                          <label class="control-label">&nbsp&nbsp{{ journal_count }}</label>
+                                      </div>
+                                    </div>
+                                    <div class="header_wrapper_inside col-lg-5">
+                                      <label class="control-label" style="font-weight: bold;">Total
+                                          Amount : </label>
+                                      {% if batch.batch_type == 5 %} {# TRANSACTION_TYPES['GL'] #}
+                                      <div class="">
+                                          <label class="control-label">&nbsp&nbsp{{ functional_amount|intcomma }}</label>
+                                      </div>
+                                      {% else %}
+                                      <div class="col-lg-2">
+                                          <label class="control-label">&nbsp&nbsp{{ source_amount|intcomma }}</label>
+                                      </div>
+                                      {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group form-horizontal">
+                                <div class="col-lg-12 header_wrapper">
+                                    <div class="header_wrapper_inside col-lg-12">
+                                      <label class="control-label" style="font-weight: bold;">Batch
+                                          Status : </label>
+                                      <div class="col-lg-2">
+                                          {% if batch.status == 1 %} {# STATUS_TYPE_DICT['Open'] #}
+                                              <span id="span-batch-status" class="badge badge-sm label-inverse span-status">Open</span>
+                                          {% elif batch.status == 2 %} {# STATUS_TYPE_DICT['Posted'] #}
+                                              <span id="span-batch-status" class="badge badge-sm label-success span-status">Posted</span>
+                                          {% elif batch.status == 7 %} {# STATUS_TYPE_DICT['Prov. Posted'] #}
+                                              <span id="span-batch-status" class="badge badge-sm label-inverse span-status">Provisional Posted</span>
+                                          {% elif batch.status == 8 %} {# STATUS_TYPE_DICT['Draft'] #}
+                                              <span id="span-batch-status" class="badge badge-sm label-warning span-status">Draft</span>
+                                          {% elif batch.status == 0 %} {# STATUS_TYPE_DICT['Undefined'] #}
+                                              <span id="span-batch-status" class="badge badge-sm label-default span-status">Undefined</span>
+                                          {% endif %}
+                                      </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <div class="col-lg-12 text-center" style="padding-top: 20px;">
+                                    {% if first_batch != 0 and batch.id != first_batch %}
+                                        <button type="button" tabindex="-1" class="btn btn-white pad-right" onclick="go_to_batch({{first_batch}})"><i class="fa fa-step-backward"></i></button>
+                                    {% else %}
+                                        <button type="button" tabindex="-1" class="btn btn-white pad-right" disabled><i class="fa fa-step-backward"></i></button>
+                                    {% endif %}
+
+                                    {% if prev_batch != 0  and batch.id != prev_batch %}
+                                        <button type="button" tabindex="-1" class="btn btn-white pad-right" onclick="go_to_batch({{prev_batch}})"><i class="fa fa-chevron-left"></i></button>
+                                    {% else %}
+                                        <button type="button" tabindex="-1" class="btn btn-white pad-right" disabled><i class="fa fa-chevron-left"></i></button>
+                                    {% endif %}
+
+                                    {% if batch.status == 1 or batch.status == 7 %} {# STATUS_TYPE_DICT['Open'] or STATUS_TYPE_DICT['Prov. Posted']#}
+                                        {% if batch.batch_type == 1 %} {# TRANSACTION_TYPES['AR Invoice'] #}
+                                            <a style="min-width: 80px!important;" class="btn btn-success start" onclick="return checkPost();"
+                                               href="/accounting/send/AR/{{ batch.id }}/">
+                                                <span>Post</span>
+                                            </a>
+                                        {% elif batch.batch_type == 2 %} {# TRANSACTION_TYPES['AP Invoice'] #}
+                                            <a style="min-width: 80px!important;;" class="btn btn-success start" onclick="return checkPost();"
+                                               href="/accounting/send/AP/{{ batch.id }}/">
+                                                <span>Post</span>
+                                            </a>
+                                        {% elif batch.batch_type == 3 %} {# TRANSACTION_TYPES['AR Receipt'] #}
+                                            <a style="min-width: 80px!important;;" class="btn btn-success start" onclick="return checkPost();"
+                                               href="{% url 'send_batch_receipt' batch.id %}">
+                                                <span>Post</span>
+                                            </a>
+                                        {% elif batch.batch_type == 4 %} {# TRANSACTION_TYPES['AP Payment'] #}
+                                            <a style="min-width: 80px!important;;" class="btn btn-success start" onclick="return checkPost();"
+                                               href="/accounting/send/APPayment/{{ batch.id }}/">
+                                                <span>Post</span>
+                                            </a>
+                                        {% elif batch.batch_type == 5 %} {# TRANSACTION_TYPES['GL'] #}
+                                            <a style="min-width: 80px!important;;" class="btn btn-success start" onclick="return checkPost();"
+                                               href="/accounting/send/GL/{{ batch.id }}/0/">
+                                                <span>Post</span>
+                                            </a>
+                                            <button id="provPost" type="button" class="btn btn-primary" onclick="doProvPost({{ batch.id }})">Prov. Post</button>
+                                        {% endif %}
+                                    {% endif %}
+
+                                    <a class="btn btn-primary" style="width: 89px;"
+                                        href="#" onclick="showModalPrintBatch({{ batch.batch_type }}, {{ batch.id }})">
+                                        <i class="glyphicon  glyphicon-print" style="color: white"></i>
+                                        <span style="color: white">Print</span>
+                                    </a>
+                                    
+                                    {% if next_batch != 0 and batch.id != next_batch %}
+                                        <button type="button" tabindex="-1" class="btn btn-white pad-left" onclick="go_to_batch({{next_batch}})"><i class="fa fa-chevron-right"></i></button>
+                                    {% else %}
+                                        <button type="button" tabindex="-1" class="btn btn-white pad-left" disabled><i class="fa fa-chevron-right"></i></button>
+                                    {% endif %}
+
+                                    {% if last_batch != 0 and batch.id != last_batch %}
+                                        <button type="button" tabindex="-1" class="btn btn-white pad-left" onclick="go_to_batch({{last_batch}})"><i class="fa fa-step-forward"></i></button>
+                                    {% else %}
+                                        <button type="button" tabindex="-1" class="btn btn-white pad-left" disabled><i class="fa fa-step-forward"></i></button>
+                                    {% endif %}
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section class="panel">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="panel-body">
+                            <header class="panel-heading" style="font-size: 20px">
+                                {% if batch.batch_type == 1 or batch.batch_type == 2 %} {# TRANSACTION_TYPES['AR Invoice'] #}
+                                    Invoice List
+                                {% elif batch.batch_type == 3 %} {# TRANSACTION_TYPES['AR Receipt'] #}
+                                    Receipt List
+                                {% elif batch.batch_type == 4 %} {# TRANSACTION_TYPES['AP Payment'] #}
+                                    Payment List
+                                {% elif batch.batch_type == 5 %} {# TRANSACTION_TYPES['GL'] #}
+                                    GL List
+                                {% endif %}
+                                {% csrf_token %}
+                                {% if batch.status == 1 %} {# STATUS_TYPE_DICT['Open'] #}
+                                    <span class="tools pull-right">
+                                    {% if batch.batch_type == 1 %} {# TRANSACTION_TYPES['AR Invoice'] #}
+                                        <a class="btn btn-success start" href="/accounting/add/AR/{{ batch.id }}/">
+                                         <i class="glyphicon glyphicon-plus"></i>
+                                         <span>Add new</span>
+                                     </a>
+                                    {% elif batch.batch_type == 2 %} {# TRANSACTION_TYPES['AP Invoice'] #}
+                                        <a class="btn btn-success start" href="/accounting/add/AP/{{ batch.id }}/">
+                                         <i class="glyphicon glyphicon-plus"></i>
+                                         <span>Add new</span>
+                                     </a>
+                                    {% elif batch.batch_type == 3 %} {# TRANSACTION_TYPES['AR Receipt'] #}
+                                        <a class="btn btn-success start" href="{% url 'add_ar_receipt' batch.id %}">
+                                         <i class="glyphicon glyphicon-plus"></i>
+                                         <span>Add new</span>
+                                     </a>
+                                    {% elif batch.batch_type == 4 %} {# TRANSACTION_TYPES['AP Payment'] #}
+                                        <a class="btn btn-success start" href="/accounting/add/APPayment/{{ batch.id }}/">
+                                         <i class="glyphicon glyphicon-plus"></i>
+                                         <span>Add new</span>
+                                     </a>
+                                    {% elif batch.batch_type == 5 %} {# TRANSACTION_TYPES['GL'] #}
+                                        <a class="btn btn-success start" href="/accounting/add/GL/{{ batch.id }}/">
+                                         <i class="glyphicon glyphicon-plus"></i>
+                                         <span>Add new</span>
+                                     </a>
+                                    {% endif %}
+
+                                    </span>
+                                {% endif %}
+                            </header>
+                            <div class="adv-table table-responsive">
+                                <table class="display table table-bordered table-striped table-hover"
+                                       id="dynamic-table" >
+                                    <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Update Date</th>
+                                        <th>ID</th>
+                                        <th>Entry Number</th>
+                                        {% if batch.batch_type == 5 %} {# TRANSACTION_TYPES['GL'] #}
+                                            <th>Entry Description</th>
+                                        {% else %}
+                                            <th>Document Number</th>
+                                        {% endif %}
+                                        {% if batch.batch_type == 3 or batch.batch_type == 4 %} {# TRANSACTION_TYPES['AP Invoice'] or TRANSACTION_TYPES['AP Payment']#}
+                                            <th>Reference</th>
+                                        {% endif %}
+                                        <th>Document Date</th>
+                                        {% if batch.batch_type == 5 %} {# TRANSACTION_TYPES['GL'] #}
+                                            <th>Source Code</th>
+                                        {% else %}
+                                            <th>Document Type</th>
+                                        {% endif %}
+                                        {% if batch.batch_type == 1 or batch.batch_type == 3 %} {# TRANSACTION_TYPES['AR Invoice'] or TRANSACTION_TYPES['AR Receipt']#}
+                                            <th>Customer</th>
+                                        {% elif batch.batch_type == 2 or batch.batch_type == 4 %} {# TRANSACTION_TYPES['AP Invoice'] or TRANSACTION_TYPES['AP Payment']#}
+                                            <th>Supplier</th>
+                                        {% endif %}
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                        <th>Flag</th>
+                                        <th class="text-center" style="min-width:90px!important;">Options</th>
+                                    </tr>
+                                    </thead>
+                                </table>
+                                <a class="btn btn-danger start" href="{% url 'batch_list' batch.batch_type %}"><i class="fa fa-arrow-circle-left fa-lg"></i>&nbsp&nbspGo Back</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    {#Comfirm Delete journal#}
+    <div class="modal fade" id="comfirmDeleteJournalModal" tabindex="-1" role="dialog"
+         aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title"><strong>Delete Confirm Dialog</strong></h4>
+                </div>
+                <div class="modal-body" style="padding-bottom: 0px!important; padding: 0 3%;">
+                    <form action="">
+                        <div class="form-group">
+                            <label>Are you sure want to delete?</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer" style="text-align: center">
+                    <button class="btn btn-default" type="button" data-dismiss="modal">No
+                    </button>
+                    <a id="comfirm-yes">
+                        <button class="btn btn-success" type="button">Yes</button>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {#End Comfirm delete journal#}
+    {% include 'print_batch_modal.html' %}
+{% endblock %}
+{% block js %}
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script src="{% static "js/accounting/print_batch_numbe.js" %}?{% now 'H' %}"></script>
+    <script src="https://cdn.datatables.net/plug-ins/725b2a2115b/api/fnPagingInfo.js"></script>
+    <script type="text/javascript">
+        var batch_type = "{{batch.batch_type}}";
+
+        $("#id_batch_number_from").select2({
+            placeholder: "Select batch",
+            allowClear: true
+        });
+        $("#id_batch_number_to").select2({
+            placeholder: "Select batch",
+            allowClear: true
+        });
+        $("#id_entry_number_from").select2({
+            placeholder: "Select Entry",
+            allowClear: true
+        });
+        $("#id_entry_number_to").select2({
+            placeholder: "Select Entry",
+            allowClear: true
+        });
+        $("#id_currency_report").select2({});
+        $(document).ready(function () {
+            var dttbl = $('#dynamic-table').DataTable({
+                "processing": true,
+                "order": [[3, "asc"]],
+                "serverSide": true,
+                "scrollX": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'JournalList__asJson' journal_type batch_id %}"
+                },
+                "columns": [
+                    {
+                        "className": 'details-control text-center',
+                        "orderable": false,
+                        "data": null,
+                        "width": "25px",
+                        "render": function (data, type, row, meta) {
+                            var btn = '<a class="expand_button fa fa-plus-circle"></a';
+                            return btn;
+                        }
+                    },
+                    {"data": "update_date",
+                     "width": "55px"},
+                    {
+                        "data": "id",
+                        "visible": false,
+                    },
+                    {"data": "code"},
+                    {% if batch.batch_type == 5 %} /* TRANSACTION_TYPES['GL'] */
+                        {"data": "name", "width": "300px"},
+                    {% else %}
+                        {"data": "document_number",
+                         "width": "100px"},
+                    {% endif %}
+                    {% if batch.batch_type == 3 or batch.batch_type == 4 %}
+                        {   "data": "reference",
+                            "orderable": false,
+                            "width": "110px"
+                        },
+                    {% endif %}
+                    {"data": "document_date",
+                     "width": "50px"},
+                    {% if batch.batch_type == 5 %} /* TRANSACTION_TYPES['GL'] */
+                        {"data": "source_type"},
+                    {% else %}
+                        {"data": "document_type",
+                         "width": "45px"},
+                    {% endif %}
+                    {% if batch.batch_type != 5 %} /* TRANSACTION_TYPES['GL'] */
+                        {"data": "cust_supp_name"},
+                    {% endif %}
+                    // {"data": "amount"},
+                    {
+                        "data": null ,  "sClass": "text-right" ,
+                        "render" : function ( data, type, full ) {
+                        return  full['currency_code'] +' '+ full['amount'];},
+                        "width": "80px"
+                    },
+                    {
+                        "sClass": "text-center",
+                        "data": null,
+                        "render": function (data, type, row, meta) {
+                            if (row.status == '1') { /* STATUS_TYPE_DICT['Open'] */
+                                return '<span id="status-journal-'+row.id+'" class="badge badge-sm label-inverse">Open</span>'
+                            }
+                            if (row.status == '2') { /* STATUS_TYPE_DICT['Posted'] */
+                                return '<span id="status-journal-'+row.id+'" class="badge badge-sm label-success">Posted</span>'
+                            }
+                            if (row.status == '3') { /* STATUS_TYPE_DICT['Deleted'] */
+                                return '<span id="status-journal-'+row.id+'" class="badge badge-sm label-default">Deleted</span>'
+                            }
+                            if (row.status == '4') { /* STATUS_TYPE_DICT['Reversed'] */
+                                return '<span id="status-journal-'+row.id+'" class="badge badge-sm label-warning">Reversed</span>'
+                            }
+                            if (row.status == '5') { /* STATUS_TYPE_DICT['ERROR'] */
+                                return '<span id="status-journal-'+row.id+'" class="badge badge-sm label-danger">Error</span>'
+                            }
+                            if (row.status == '6') { /* STATUS_TYPE_DICT['Auto Reverse Entry'] */
+                                return '<span id="status-journal-'+row.id+'" class="badge badge-sm label-warning">Reversing Entry</span>'
+                            }
+                            if (row.status == '7') { /* STATUS_TYPE_DICT['Prov. Posted'] */
+                                return '<span id="status-journal-'+row.id+'" class="badge badge-sm label-inverse">Prov. Posted</span>'
+                            }
+                            if (row.status == '8') { /* STATUS_TYPE_DICT['Draft'] */
+                                return '<span id="status-journal-'+row.id+'" class="badge badge-sm label-warning">Draft</span>'
+                            }
+                            if (row.status == '0') { /* STATUS_TYPE_DICT['Undefined'] */
+                                return '<span id="status-journal-'+row.id+'" class="badge badge-sm label-default">Undefined</span>'
+                            }
+                        }
+                    },
+                    {
+                        "sClass": "text-center",
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, row, meta) {
+                            if (row.flag == 1) { /* FLAG_TYPE_DICT['CHECKED'] */
+                                return '<span id="flag-journal-'+row.id+'" class="badge badge-sm label-success">CHECKED</span>'
+                            }
+                            else if (row.flag == 2) { /* FLAG_TYPE_DICT['MODIFIED'] */
+                                return '<span id="flag-journal-'+row.id+'" class="badge badge-sm label-warning">MODIFIED</span>'
+                            }
+
+                            /* FLAG_TYPE_DICT['UNMARKED'] */
+                            return '<span id="flag-journal-'+row.id+'" class="badge badge-sm label-inverse">UNMARKED</span>'
+                        },
+                    },
+                    {
+                        "sClass": "text-center",
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, row, meta) {
+                            var btn =
+                                    '<div class="btn-group dropdown">' +
+                                    '<button type="button"' +
+                                    'class="btn btn-primary btn-sm dropdown-toggle"' +
+                                    'data-toggle="dropdown" aria-haspopup="true"' +
+                                    'aria-expanded="false"' +
+                                    'style="min-width: 30px!important;">Action' +
+                                    '<span class="caret" style="margin-left:15px;"></span>' +
+                                    '<span class="sr-only">Toggle Dropdown</span>' +
+                                    '</button>' +
+                                    '<ul class="dropdown-menu dropdown-menu-right">' +
+                                    '<li>';
+                            var btn_blank =
+                                    '<div class="btn-group dropdown">' +
+                                    '<button type="button"' +
+                                    'class="btn btn-default btn-sm dropdown-toggle not-use"' +
+                                    'data-toggle="dropdown" aria-haspopup="true"' +
+                                    'aria-expanded="false"' +
+                                    'style="min-width: 40px!important;">Action' +
+                                    '<span class="caret" style="margin-left:15px"></span>' +
+                                    '<span class="sr-only">Toggle Dropdown</span>' +
+                                    '</button>' +
+                                    '<ul class="dropdown-menu dropdown-menu-right">' +
+                                    '<li>';
+                            if ((row.status == '1') /* STATUS_TYPE_DICT['Open'] */
+                                || (row.status == '2') /* STATUS_TYPE_DICT['Posted'] */
+                                || (row.status == '7') /* STATUS_TYPE_DICT['Prov. Posted'] */
+                                || (row.status == '8')) { /* STATUS_TYPE_DICT['Draft'] */
+                                if (row.batch_type == 1) { /* TRANSACTION_TYPES['AR Invoice'] */
+                                    if (row.status == "1" || row.status == "7") {
+                                        btn += '<a href="/accounting/edit/AR/' + row.id + '/">Edit</a>';
+                                    } else {
+                                        btn += '<a href="/accounting/edit/AR/' + row.id + '/">View</a>';
+                                    }
+                                    if (row.status == '1' || row.status == '8') { /* STATUS_TYPE_DICT['Open'] or STATUS_TYPE_DICT['Draft'] */
+                                        btn += '<a class="tunjukin" onclick="deleteAR(' + row.id + ')">Delete</a>';
+                                        btn += flag_btn(row);
+                                    }
+                                } else if (row.batch_type == 2) { /* TRANSACTION_TYPES['AP Invoice'] */
+                                    if (row.status == "1" || row.status == "7") {
+                                        btn += '<a href="/accounting/edit/AP/' + row.id + '/">Edit</a>';
+                                    } else {
+                                        btn += '<a href="/accounting/edit/AP/' + row.id + '/">View</a>';
+                                    }
+                                    if (row.status == '1' || row.status == '8') { /* STATUS_TYPE_DICT['Open'] or STATUS_TYPE_DICT['Draft']*/
+                                        btn += '<a class="tunjukin" onclick="deleteAP(' + row.id + ')">Delete</a>';
+                                        btn += flag_btn(row);
+                                    }
+                                } else if (row.batch_type == 3) { /* TRANSACTION_TYPES['AR Receipt'] */
+                                    if (row.status == "1" || row.status == "7") {
+                                        btn += '<a href="/accounting/edit/ARReceipt/' + row.id + '/">Edit</a>';
+                                    } else {
+                                        btn += '<a href="/accounting/edit/ARReceipt/' + row.id + '/">View</a>';
+                                    }
+                                    if (row.status == '1' || row.status == '8') { /* STATUS_TYPE_DICT['Open'] or STATUS_TYPE_DICT['Draft']*/
+                                        btn += '<a class="tunjukin" onclick="deleteARReceipt(' + row.id + ')">Delete</a>';
+                                        btn += flag_btn(row);
+                                    }
+                                } else if (row.batch_type == 4) { /* TRANSACTION_TYPES['AP Payment'] */
+                                    if (row.status == "1" || row.status == "7") {
+                                        btn += '<a href="/accounting/edit/APPayment/' + row.batch_id + '/' + row.id + '/">Edit</a>';
+                                    } else {
+                                        btn += '<a href="/accounting/edit/APPayment/' + row.batch_id + '/' + row.id + '/">View</a>';
+                                    }
+                                    if (row.status == '1' || row.status == '8') { /* STATUS_TYPE_DICT['Open'] or STATUS_TYPE_DICT['Draft']*/
+                                        btn += '<a class="tunjukin" onclick="deleteAPPayment(' + row.id + ')">Delete</a>';
+                                        btn += flag_btn(row);
+                                    }
+                                } else if (row.batch_type == 5) { /* TRANSACTION_TYPES['GL'] */
+                                    if ((row.status == '1') /* STATUS_TYPE_DICT['Open'] */
+                                        || (row.status == '7')) { /* STATUS_TYPE_DICT['Prov. Posted'] */
+                                        btn += '<a href="/accounting/edit/GL/' + row.id + '/">Edit</a>';
+                                        btn += '<a class="tunjukin" onclick="deleteGL(' + row.id + ')">Delete</a>';
+                                        btn += flag_btn(row);
+                                    } else {
+                                        btn += '<a href="/accounting/view/GL/' + row.id + '/">View</a>';
+                                        btn += '<a class="not-use"><span style="color: #A4A4A4">Edit</span></a>';
+                                        btn += '<a class="not-use"><span style="color: #A4A4A4">Delete</span></a>';
+                                    }
+                                }
+                            } else {
+                                btn = btn_blank;
+                            }
+
+                            btn += '</li></ul/div>';
+                            return btn;
+                        }
+                    }
+                ]
+            });
+            $('th').parents().eq(3).attr('style', 'margin-left: auto !important; margin-right: auto !important;');
+            
+            // Clear search field on page load
+            if ($('input[type=search]').val() != '') {
+                $('#dynamic-table').DataTable().search('').draw();
+            }
+
+            function flag_btn(row) {
+                btn = '';
+                if (row.flag == 0) { /* FLAG_TYPE_DICT['UNMARKED'] */
+                    btn += '<a id="flag-check-journal-'+row.id+'" class="tunjukin" onclick="flagCheckJournal(' + row.id + ')">Flag as CHECKED</a>';
+                    btn += '<a id="flag-uncheck-journal-'+row.id+'" class="tunjukin" style="display:none" onclick="flagUncheckJournal(' + row.id + ')">Clear Flag</a>';
+                }
+                else if (row.flag == 1) { /* FLAG_TYPE_DICT['CHECKED'] */
+                    btn += '<a id="flag-check-journal-'+row.id+'" class="tunjukin" style="display:none" onclick="flagCheckJournal(' + row.id + ')">Flag as CHECKED</a>';
+                    btn += '<a id="flag-uncheck-journal-'+row.id+'" class="tunjukin" onclick="flagUncheckJournal(' + row.id + ')">Clear Flag</a>';
+                }
+                else if (row.flag == 2) { /* FLAG_TYPE_DICT['MODIFIED'] */
+                    btn += '<a id="flag-check-journal-'+row.id+'" class="tunjukin" onclick="flagCheckJournal(' + row.id + ')">Flag as CHECKED</a>';
+                    btn += '<a id="flag-uncheck-journal-'+row.id+'" class="tunjukin" onclick="flagUncheckJournal(' + row.id + ')">Clear Flag</a>';
+                }
+
+                return btn;
+            }
+
+            $('#dynamic-table tbody').on('click', 'td.details-control a', function () {
+                var tr = $(this).closest('tr');
+                var row = dttbl.row( tr );
+
+                if ( row.child.isShown() ) {
+                    row.child.hide();
+                    tr.removeClass('shown');
+                    $(this).addClass('fa-plus-circle');
+                    $(this).removeClass('fa-minus-circle');
+                }
+                else {
+                    format(row.child, row.data());
+                    tr.addClass('shown');
+                    $(this).removeClass('fa-plus-circle');
+                    $(this).addClass('fa-minus-circle');
+                }
+            });
+        });
+
+        function go_to_batch(batch_id) {
+            window.location.href = '/accounting/list/' + batch_type + '/' + batch_id + '/'; 
+        }
+
+        function deleteAR(id) {
+            var url = '/accounting/delete/AR/' + id + '/'
+            $("#comfirmDeleteJournalModal").modal("show");
+            $("#comfirm-yes").attr("href", url);
+        }
+
+        function deleteAP(id) {
+            var url = '/accounting/delete/AP/' + id + '/'
+            $("#comfirmDeleteJournalModal").modal("show");
+            $("#comfirm-yes").attr("href", url);
+        }
+
+        function deleteARReceipt(id) {
+            var url = '/accounting/delete/ARReceipt/' + id + '/';
+            $("#comfirmDeleteJournalModal").modal("show");
+            $("#comfirm-yes").attr("href", url);
+        }
+
+        function deleteAPPayment(id) {
+            var url = '/accounting/delete/APPayment/' + id + '/';
+            $("#comfirmDeleteJournalModal").modal("show");
+            $("#comfirm-yes").attr("href", url);
+        }
+
+        function deleteGL(id) {
+            var url = '/accounting/delete/GL/' + id + '/'
+            $("#comfirmDeleteJournalModal").modal("show");
+            $("#comfirm-yes").attr("href", url);
+        }
+
+        function doProvPost(batch_id) {
+            $('#loading').show();
+            window.location = "/accounting/send/GL/"+batch_id+"/1/";
+        }
+
+        function format (callback,jrnl) {
+            $.ajax({
+                url: '/accounting/journalDetail__asJson/'+ jrnl.id +'/',
+                dataType: "json",
+                complete: function (response) {
+                    var data = JSON.parse(response.responseText);
+                    if (data[0].success){
+                        var thead = '',  tbody = '';
+                        thead += '<th class="line_width">Line</th>';
+                        thead += '<th>Reference</th>';
+                        thead += '<th>Description</th>';
+                        thead += '<th class="account_width">Account</th>';
+                        thead += '<th>Currency</th>';
+                        if (data[0].batch_type=='5'){ /* TRANSACTION_TYPES['GL'] */
+                            thead += '<th class="currency_width">Source Debit</th>';
+                            thead += '<th class="currency_width">Source Credit</th>';
+                        } else {
+                            thead += '<th class="currency_width">Source Amount</th>';
+                        }
+                        thead += '<th class="currency_width">Exchange Rate</th>';
+                        if (data[0].batch_type=='5'){ /* TRANSACTION_TYPES['GL'] */
+                            thead += '<th class="currency_width">Functional Debit</th>';
+                            thead += '<th class="currency_width">Functional Credit</th>';
+                        } else {
+                            thead += '<th class="currency_width">Functional Amount</th>';
+                        }
+                        for (var i = 0; i < data[0].trx.length; i++) {
+                            tbody += '<tr>';
+                            tbody += '<td class="text-right">' + data[0].trx[i].line + '</td>';
+                            tbody += '<td class="break-word">' + data[0].trx[i].reference + '</td>';
+                            tbody += '<td class="break-word">' + data[0].trx[i].description + '</td>';
+                            tbody += '<td class="break-word">' + data[0].trx[i].account + '</td>';
+                            tbody += '<td>' + data[0].trx[i].currency + '</td>';
+                            if (data[0].batch_type=='5'){ /* TRANSACTION_TYPES['GL'] */
+                                tbody += '<td class="text-right">' + data[0].trx[i].source_debit + '</td>';
+                                tbody += '<td class="text-right">' + data[0].trx[i].source_credit + '</td>';
+                            } else {
+                                tbody += '<td class="text-right">' + data[0].trx[i].source_amount + '</td>';
+                            }
+                            tbody += '<td class="text-right">' + data[0].trx[i].exchange_rate + '</td>';
+                            if (data[0].batch_type=='5'){ /* TRANSACTION_TYPES['GL'] */
+                                tbody += '<td class="text-right">' + data[0].trx[i].functional_debit + '</td>';
+                                tbody += '<td class="text-right">' + data[0].trx[i].functional_credit + '</td></tr>';
+                            } else {
+                                tbody += '<td class="text-right">' + data[0].trx[i].functional_amount + '</td></tr>';
+                            }
+                        }
+                        callback($('<table class="display table table-bordered table-striped table-condensed">' + thead + tbody + '</table>')).show();
+                    } else {
+                        showErrorMessage();
+                    }
+                },
+                error: function () {
+                    showErrorMessage();
+                }
+            })
+        }
+
+        function showErrorMessage(){
+            $('#notificationModal_title').text('Error');
+            $('#notificationModal_text1').text('Failed to get batch detail data !');
+            $('#notificationModal_text2').text('Please refresh and try again or contact administrator for support.');
+            $("#notificationModal").modal("show");
+        }
+
+        function checkJournal(id){
+            $.ajax({
+                method: "POST",
+                url: '/accounting/check_journal/',
+                data: {
+                    'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val(),
+                    'journal_id': id
+                },
+                success: function (data) {
+                    var span_id = "status-journal-"+id;
+                    var link_id = "check-uncheck-journal-"+id;
+                    if (data['result'] = '1'){
+                        $('#'+span_id).text(data['status']);
+                        $('#'+span_id).removeClass('label-warning');
+                        $('#'+span_id).addClass('label-inverse');
+                        $("#"+link_id).attr("onclick","uncheckJournal("+id+")");
+                        $("#"+link_id).text("Set to Uncheck");
+                        if (data['uncheck'] == '0'){
+                            $('#span-batch-status').text(data['status']);
+                            $('#span-batch-status').removeClass('label-warning');
+                            $('#span-batch-status').addClass('label-inverse');
+                        }
+                    } else {
+                        pop_info_dialog("Failed", "Please refresh and try again or contact administrator for support.", "Failed");
+                    }
+                },
+                error: function () {
+                    pop_info_dialog("Failed", "Please refresh and try again or contact administrator for support.", "Failed");
+                }
+            });
+        }
+
+        function uncheckJournal(id){
+            $.ajax({
+                method: "POST",
+                url: '/accounting/uncheck_journal/',
+                data: {
+                    'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val(),
+                    'journal_id': id
+                },
+                success: function (data) {
+                    var span_id = "status-journal-"+id;
+                    var link_id = "check-uncheck-journal-"+id;
+                    if (data['result'] = '1'){
+                        $('#'+span_id).text(data['status']);
+                        $('#'+span_id).removeClass('label-inverse');
+                        $('#'+span_id).addClass('label-warning');
+                        $('#span-batch-status').text(data['status']);
+                        $('#span-batch-status').removeClass('label-inverse');
+                        $('#span-batch-status').addClass('label-warning');
+                        $("#"+link_id).attr("onclick","checkJournal("+id+")");
+                        $("#"+link_id).text("Set to Check");
+                    } else {
+                        pop_info_dialog("Failed", "Please refresh and try again or contact administrator for support.", "Failed");
+                    }
+                },
+                error: function () {
+                    pop_info_dialog("Failed", "Please refresh and try again or contact administrator for support.", "Failed");
+                }
+            });
+        }
+
+        function flagCheckJournal(id){
+            $.ajax({
+                method: "POST",
+                url: '/accounting/flag_check_journal/',
+                data: {
+                    'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val(),
+                    'journal_id': id
+                },
+                success: function (data) {
+                    var span_id = "flag-journal-"+id;
+                    var check_link_id = "flag-check-journal-"+id;
+                    var uncheck_link_id = "flag-uncheck-journal-"+id;
+
+                    if (data['result'] = '1') {
+                        $('#'+span_id).text(data['status']);
+                        $('#'+span_id).removeClass('label-inverse label-warning');
+                        $('#'+span_id).addClass('label-success');
+
+                        $("#"+check_link_id).hide();
+                        $("#"+uncheck_link_id).show();
+                    } else {
+                        pop_info_dialog("Failed", "Please refresh and try again or contact administrator for support.", "Failed");
+                    }
+                },
+                error: function () {
+                    pop_info_dialog("Failed", "Please refresh and try again or contact administrator for support.", "Failed");
+                }
+            });
+        }
+
+        function flagUncheckJournal(id){
+            $.ajax({
+                method: "POST",
+                url: '/accounting/flag_uncheck_journal/',
+                data: {
+                    'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val(),
+                    'journal_id': id
+                },
+                success: function (data) {
+                    var span_id = "flag-journal-"+id;
+                    var check_link_id = "flag-check-journal-"+id;
+                    var uncheck_link_id = "flag-uncheck-journal-"+id;
+
+                    if (data['result'] = '1'){
+                        $('#'+span_id).text(data['status']);
+                        $('#'+span_id).removeClass('label-success label-warning');
+                        $('#'+span_id).addClass('label-inverse');
+
+                        $("#"+check_link_id).show();
+                        $("#"+uncheck_link_id).hide();
+                    } else {
+                        pop_info_dialog("Failed", "Please refresh and try again or contact administrator for support.", "Failed");
+                    }
+                },
+                error: function () {
+                    pop_info_dialog("Failed", "Please refresh and try again or contact administrator for support.", "Failed");
+                }
+            });
+        }
+
+        var ul_array = [];
+        $(document).on('click', '.table-responsive [data-toggle="dropdown"]', function () {
+            // if the button is inside a modal
+            if ($('body').hasClass('modal-open')) {
+                throw new Error("This solution is not working inside a responsive table inside a modal, you need to find out a way to calculate the modal Z-index and add it to the element")
+                return true;
+            }
+
+            ul_array.forEach(element => {
+                element.css('display', 'none');
+            });
+            ul_array.length = 0;
+
+            $buttonGroup = $(this).parent();
+            if (!$buttonGroup.attr('data-attachedUl')) {
+                var ts = +new Date;
+                $ul = $(this).siblings('ul');
+                $ul.attr('data-parent', ts);
+                $buttonGroup.attr('data-attachedUl', ts);
+                $(window).resize(function () {
+                    $ul.css('display', 'none').data('top');
+                });
+            } else {
+                $ul = $('[data-parent=' + $buttonGroup.attr('data-attachedUl') + ']');
+            }
+            if (!$buttonGroup.hasClass('open')) {
+                $ul.css('display', 'none');
+                return;
+            }
+            ul_array.push($ul);
+            dropDownFixPosition($(this).parent(), $ul);
+            function dropDownFixPosition(button, dropdown) {
+                var dropDownTop = button.offset().top + button.outerHeight();
+                dropdown.css('top', dropDownTop + "px");
+                dropdown.css('left', (button.offset().left - 100) + "px");
+                dropdown.css('position', "absolute");
+
+                dropdown.css('width', dropdown.width());
+                dropdown.css('heigt', dropdown.height());
+                dropdown.css('display', 'block');
+                dropdown.appendTo('body');
+            }
+        });
+    </script>
+{% endblock %}

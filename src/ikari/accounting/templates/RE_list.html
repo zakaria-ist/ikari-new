@@ -1,0 +1,162 @@
+{% extends "base.html" %} {% block extrahead %} {% load staticfiles %}{% load schedule %}
+<style type="text/css">
+    .not-use {
+        pointer-events: none;
+    }
+
+    .tunjukin {
+        cursor: pointer;
+    }
+</style>
+{% endblock %} 
+{% block title %}
+Recurring Entry List
+{% endblock %} 
+
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+
+{% block parent_com_a_active %}
+    active
+{% endblock %}
+
+{% block re_active %}
+    active
+{% endblock %}
+
+{% block content %}
+<br/>
+<div class="row">
+    <div class="col-sm-12">
+
+        <section class="panel">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel-body">
+                        <header class="panel-heading" style="font-size: 20px">
+                            Recurring Entry List 
+                        </header>
+                        <div class="adv-table">
+                            {% csrf_token %}
+                            <table class="display table table-bordered table-striped table-condensed" id="dynamic-table" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th class="hidden"></th>
+                                        <th></th>
+                                        <th>Entry Code</th>
+                                        <th>Description</th>
+                                        <th>Recurring Period</th>
+                                        <th>Start Date</th>
+                                        <th>Expiration Date</th>
+                                        <th>Last Run Date</th>
+                                        <th class="text-center" style="min-width:90px!important;">Options</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for entry in rec_entry_list %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td>{{ entry.code|default:"" }}</td>
+                                            <td>{{ entry.description|default:"" }}</td>
+                                            <td>{{ entry.schedule.recur_period|return_period }}</td>
+                                            <td>{{ entry.start_date|date:"d-m-Y" }}</td>
+                                            <td>{% if entry.expire_date %}{{ entry.expire_date|date:"d-m-Y" }} {% endif %}</td>
+                                            <td>{{ entry.run_date|date:"d-m-Y" }}</td>
+                                            <td class="text-center">
+                                                <div class="btn-group dropdown">
+                                                    <button type="button"
+                                                            class="btn btn-primary btn-sm dropdown-toggle sended"
+                                                            data-toggle="dropdown" aria-haspopup="true"
+                                                            aria-expanded="false" style="min-width: 40px!important;"><span
+                                                            class="caret"></span><span
+                                                            class="sr-only"
+                                                            id="BtnTrxOption">Toggle Dropdown</span></button>
+                                                    <ul class="dropdown-menu dropdown-menu-right">
+                                                        <li id="active-{{ forloop.counter }}">
+                                                            {% if entry.journal_type == 1 %}
+                                                            <a href="/accounting/edit/AR-RE/{{entry.id}}/">Edit</a>
+                                                            {% elif entry.journal_type == 2 %}
+                                                            <a href="/accounting/edit/AP-RE/{{entry.id}}/">Edit</a>
+                                                            {% elif entry.journal_type == 3 %}
+                                                            <a href="/accounting/edit/ARReceipt-RE/{{entry.id}}/">Edit</a>
+                                                            {% elif entry.journal_type == 4 %}
+                                                            <a href="/accounting/edit/APPayment-RE/{{entry.id}}/">Edit</a>
+                                                            {% elif entry.journal_type == 5 %}
+                                                            <a href="/accounting/edit/RE/{{entry.id}}/">Edit</a>
+                                                            {% endif %}
+                                                            <a onclick="deleteRecurringEntry({{ entry.id }})">Delete</a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{# Comfirm Delete Transaction #}
+<div class="modal fade" id="comfirmDeleteTransactionModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <form id="comfirmDeleteTransactionForm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">
+                        <strong>Delete Confirm Dialog</strong>
+                    </h4>
+                </div>
+                <div class="modal-body" style="padding-bottom: 0px!important;">
+                    <div class="form-group">
+                        <label>Are you sure want to delete?</label>
+                    </div>
+                </div>
+                <div class="modal-footer" style="text-align: center">
+                    <button class="btn btn-default" type="button" data-dismiss="modal">No
+                    </button>
+                    <a>
+                        <button class="btn btn-success" id="comfirm-yes">Yes</button>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{# End Comfirm delete Transaction #}
+ {% endblock %} 
+ {% block js %}
+<script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+<script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+
+<script type="text/javascript">
+    // Show Comfirm delete new transaction
+    function deleteRecurringEntry(id) {
+        $("#comfirmDeleteTransactionModal").modal("show");
+        $("#comfirm-yes").attr("onclick", "delete_re(" + id + ")");
+    }
+
+    function delete_re(id) {
+        $.ajax({
+            method: "POST",
+            url: '/accounting/delete-re-transaction/',
+            data: {
+                'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val(),
+                'rec_entry_id': id
+            },
+            success: function (data) {
+                console.log('deleted')
+                location.reload();
+            },
+            error: function () {
+        
+            }
+        });
+    }
+
+</script>
+ {% endblock %}

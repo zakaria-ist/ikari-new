@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <!-- <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/> -->
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <link href="{% static "css/table.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}G/L Transaction History{% endblock %}
+{% block account_setting_a_active %}active{% endblock %}
+{% block account_setting_i_active %}active{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block account_transaction_active %}active{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    G/L Transaction History
+                </header>
+                <form class="form-horizontal" action="" role="form" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" id="is_advance_filter" name="is_advance_filter" value="0">
+                    <input type="hidden" id="account_id" name="account_id" value="{{ account.id }}">
+                    <div class="panel-body form-horizontal">
+                        <div class="form-group ">
+                            <label for="code" class="col-lg-2 col-sm-2 control-label">Account</label>
+                            <div class="col-lg-2">
+
+                                <select class="form-control" id="code" name="code">
+                                        {% for account_code in account_list %}
+                                            <option value="{{ account_code.id }}" data-acc-name="{{ account_code.name }}" {% if account.code == account_code.code %} selected="selected" {% endif %}>
+                                                {{ account_code.code }} : {{ account_code.name }}
+                                            </option>
+                                        {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-lg-8">
+                                <input type="text" class="form-control" id="name" name="name" value="{{ account.name }}"
+                                       disabled>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="code" class="col-lg-2 col-sm-2 control-label">Period Ending</label>
+                            <div class="col-lg-2 col-sm-2">
+                                <div id="sandbox-container">
+                                    {% if period %}
+                                        <input name="period_ending" id="period_ending" type="text" class="form-control"
+                                            value="{{period}}">
+                                    {% else %}
+                                        <input name="period_ending" id="period_ending" type="text" class="form-control"
+                                            value="{% now "m-Y" %}">
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-lg-8 col-sm-8">
+                                <label for="code" class="col-lg-2 col-sm-2 control-label"
+                                       style="padding-right: 0px!important;padding-left: 0px!important;">Source
+                                    Code</label>
+                                <div class="col-lg-3 col-sm-3">
+                                    <select class="form-control" id="source_code" name="source_code">
+                                        <option value="0">All Select</option>
+                                        {% for source_item in source_code_list %}
+                                            <option value="{{ source_item.0 }}">
+                                                {{ source_item.0 }} : {{ source_item.1 }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <label for="code" class="col-lg-2 col-sm-2 control-label"
+                                       style="padding-right: 0px!important;padding-left: 0px!important;">Source
+                                    Currency</label>
+                                <div class="col-lg-3 col-sm-3">
+                                    <select class="form-control" id="source_currency" name="source_currency">
+                                        <option value="0">All Select</option>
+                                        {% for currency_item in source_currency_list %}
+                                            <option value="{{ currency_item.id }}">
+                                                {{ currency_item.code }} - {{ currency_item.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-lg-2 col-sm-2">
+                                    <button id="btnSearchView" class="btn btn-success" type="button">
+                                        <i class="fa fa-search"></i> View
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        {% comment %} <div id="loadpage"
+                             style="position:absolute; left:0px; top:0px; background-color:white; layer-background-color:white; width: 100%; height: 100%;">
+                            <p align="center" style="font-size: large;">
+                                <img src="/static/img/loading1.gif">
+                            </p>
+                        </div> {% endcomment %}
+                        <div class="adv-table table-responsive">
+                            <table class="display table table-bordered table-striped table-hover"
+                                   id="dynamic-table">
+                                <thead>
+                                <tr>
+                                    <th>Period Year</th>
+                                    <th>Period Month</th>
+                                    <th>Date</th>
+                                    <th>Source Code</th>
+                                    <th>Reference</th>
+                                    <th>Description</th>
+                                    <th>Function Amount</th>
+                                    <th>Source Amount</th>
+                                    <th>Exchane Rate</th>
+                                    <th>Batch No.</th>
+                                    <th>Entry No.</th>
+                                    <th class="text-center">View</th>
+                                </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <!-- <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script> -->
+    <!-- <script src="{% static 'js/advanced-form-datepicker.js' %}"></script> -->
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script>
+        // $('#sandbox-container input').datepicker({
+        //     format: "mm-yyyy",
+        //     startView: 1,
+        //     minViewMode: 1,
+        //     autoclose: true
+        // });
+        var period_ending = '';
+
+        $(document).ready(function () {
+
+            $.each($('#code option'), function(index, value) {
+              if($(this).index() == 4) {
+                $(this).attr('selected', 'selected');
+              }
+            });
+
+            let to_two_decimal = function(data, currency) {
+              if(currency) {
+                let real_number = data.toString().replace(currency, '').replace(',', '');
+                return roundDecimal(parseFloat(real_number), 2) + " " + currency
+              }
+            }
+
+            //$("#loadpage").hide();
+            $('#is_advance_filter').val('0');
+            var period_ending_split = $('#period_ending').val().split("-");
+            period_ending = period_ending_split[1] + "-" + period_ending_split[0];
+            $('#dynamic-table').dataTable({
+                "order": [[2, "desc"]],
+                "serverSide": true,
+                "scrollX": true,
+                stateSave: true,
+                "ajax": {
+                    "type": "POST",
+                    "url": "{% url 'AccountTransaction__asJson' %}",
+                    "data": function (d) {
+                        d.csrfmiddlewaretoken = $('input[name="csrfmiddlewaretoken"]').val();
+                        d.account_id = $('#account_id').val();
+                        d.period_ending = period_ending;
+                        d.account_id = $('#code').val();
+                        d.source_code = $('#source_code').val();
+                        d.source_currency = $('#source_currency').val();
+                        d.is_advance_filter = $('#is_advance_filter').val();
+                    },
+                },
+                "columns": [
+                    {"data": "period_year", "width": "30px"},
+                    {"data": "period_month", "width": "30px"},
+                    {"data": "document_date", "width": "60px"},
+                    {"data": "source_type", "width": "30px"},
+                    {"data": "reference", "width": "200px"},
+                    {"data": "description", "width": "400px"},
+                    {"data": "functional_amount", "sClass": "text-right", "width": "150px"}, //100px
+                    {"data": "source_amount", "sClass": "text-right", "width": "150px"}, //100px
+                    {"data": "exchange_rate", "sClass": "text-right", "width": "100px"},
+                    {"data": "batch_no", "sClass": "text-right", "width": "30px"},
+                    {"data": "entry_no", "sClass": "text-right", "width": "30px"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "width": "30px",
+                        "render": function (data, type, full, meta) {
+                            var button_edit = '<a href=/accounting/view/GL/' + full.journal_id + '/ class="btn btn-primary">View</a>'
+                            return button_edit;
+                        }
+                    }
+                ]
+            });
+
+            $('th').parents().eq(3).attr('style', 'margin-left: auto !important; margin-right: auto !important;');
+
+            /* Load select 2 */
+            $('select').select2();
+
+            /* Changing the description as the code changes */
+            $( '#code' ).on("change",function(){
+                var $selected = $(this).find('option:selected');
+                $('#name').val($selected.attr('data-acc-name'));
+                $('#btnSearchView').trigger('click');
+            });
+
+            /* load page when changing selected item */
+            $('select').on("change",function(){
+                $('#btnSearchView').trigger('click');
+            });
+
+            /* load page when changing period ending */
+            $('#period_ending').on("change",function(){
+                var period_ending_split = $(this).val().split("-");
+                period_ending = period_ending_split[1] + "-" + period_ending_split[0];
+                $('#btnSearchView').trigger('click');
+            });
+        });
+        var year_period = moment().format("MM-YYYY");
+        $('#period_ending').bind('keyup', function (event) {
+            if (event.which != 13) {
+                temp_date = $(this).val();
+                valid_date = moment(temp_date, "MM-YYYY", true).isValid();
+                if (valid_date) {
+                    year_period = temp_date;
+                }
+                return true;
+            }
+        });
+
+        $('#period_ending').bind('keydown', function (event) {
+            if (event.which == 13) {
+                $(this).val(moment(year_period, "MM-YYYY").format("MM-YYYY"));
+                return false;
+            } else {
+                adjust_input_month_year(this);
+            }
+        });
+
+        /* Search Account button*/
+        $('#btnSearchView').on('click', function () {
+            $("#loading").show();
+            $('#is_advance_filter').val('1');
+            var datatbl = $('#dynamic-table').DataTable();
+            datatbl.ajax.reload(function () {
+                 $("#loading").hide();
+            });
+            $('#is_advance_filter').val('0');
+            $('input[type="search"]').val('');
+        });
+
+        $(document).on('keydown', 'input[type="search"]', function (event) {
+            $('#source_code').val('0');
+            $('#source_currency').val('0');
+        });
+        document.getElementById("dynamic-table").reload = function () {
+            $("#loading").hide();
+        }
+    </script>
+{% endblock %}

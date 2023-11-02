@@ -1,0 +1,513 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <style>
+      .dropdown-menu {width: 400px;}
+    </style>
+{% endblock %}
+
+{% block title %}Report View{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+{% block parent_GL_a_active %}active{% endblock %}
+{% block parent_GL_i_active %}active{% endblock %}
+{% block gl_profit_loss_active %}active{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-3">
+            <section class="panel" id="secFilterCondition">
+                <header class="panel-heading">
+                    Profit Loss Listing
+                </header>
+                <div class="panel-body form-horizontal">
+                    <form class="form-horizontal" role="form" id="template_form" method="POST" action="{% url 'save_templates' 'PL' %}" enctype="multipart/form-data" onsubmit="">
+                        {% csrf_token %}
+                        <div id="divTemplate" class="form-group filter divGL">
+                            <label class="control-label col-md-12">Upload Template File</label>
+                            <div class="col-md-11">
+                                <div id="template-container">
+                                    <input type="file" id="pl_template" tabindex="1" name="pl_template" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="divDateFromTo" class="form-group filter divGL">
+                        <label class="control-label col-md-12">Period-Year</label>
+                        <div class="col-md-11">
+                            <div id="from-container" class="dropdown">
+                                <div class="" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                    <input tabindex="1" type="text" class="form-control text-center year-period" value="">
+                                </div>
+                                {% comment %} <div class="dropdown-toggle col-md-4" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                    <i class="fa fa-calendar" aria-hidden="true"></i>
+                                    <span class="caret"></span>
+                                </div> {% endcomment %}
+                                <div class="dropdown-menu" id="from_menu" aria-labelledby="dropdownMenu1">
+                                    <button type="button" style="border-color: transparent;" class="btn btn-white col-md-offset-2 col-md-2" onclick="changeYear('Prev')"><i class="fa fa-chevron-circle-left fa-2x"></i></button>
+                                    <div class="col-md-4">
+                                        <select class="form-control" name="f_year" id="f_year" class="form-control">
+                                            {% for year in fsc_years %}
+                                                <option value="{{year}}">{{year}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <button type="button" style="border-color: transparent;" class="btn btn-white col-md-2" onclick="changeYear('Next')"><i class="fa fa-chevron-circle-right fa-2x"></i></button>
+                                    <table class="table table-condensed table-hover table-striped" id="fromTable">
+                                        <thead>
+                                            <tr>
+                                                <th id="period" class="th-fsc" style="width: 5%;">Prd.</th>
+                                                <th id="start" class="th-fsc" style="width: 35%;">Start Date</th>
+                                                <th id="end" class="th-fsc" style="width: 35%;">End Date</th>
+                                                <th id="status" class="th-fsc" style="width: 25%;">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="f">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label col-md-12">Report Type</label>
+                        <div class="col-md-11">
+                            <div class="input-group">
+                                <input name="report_type" value="1" type="radio" checked> Actual
+                            </div>
+                            <div class="input-group">
+                                <input name="report_type" value="2" type="radio"> Provisional
+                            </div>
+                        </div>
+                    </div>
+                    {% if segment_list %}
+                    <div class="form-group">
+                        <label class="control-label col-md-12">Report Filter Type</label>
+                        <div class="col-md-11">
+                            <div class="input-group">
+                                <input id="filter_type_1" name="filter_type" value="Account" type="radio" checked> Account
+                            </div>
+                            <div class="input-group">
+                                <input id="filter_type_2" name="filter_type" value="Segment" type="radio"> Segment Code
+                            </div>
+                            <br/>
+                            <!-- <div id="div_acc_filter">
+                                <div class="row">
+                                    <label class="control-label col-lg-2 col-md-2">From</label>
+                                    <div class="col-lg-10 col-md-10">
+                                        <select id="from_acc_filter" name="from_acc_filter">
+                                            <option value="" selected="selected">Select Account</option>
+                                            {% for acc in account_list %}
+                                            {% if acc.account_segment%}
+                                            <option value="{{acc.id}}">{{acc.account_segment}}</option>
+                                            {% endif %}
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <br/>
+                                <div class="row">
+                                    <label class="control-label col-lg-2 col-md-2">To</label>
+                                    <div class="col-lg-10 col-md-10">
+                                        <select id="to_acc_filter" name="to_acc_filter">
+                                            <option value="" selected="selected">Select Account</option>
+                                            {% for acc in account_list %}
+                                            {% if acc.account_segment%}
+                                            <option value="{{acc.id}}">{{acc.account_segment}}</option>
+                                            {% endif %}
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div> -->
+                            <div id="div_segm_filter">
+                                <div class="row">
+                                    <label class="control-label col-lg-2 col-md-2">From</label>
+                                    <div class="col-lg-10 col-md-10">
+                                        <select id="from_segm_filter" name="from_segm_filter">
+                                            <option value="" selected="selected">Segment Code</option>
+                                            {% for segment in segment_list %}
+                                            <option value="{{segment.id}}">{{segment.code}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <br/>
+                                <div class="row">
+                                    <label class="control-label col-lg-2 col-md-2">To</label>
+                                    <div class="col-lg-10 col-md-10">
+                                        <select id="to_segm_filter" name="to_segm_filter">
+                                            <option value="" selected="selected">Segment Code</option>
+                                            {% for segment in segment_list %}
+                                            <option value="{{segment.id}}">{{segment.code}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="form-group">
+                        <!-- <label class="control-label col-md-12">Report Filter Type</label>
+                        <div class="col-md-11">
+                            <div id="div_acc_filter">
+                                <div class="row">
+                                    <label class="control-label col-lg-2 col-md-2">From</label>
+                                    <div class="col-lg-10 col-md-10">
+                                        <select id="from_acc_filter" name="from_acc_filter">
+                                            <option value="" selected="selected">Select Account</option>
+                                            {% for acc in account_list %}
+                                            <option value="{{acc.id}}">{{acc.code}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <br/>
+                                <div class="row">
+                                    <label class="control-label col-lg-2 col-md-2">To</label>
+                                    <div class="col-lg-10 col-md-10">
+                                        <select id="to_acc_filter" name="to_acc_filter">
+                                            <option value="" selected="selected">Select Account</option>
+                                            {% for acc in account_list %}
+                                            <option value="{{acc.id}}">{{acc.code}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> -->
+                    </div>
+                    {% endif %}
+                    <div id="divButton" class="form-group bottom-group">
+                        <div class="col-md-5">
+                            <a id="btnReview" tabindex="1" class="btn btn-success" style="margin-top: 10px;">Review</a>
+                        </div>
+                        <div class="col-md-7">
+                            <a id="export_excel" tabindex="1" class="btn btn-success" style="margin-top: 10px;">Excel Report</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <div class="col-md-9">
+            <section class="panel">
+                <div class="panel-body" style="height: 100%; min-height: 500px;">
+                    <div id="divViewPDF" class="adv-table">
+                        <iframe id="frViewPDF" width="100%" height="100%" style="height: 100%; min-height: 510px;"
+                                src=""></iframe>
+                    </div>
+                    <div id="loadpage"
+                         style="position:absolute; left:0px; top:0px; background-color:white; layer-background-color:white; width: 100%; height: 100%;">
+                        <p align="center" style="font-size: large;">
+                            <img src="/static/img/loading1.gif">
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}?{% now 'H' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+        var f_year = '';
+        var f_perd = '';
+        var fiscal_data = [];
+        $(document).ready(function () {
+            var date = '{{fsc_date}}';
+            date = date.split('-');
+            f_year = date[2];
+            f_perd = date[1];
+            date = date[1] + '-' + date[2];
+            $('#from-container input').val(date);
+            get_fiscal_data();
+        });
+
+        function changeYear(to) {
+            var curr_year = $('#f_year option:selected').val();
+            var to_year = curr_year;
+            if (to == 'Next') {
+                to_year = parseInt(curr_year) + 1;
+            } else {
+                to_year = parseInt(curr_year) - 1;
+            }
+
+            fiscal_data.forEach(element => {
+                if(element.year == to_year) {
+                    $("#from-container select").val(to_year).trigger('change');
+                }
+            });
+        }
+
+        $('#dropdownMenu1').on('click', function(){
+            update_fiscal_table('#fromTable tbody', f_year, f_perd);
+            $("#from-container select").val(f_year);
+            $('#from_menu').addClass('show');
+        });
+
+        $("#from-container select").on('change', function(){
+            f_year = $(this).val();
+            $('#from-container input').val(f_perd + '-' + f_year);
+            update_fiscal_table('#fromTable tbody', f_year, f_perd);
+        });
+
+        function get_fiscal_data() {
+            $.ajax({
+                type: "GET",
+                url: "/accounting/get_fiscal_data/",
+                success: function (data) {
+                    fiscal_data = data;
+                }
+            });
+        }
+
+        function update_fiscal_table(selector, year, perd='1'){
+            $(selector).empty();
+            fiscal_data.forEach(element => {
+                if(element.year == year) {
+                    let tr = '<tr class="rows';
+                    if (parseInt(perd) == parseInt(element.period)) {
+                        tr += ' success';
+                    }
+                    tr += '"><td class="td-fsc">' + element.period + '</td>';
+                    tr += '<td class="td-fsc">' + element.start + '</td>';
+                    tr += '<td class="td-fsc">' + element.end + '</td>';
+                    tr += '<td class="td-fsc">' + element.status + '</td>';
+                    tr += '</tr>';
+                    $(selector).append(tr);
+ 
+                }
+            });
+        }
+
+        $(document).on("click","tr.rows", function(e){
+            if($(this).parent().hasClass('f')){
+                f_perd = $(this).find('td').eq(0).text();
+                $('#from-container input').val(f_perd + '-' + f_year);
+                update_fiscal_table("#fromTable tbody", f_year, f_perd);
+                $('#from_menu').removeClass('show');
+            }
+        });
+        
+        $('#pl_template').on('change', function(e){
+            var file = $('#pl_template')[0].files[0]
+            if (file){
+                console.log(file.name);
+                var ext = file.name.split('.').pop()
+                if(ext != 'xls' && ext != 'xlsx') {
+                    pop_info_dialog("Failed", "Wrong Extension", "Failed");
+                } else {
+                    $('#template_form').submit();
+                }
+            }
+        });
+
+        $('#template_form').submit(function (e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            $.ajax({
+                type: $('#template_form').attr('method'),
+                url: $('#template_form').attr('action'),
+                data: formData,
+                cache: false,
+                processData: false,
+                contentType: false,
+                success: function (data) {
+                    console.log('Submission was successful.');
+                    console.log(data);
+                },
+                error: function (data) {
+                    console.log('An error occurred.');
+                    console.log(data);
+                },
+            });
+        });
+
+        $(document).on('click', function(e){
+            if($(e.target).hasClass('year-period')) {
+                $('#from_menu').addClass('show');
+            } else {
+                if($(e.target).parent().parent().hasClass('dropdown-menu') == false) {
+                    $('#from_menu').removeClass('show');
+                }
+            }
+        });
+
+        {% comment %} var year_period = moment().format("MM-YYYY");
+        $('.year-period').bind('keydown', function (event) {
+            if (event.which == 13) {
+                temp_date = $(this).val();
+                valid_date = moment(temp_date, "MM-YYYY", true).isValid();
+                if (valid_date) {
+                    year_period = temp_date;
+                }
+                return true;
+            } else {
+                adjust_input_month_year(this);
+            }
+        });
+        $('.year-period').bind('keyup', function (event) {
+            if (event.which == 13) {
+                $(this).datepicker('setDate', year_period);
+                return false;
+            }
+        }); {% endcomment %}
+        var frViewPDF = $('#frViewPDF')[0];
+        var divViewPDF = $('#divViewPDF');
+        $(document).ready(function () {
+            $("#loadpage").hide();
+            $("#report_list").trigger('change');
+            //Set height of report view
+            var header = $('.header');
+            var height = $(this).height() - header.height() * 2;
+            divViewPDF.height(height);
+            var window = $(window).on('resize', function () {
+                divViewPDF.height(height);
+            }).trigger('resize'); //on page load
+            
+            $("#from_acc_filter").select2({
+                placeholder: "Select Accont",
+            });
+            $("#to_acc_filter").select2({
+                placeholder: "Select Account",
+            });
+            
+            var segment_list = "{{segment_list}}";
+            if('None' != segment_list && '[]' != segment_list){
+                $("#from_segm_filter").select2({
+                    placeholder: "Segment Code",
+                });
+                $("#to_segm_filter").select2({
+                    placeholder: "Segment Code",
+                });
+
+                $('#filter_type_1').prop('checked', true);
+                $('#div_segm_filter').hide();
+                $('#div_acc_filter').show();
+                $('input[type=radio][name=filter_type]').on('change', function () {
+                    var filter_type = $('input[name=filter_type]:checked').val();
+                    if ('Account' == filter_type) {
+                        $('#div_segm_filter').hide();
+                        $('#div_acc_filter').show();
+                    } else {
+                        $('#div_segm_filter').show();
+                        $('#div_acc_filter').hide();
+                    }
+                });
+            }
+        });
+        $('#btnReview').on('keydown', function (e) {
+            if (e.which == 13) {
+                $(this).click();
+            }
+        });
+        $('#btnReview').on('click', function () {
+            var url = "";
+            var selected_report_type = $('input[name=report_type]:checked').val();
+            var segment_list = "{{segment_list}}";
+            if('None' != segment_list && '[]' != segment_list){
+                filter_type = $('input[name=filter_type]:checked').val();
+            } else {
+                filter_type = 'Account';
+            }
+            if ('Account' == filter_type) {
+                // from_val = $('#from_acc_filter option:selected').val();
+                // to_val = $('#to_acc_filter option:selected').val();
+                from_val = 1;
+                to_val = 1;
+            } else {
+                from_val = $('#from_segm_filter option:selected').val();
+                to_val = $('#to_segm_filter option:selected').val();
+                if (from_val == '') {
+                    pop_ok_dialog("Invalid First Segment Code",
+                        "Please select first segment codes for the report.",
+                        function () { })
+                }
+                if (to_val == '') {
+                    pop_ok_dialog("Invalid Second Segment Code",
+                        "Please select second segment codes for the report.",
+                        function () { })
+                }
+            }
+
+            if (from_val != '' && to_val != '') {
+                $("#loadpage").show();
+                //Print SR.... reports
+                inputData = divDateFromTo.getElementsByTagName("input");
+                if (inputData.length > 0) {
+                    data0 = inputData[0].value.split("-").reverse().join("-");
+                    if (data0.length == 0)
+                        data0 = '0'
+                        url = '/reports/print_GLProfit_new' + '/' + data0 + '/' + selected_report_type 
+                            + '/' + filter_type + '/' + from_val + '/' + to_val + '/';
+                    frViewPDF.setAttribute("src", url);
+                    divViewPDF.innerHTML = frViewPDF.outerHTML;
+                }
+
+                document.getElementById("frViewPDF").onload = function () {
+                    $("#loadpage").hide();
+                }
+            }
+        });
+        $('#export_excel').on('keydown', function (e) {
+            if (e.which == 13) {
+                $(this).click();
+            }
+        });
+        $('#export_excel').on('click', function () {
+            var url = "";
+            var selected_report_type = $('input[name=report_type]:checked').val();
+            var segment_list = "{{segment_list}}";
+            if ('None' != segment_list && '[]' != segment_list) {
+                filter_type = $('input[name=filter_type]:checked').val();
+            } else {
+                filter_type = 'Account';
+            }
+            if ('Account' == filter_type) {
+                // from_val = $('#from_acc_filter option:selected').val();
+                // to_val = $('#to_acc_filter option:selected').val();
+                from_val = 1;
+                to_val = 1;
+            } else {
+                from_val = $('#from_segm_filter option:selected').val();
+                to_val = $('#to_segm_filter option:selected').val();
+                if (from_val == '') {
+                    pop_ok_dialog("Invalid First Segment Code",
+                        "Please select first segment codes for the report.",
+                        function () { })
+                }
+                if (to_val == '') {
+                    pop_ok_dialog("Invalid Second Segment Code",
+                        "Please select second segment codes for the report.",
+                        function () { })
+                }
+            }
+
+            if (from_val != '' && to_val != '') {
+                //Print SR.... reports
+                inputData = divDateFromTo.getElementsByTagName("input");
+                if (inputData.length > 0) {
+                    data0 = inputData[0].value.split("-").reverse().join("-");
+                    if (data0.length == 0)
+                        data0 = '0'
+                        url = '/reports/print_GLProfit_excel_new' + '/' + data0 + '/' + selected_report_type
+                            + '/' + filter_type + '/' + from_val + '/' + to_val + '/';
+                    frViewPDF.setAttribute("src", url);
+                    //divViewPDF.innerHTML = frViewPDF.outerHTML;
+                }
+            }
+        });
+
+    </script>
+{% endblock %}
+
+

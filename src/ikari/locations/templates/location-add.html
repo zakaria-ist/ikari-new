@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+{% endblock %}
+
+{#{% block title %}Add Location{% endblock %}#}
+{#{% block location_active %}active{% endblock %}#}
+{#{% block inv_setting_a_active %}active{% endblock %}#}
+{#{% block inv_setting_i_active %}active{% endblock %}#}
+
+{% block title %}Add Location{% endblock %}
+{% block ics_a_active %}active{% endblock %}
+{% block location_active %}active{% endblock %}
+{% block inv_setting_a_active %}active{% endblock %}
+{% block inv_setting_i_active %}active{% endblock %}
+
+
+{% block content %}
+    {% if messages_error %}
+        <div class="text-center alert alert-danger"><strong>{{ messages_error }}</strong></div>{% endif %}
+    <form class="form-horizontal" action="{% url 'location_add' %}" role="form" method="post" onsubmit="return checkForm(this);"
+          enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="col-lg-12">
+            <section class="panel">
+                <header class="panel-heading">
+                    <strong>Location Info</strong>
+                </header>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label for="code" class="col-lg-2 col-sm-2 control-label">Location Code<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="code" name="code" required>
+                        </div>
+                        <label for="pricing_type" class="col-lg-2 col-sm-2 control-label">Pricing Type</label>
+                        <div class="col-lg-2">
+                            <input type="number" class="form-control" id="pricing_type" name="pricing_type">
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Location Name<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="name" name="name">
+                        </div>
+                        <label for="stock_class" class="col-lg-2 col-sm-2 control-label">Stock Class</label>
+                        <div class="col-lg-2">
+                            <select name="stock_class" class="form-control" id="stock_class">
+                                <option value="1">Internal Stock</option>
+                                <option value="2">External Stock</option>
+                            </select>
+
+
+
+{#                            <div class="input-group">#}
+{#                                <span class="input-group-addon">#}
+{#                                <input name="stock_class" value="1" id="radio-1" type="radio" checked>Internal Stock#}
+{#                                </span>#}
+{#                                <span class="input-group-addon">#}
+{#                                <input name="stock_class" value="2" id="radio-2" type="radio">External Stock#}
+{#                                </span>#}
+{#                            </div>#}
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+
+                        <label for="address" class="col-lg-2 col-sm-2 control-label">Address</label>
+                        <div class="col-lg-4">
+                            <textarea class="form-control" rows="3" id="address" name="address"></textarea>
+                        </div>
+                        <div>
+                            <label for="stock_limit" class="col-lg-2 col-sm-2 control-label">Stock Limit</label>
+                            <div class="col-lg-4" style="margin-bottom: 12px; padding-left: 0px; padding-right: 0px;">
+                                <div class="col-lg-6">
+                                    <input type="number" step="0.01" class="form-control" id="stock_limit"
+                                           name="stock_limit">
+                                </div>
+                                <div class="col-lg-2" style="vertical-align: middle; line-height: 32px;">
+                                    <label><b>({{ currency.code|default_if_none:"" }})</b></label>
+                                </div>
+                            </div>
+                            <label for="stock_take_flag"
+                                   class="col-lg-2 col-sm-2 control-label">Stock Take Flag</label>
+                            <div class="col-lg-2">
+                                <input type="text" class="form-control" id="stock_take_flag" name="stock_take_flag">
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="attention" class="col-lg-2 col-sm-2 control-label">Attention To</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="attention" name="attention">
+                        </div>
+                        <label for="stock_take_date" class="col-lg-2 col-sm-2 control-label">Last Stock Take</label>
+                        <div class="col-lg-4">
+{#                            <input class="form-control form-control-inline input-medium default-date-picker"#}
+{#                                   size="16"#}
+{#                                   type="text" name="stock_take_date" id="stock_take_date"/>#}
+                            <input class="form-control form-control-inline input-medium"
+                                   size="16"
+                                   type="text" name="stock_take_date" id="stock_take_date"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone" class="col-lg-2 col-sm-2 control-label">Telephone No.</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="phone" name="phone">
+                        </div>
+                        <label class="col-lg-2 col-sm-2 control-label">Last Update</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" disabled="true">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="fax" class="col-lg-2 col-sm-2 control-label">Fax No.</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="fax" name="fax">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-lg-12" style="text-align: center">
+                            <button type="submit" name="btnSave" class="btn btn-success" onclick="updateForm()">Save</button>
+                            <a class="btn btn-default" href="{% url 'location_list' %}">Cancel</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </form>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script type="application/javascript" src="{% static 'js/ga.js' %}?{% now 'H' %}"></script>
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+        function updateForm() {
+            $('#stock_take_date').val($('#stock_take_date').val().split('-').reverse().join('-'));
+        }
+        $(document).on('keyup', '.select2-selection.select2-selection--single', function (e) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if(keycode == '9'){
+                $(this).closest(".select2-container").siblings('select:enabled').select2('open');
+            }
+        });
+        $(document).ready(function () {
+            $('#code').focus();
+            $('#stock_class').select2();
+
+            $('#stock_take_date').bind('keyup', function (event) {
+                adjust_input_date(this);
+            });
+            $('#stock_take_date').on('change', function (e) {
+                var date_from = get_date_from('#' + e.target.id);
+                date_from = date_from.split('/').join('-');
+                var date_from_valid = moment(date_from, "DD-MM-YYYY", true).isValid();
+
+                if (!date_from_valid) {
+                    pop_ok_dialog("Invalid Date",
+                        "Date (" + $('#' + e.target.id).val() + ") is invalid !",
+                        function () {
+                            $('#stock_take_date').val('');
+                            $('#stock_take_date').focus();
+                        });
+
+                }
+            });
+        })
+
+        $('#stock_class').on('select2:close', function (e)
+        {
+            $('#address').focus();
+        });
+        {#$(document).on('keydown', '#name', function (e) {#}
+        {#    var keycode = (e.keyCode ? e.keyCode : e.which);#}
+        {#    if(keycode == '9'){#}
+        {#        $('#radio-1').focus();#}
+        {#    }#}
+        {#});#}
+        {##}
+        {#$(document).on('keydown', '#radio-1', function (e) {#}
+        {#    var keycode = (e.keyCode ? e.keyCode : e.which);#}
+        {#    if(keycode == '9'){#}
+        {#        $('#radio-2').focus();#}
+        {#    }#}
+        {#});#}
+    </script>
+{% endblock %}

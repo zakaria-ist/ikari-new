@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <style>
+        .hide_column {
+            display: none;
+        }
+    </style>
+{% endblock %}
+
+
+{#{% block item_active %}active{% endblock %}#}
+{#{% block inv_setting_a_active %}active{% endblock %}#}
+{#{% block inv_setting_i_active %}active{% endblock %}#}
+
+{% block title %}{% if supplieritem.id == None %}
+    Add Supplier Item {% else %} Edit Supplier Item {% endif %}{% endblock %}
+{% block item_active %}active{% endblock %}
+{% block ics_a_active %}active{% endblock %}
+{% block inv_setting_a_active %}active{% endblock %}
+{% block inv_setting_i_active %}active{% endblock %}
+
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                {% if supplieritem.id == None %} Add Supplier Item
+                {% else %} Edit Supplier Item {% endif %}
+            </header>
+            <div class="panel-body">
+                {% if messages_error %}
+                    <div class="text-center alert alert-danger"><strong>{{ messages_error }}</strong></div>{% endif %}
+                <form class="form-horizontal"
+                        {% if supplieritem.id == None %} action="{% url 'supplieritem_add' item_id %}"
+                        {% else %} action="{% url 'supplieritem_edit' supplieritem.id %}" {% endif %}
+                      role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label for="customer" class="col-lg-2 col-sm-2 control-label">Supplier Code<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" id="supplier_code" name="supplier_code"
+                                    {% if supplier.id != None %} value="{{ supplier.code }}" {% endif %} required>
+                            <input type="hidden" id="hdSupplierSelected" name="hdSupplierSelected"
+                                    {% if supplier.id != None %} value="{{ supplier.id }}" {% endif %}>
+                        </div>
+                        <div class="col-lg-4">
+{#                            <a data-toggle="modal" href="#mySupplierListModal"#}
+{#                               class="btn btn-white fa fa-search">Search</a>#}
+                            <button tabindex="-1" type="button" class="btn btn-info" data-toggle="modal" href="#mySupplierListModal"><i class="fa fa-search"></i></button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="customer" class="col-lg-2 col-sm-2 control-label">Supplier Name<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-4">
+                            <input type="text" tabindex="-1" class="form-control" id="supplier_name" name="supplier_name"
+                                    {% if supplier.id != None %} value="{{ supplier.name }}" {% endif %}
+                                   readonly required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="customer" class="col-lg-2 col-sm-2 control-label">Purchase Currency<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-4">
+                            {{ form.currency }}
+                            <span class="messages">{{ form.errors.currency }}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="purchase_price" class="col-lg-2 col-sm-2 control-label">Purchase Price<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-4">
+                            {{ form.purchase_price|default_if_none:"" }}
+                        </div>
+                        <span class="messages">{{ form.errors.purchase_price }}</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="leading_days" class="control-label col-md-2">Lead Time</label>
+                        <div class="col-md-4">
+                            {{ form.leading_days|default_if_none:"" }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="effective_date" class="control-label col-md-2">Effective Date</label>
+                        <div class="col-md-4">
+                            {{ form.effective_date|default_if_none:"" }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputPassword1" class="col-lg-2 col-sm-2 control-label"></label>
+                        <div class="col-lg-10">
+                            <div class="checkbox checkbox-primary">
+                                <input name="is_active" id="is_active" class="styled" type="checkbox" checked/>
+                                <label for="is_active">
+                                    Active
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" name="btnSave" class="btn btn-success" onclick="fixDate()">Save</button>
+                            {% if 'suppliers.delete_supplieritem' in user.get_all_permissions %}
+                                <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger"
+                                   {% if supplieritem.id == None %}style="display: none"{% endif %}>Delete</a>
+                            {% endif %}
+                            {% if item_id %}
+                                <a class="btn btn-default" href="{% url 'item_edit' item_id 2 %}">Cancel</a> {# ITEM_TABS['Item'] #}
+                            {% else %}
+                                <a class="btn btn-default"
+                                   href="{% url 'item_edit' supplieritem.item_id 2 %}">Cancel</a> {# ITEM_TABS['Item'] #}
+                            {% endif %}
+                        </div>
+                    </div>
+                </form>
+            </div>
+            {% if supplieritem.id != None %}
+                <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+                     class="modal fade">
+                    <div class="modal-dialog modal-sm">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                                <h4 class="modal-title">Delete Confirm Dialog</h4>
+                            </div>
+                            <div class="modal-body">
+                                <form role="form" action="{% url 'supplieritem_delete' supplieritem.id %}"
+                                      method="post">
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-success">OK</button>
+                                    <a class="btn btn-default"
+                                       href="{% url 'supplieritem_edit' supplieritem.id %}">Cancel</a>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            <div class="modal fade" id="mySupplierListModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"
+                                    aria-hidden="true">&times;</button>
+                            <h4 class="modal-title">Search Supplier</h4>
+                        </div>
+                        <div class="modal-body" style="padding-bottom: 10px!important;">
+                            <div class="form-group">
+                                <section class="panel" style="margin-top: 10px!important;">
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <div class="panel-body"
+                                                 style="padding: 0px!important; font-size: 12.5px !important;">
+                                                <div class="adv-table">
+                                                    <table id="supplier-table" style="width: 100% !important;"
+                                                           class="display table table-bordered table-striped table-condensed">
+                                                        <thead>
+                                                        <tr>
+                                                            <th>Supplier Code</th>
+                                                            <th>Supplier Name</th>
+                                                            <th>Country</th>
+                                                            <th>Currency</th>
+                                                            <th class="hide_column"></th>
+                                                        </tr>
+                                                        </thead>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+
+                            </div>
+                            <div class="modal-footer">
+                                <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                                <button class="btn btn-success" type="button" id="btnSupplierSelect">Select</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+        var eff_date = $('#id_effective_date').val().split('-').reverse().join('-');
+        $('#id_effective_date').val(eff_date);
+        function fixDate() {
+            var eff_date = $('#id_effective_date').val().split('-').reverse().join('-');
+            $('#id_effective_date').val(eff_date);
+        }
+        jQuery(document).ready(function ($) {
+            $('#id_currency').select2();
+            $('#supplier_code').focus();
+            $(document).on('keyup', '.select2-selection.select2-selection--single', function (e) {
+                var keycode = (e.keyCode ? e.keyCode : e.which);
+                if(keycode == '9'){
+                    $(this).closest(".select2-container").siblings('select:enabled').select2('open');
+                }
+            });
+            $('#id_currency').on('select2:close', function (e)
+            {
+                $('#id_purchase_price').focus();
+            });
+
+            {#$('option:not(:selected)').attr('disabled', true);#}
+            {#$('form input').on('keypress', function (e) {#}
+            {#    return e.which !== 13;#}
+            {#});#}
+
+            $('#supplier_code').on('keypress', function (e) {
+                if (e.which === 13) {
+                    var supplier_code = $('#supplier_code').val();
+                    $.ajax({
+                        method: "POST",
+                        url: '/items/get_supplier_info/',
+                        dataType: 'JSON',
+                        data: {
+                            'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val(),
+                            'supplier_code': supplier_code,
+                            'item_id': {{ item.id }},
+                        },
+                        responseTime: 200,
+                        response: function (settings) {
+                            if (settings.data.value) {
+                                this.responseText = '{"success": true}';
+                            } else {
+                                this.responseText = '{"success": false, "msg": "required"}';
+                            }
+                        },
+                        success: function (json) {
+                            $('#hdSupplierSelected').val(json['id']);
+                            $('#supplier_code').val(json['code']);
+                            $('#supplier_name').val(json['name']);
+                            if (json['purchase_price'] != '0') {
+                                $('#id_purchase_price').val(json['purchase_price']);
+                            }
+                            else {
+                                $('#id_purchase_price').val(0);
+                                {% if item.purchase_price != None %}
+                                    $('#id_purchase_price').val({{ item.purchase_price }});
+                                {% endif %}
+                            }
+
+                            $('option').attr('disabled', false);
+                            $('#id_currency').find('option:selected').removeAttr('selected');
+                            $('#id_currency option[value=' + json['currency_id'] + ']').attr('selected', 'selected');
+                            $('#id_currency').val(json['currency_id']);
+                            $('option:not(:selected)').attr('disabled', true);
+                        }
+                    });
+                }
+            });
+            $('#btnSupplierSelect').on('click', function () {
+
+                var currency_select_id = $("input[name='choices']:checked").val();
+                var customer_select_id = $("input[name='choices']:checked").attr('id');
+                var nRow = $("input[name='choices']:checked").parents('tr')[0];
+                var jqInputs = $('td', nRow);
+
+                $('#hdSupplierSelected').val(customer_select_id);
+                $('#supplier_code').val(jqInputs[0].innerText);
+                $('#supplier_name').val(jqInputs[1].innerText);
+                $('#id_purchase_price').val(0);
+                {% if item.purchase_price != None %}
+                    $('#id_purchase_price').val({{ item.purchase_price }});
+                {% endif %}
+
+                $('option').attr('disabled', false);
+                //$('#id_currency').find('option:selected').removeAttr('selected');
+                //$('#id_currency option[value=' + currency_select_id + ']').attr('selected', 'selected');
+                $('#id_currency').val(currency_select_id).trigger('change');
+                $('option:not(:selected)').attr('disabled', true);
+
+                $.ajax({
+                    method: "POST",
+                    url: '/items/get_supplier_info/',
+                    dataType: 'JSON',
+                    data: {
+                        'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val(),
+                        'supplier_code': jqInputs[0].innerText,
+                        'item_id': {{ item.id }},
+                    },
+                    responseTime: 200,
+                    success: function (json) {
+                        if (json['purchase_price'] != '0' && json['purchase_price'] != '') {
+                            $('#id_purchase_price').val(json['purchase_price']);
+                        }
+                        else {
+                            $('#id_purchase_price').val(0);
+                            {% if item.purchase_price != None %}
+                                $('#id_purchase_price').val({{ item.purchase_price }});
+                            {% endif %}
+                        }
+                    }
+                });
+
+                $(this).attr('data-dismiss', 'modal');
+            });
+
+            $('#supplier-table').dataTable({
+                "order": [[0, "desc"]],
+                "bLengthChange": false,
+                "iDisplayLength": 5,
+                "serverSide": true,
+                "ajax": {
+                    "url": "{% url 'ItemSupplierList__asJson' %}",
+                    "type": 'POST',
+                    "data": {
+                        'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val(),
+                    },
+                },
+                "columns": [
+                    {"data": "code", "sClass": "text-left"},
+                    {"data": "name", "sClass": "text-left"},
+                    {"data": "country_code", "sClass": "text-left"},
+                    {"data": "currency_code", "sClass": "text-left"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "sClass": "hide_column",
+                        "render": function (data, type, full, meta) {
+                            var button_edit = '<input type="radio" name="choices" id="' + full.id + '" class="call-checkbox" value="' + full.currency_id + '">';
+                            return button_edit;
+                        }
+                    }
+                ]
+            });
+
+            $('#supplier-table').on( 'draw.dt', function () {
+                selectTableRow('#supplier-table', 4);
+                $("input[type='radio']").each(function () {
+                    $(this).closest('tr').css('background-color', '#f9f9f9');
+                });
+            });
+
+        });
+    </script>
+{% endblock %}

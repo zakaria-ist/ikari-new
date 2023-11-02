@@ -1,0 +1,1449 @@
+    {% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/css/bootstrap-datepicker3.css"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+    <style type="text/css">
+      .datepicker {
+        display: none !important
+      }
+    </style>
+{% endblock %}
+
+{% block title %}Report View{% endblock %}
+{% block order_report_active %}active{% endblock %}
+{% block parent_order_a_active %}active{% endblock %}
+{% block parent_order_i_active %}active{% endblock %}
+
+{% block rp_order_issued_report_block %}{% if category_id == '66' %}active{% endif %}{% endblock %}
+
+{% block rp_delivery_schedule_block %}{% if category_id == '50' %}active{% endif %}{% endblock %}
+
+{% block rp_goods_receive_block %}{% if category_id == '3' %}active{% endif %}{% endblock %}
+
+{% block rp_listing_block %}{% if category_id == '4' %}active{% endif %}{% endblock %}
+
+{% block rp_monthly_gross_profit_block %} {% if category_id == '5' %}active{% endif %}{% endblock %}
+
+{% block rp_monthly_purchase_preports_block %}{% if category_id == '7' %}active{% endif %}{% endblock %}
+
+{% block rp_monthly_sales_preports_block %}{% if category_id == '6' %}active{% endif %}{% endblock %}
+
+{% block rp_order_entry_check_list_block %}{% if category_id == '56' %}active{% endif %}{% endblock %}
+
+{% block rp_outstanding_po_balance_block %}{% if category_id == '1' %}active{% endif %}{% endblock %}
+
+{% block rp_outstanding_so_balance_block %}{% if category_id == '2' %}active{% endif %}{% endblock %}
+
+{% block rp_outstanding_stock_balance_block %}{% if category_id == '37' %}active{% endif %}{% endblock %}
+
+{% block rp_po_good_receive_matching_block %}{% if category_id == '53' %}active{% endif %}{% endblock %}
+
+{% block rp_so_good_receive_matching_block %}{% if category_id == '62' %}active{% endif %}{% endblock %}
+
+{% block rp_sales_analysis_block %}{% if category_id == '8' %}active{% endif %}{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-3">
+            <section class="panel" id="secReportList">
+                <header class="panel-heading">
+                    Reports
+                </header>
+                <div class="panel-body form-horizontal">
+                    <form class="form-horizontal" action="" role="form" method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <input type="hidden" id="hdReportId">
+                            <label class="control-label col-md-12">Report List</label>
+                            <div class="col-md-12">
+                                <select class="form-control" id="report_list" name="report_list">
+                                    {% for report in report_list %}
+                                        <option value="{{ report.code }}">
+                                            {{ report.code }} - {{ report.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </section>
+            <section class="panel" id="secFilterCondition">
+                <header class="panel-heading">
+                    Filter Conditions
+                </header>
+                <div class="panel-body form-horizontal">
+
+                    <div id="divCurrentMonth"
+                         class="form-group filter divSR8700 divSR8700_1 divSR8701 divGL2200"
+                         style="display: none">
+                        <label class="control-label col-md-12">Issued Month</label>
+                        <div class="col-md-12">
+                            <div id="sandbox-container">
+                                <input id="divCurrentMonthCL2200" tabindex="1" type="text" class="form-control month-date-picker" value="">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="divSR8600"
+                         class="form-group filter divSR8600 divSR8601 divSR8602 divSR8603"
+                         style="display: none">
+                        <label class="control-label col-md-12">Invoice Month From</label>
+                        <div class="col-md-12">
+                            <div id="sandbox-container">
+                                <input id="inputFromSR8600" tabindex="1" type="text" class="form-control month-date-picker" value="">
+                            </div>
+                        </div>
+                        <label class="control-label col-md-12">Invoice Month To</label>
+                        <div class="col-md-12">
+                            <div id="sandbox-container">
+                                <input id="inputToSR8600" tabindex="1" type="text" class="form-control month-date-picker" value="">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="divSR7202" class="form-group filter divSR7202">
+                        <label class="control-label col-md-12">Wanted Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_fromSR7202" name="date_fromSR7202"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Wanted Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_toSR7202" name="date_toSR7202"
+                                    type="text" value=""/>
+                        </div>
+                        <label for="lbSR7202Supplier" class="control-label col-md-12">From Supplier No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7202Supplier }}
+                        </div>
+                        <label for="lbSR7202ToSupplier" class="control-label col-md-12">To Supplier No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7202ToSupplier }}
+                        </div>
+                    </div>
+
+                    <div id="divSR8801" class="form-group filter divSR8801">
+                        <label class="control-label col-md-12">Receive Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_fromSR8801" name="date_fromSR8801"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Receive Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_toSR8801" name="date_toSR8801"
+                                    type="text" value=""/>
+                        </div>
+                        <label for="lbSR8801Supplier" class="control-label col-md-12">From Supplier No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR8801Supplier }}
+                        </div>
+                        <label for="lbSR8801ToSupplier" class="control-label col-md-12">To Supplier No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR8801ToSupplier }}
+                        </div>
+                    </div>
+
+                    <div id="divSL330" class="form-group filter divSL3300 divSL3301">
+                        <label class="control-label col-md-12">Issue Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_fromSL330" name="date_fromSL330"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Issue Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_toSL330" name="date_toSL330"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">From Document No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSL330Document }}
+                        </div>
+                        <label class="control-label col-md-12">To Document No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSL330ToDocument }}
+                        </div>
+                        <label class="control-label col-md-12">From Customer</label>
+                        <div class="col-md-11">
+                            {{ form.lbSL330CCustomer }}
+                        </div>
+                        <label class="control-label col-md-12">To Customer</label>
+                        <div class="col-md-11">
+                            {{ form.lbSL330ToCCustomer }}
+                        </div>
+                        <div id="SL330_customer_po_select">
+                            <label class="control-label col-md-12">From Cust. Po</label>
+                            <div class="col-md-11">
+                                {{ form.lbSL330Cutomer }}
+                            </div>
+                            <label class="control-label col-md-12">To Cust. Po</label>
+                            <div class="col-md-11">
+                                {{ form.lbSL330ToCutomer }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="divSL3A0" class="form-group filter divSL3A00 divSL3A01">
+                        <label class="control-label col-md-12">Issue Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_fromSL3A0" name="date_fromSL3A0"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Issue Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_toSL3A0" name="date_toSL3A0"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">From Document No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSL3A0Document }}
+                        </div>
+                        <label class="control-label col-md-12">To Document No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSL3A0ToDocument }}
+                        </div>
+                        <label class="control-label col-md-12">From Supplier</label>
+                        <div class="col-md-11">
+                            {{ form.lbSL3A0Supplier }}
+                        </div>
+                        <label class="control-label col-md-12">To Supplier</label>
+                        <div class="col-md-11">
+                            {{ form.lbSL3A0ToSupplier }}
+                        </div>
+                        <div id="SL3A0_customer_po_select">
+                            <label class="control-label col-md-12">From Cust. Po</label>
+                            <div class="col-md-11">
+                                {{ form.lbSL3A0Cutomer }}
+                            </div>
+                            <label class="control-label col-md-12">To Cust. Po</label>
+                            <div class="col-md-11">
+                                {{ form.lbSL3A0ToCutomer }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="divSR7201" class="form-group filter divSR7201">
+                        <label class="control-label col-md-12">Wanted Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_fromSR7201" name="date_fromSR7201"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Wanted Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_toSR7201" name="date_toSR7201"
+                                    type="text" value=""/>
+                        </div>
+                        <label for="lbSR7201Document" class="control-label col-md-12">From Document No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7201Document }}
+                        </div>
+                        <label for="lbSR7201ToDocument" class="control-label col-md-12">To Document No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7201ToDocument }}
+                        </div>
+                    </div>
+
+                    <div id="divSR7203" class="form-group filter divSR7203">
+                        <label class="control-label col-md-12">Wanted Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_fromSR7203" name="date_fromSR7203"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Wanted Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_toSR7203" name="date_toSR7203"
+                                    type="text" value=""/>
+                        </div>
+                        <label for="lbSR7203Supplier" class="control-label col-md-12">From Supplier No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7203Supplier }}
+                        </div>
+                        <label for="lbSR7203ToSupplier" class="control-label col-md-12">To Supplier No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7203ToSupplier }}
+                        </div>
+                        <label for="lbSR7203Cutomer" class="control-label col-md-12">From Customer Po</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7203Cutomer }}
+                        </div>
+                        <label for="lbSR7203ToCutomer" class="control-label col-md-12">To Customer Po</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7203ToCutomer }}
+                        </div>
+                    </div>
+
+                    <div id="divSR8301" class="form-group filter divSR8301">
+                        <label class="control-label col-md-12">Issue Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_fromSR8301" name="date_fromSR8301"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Issue Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_toSR8301" name="date_toSR8301"
+                                    type="text" value=""/>
+                        </div>
+                        <label for="lbSR8301Supplier" class="control-label col-md-12">From Supplier No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR8301Supplier }}
+                        </div>
+                        <label for="lbSR8301ToSupplier" class="control-label col-md-12">To Supplier No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR8301ToSupplier }}
+                        </div>
+                        <label for="lbSR8301Cutomer" class="control-label col-md-12">From Customer Po</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR8301Cutomer }}
+                        </div>
+                        <label for="lbSR8301ToCutomer" class="control-label col-md-12">To Customer Po</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR8301ToCutomer }}
+                        </div>
+                    </div>
+
+                    <div id="divSR7204" class="form-group filter divSR7204">
+                        <label class="control-label col-md-12">Wanted Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_fromSR7204" name="date_fromSR7204"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Wanted Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_toSR7204" name="date_toSR7204"
+                                    type="text" value=""/>
+                        </div>
+                        <label for="lbSR7204Supplier" class="control-label col-md-12">From Supplier No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7204Supplier }}
+                        </div>
+                        <label for="lbSR7204ToSupplier" class="control-label col-md-12">To Supplier No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7204ToSupplier }}
+                        </div>
+                        <label for="lbSR7204PartNo" class="control-label col-md-12">From Part No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7204PartNo }}
+                        </div>
+                        <label for="lbSR7204ToPartNo" class="control-label col-md-12">To Part No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7204ToPartNo }}
+                        </div>
+                    </div>
+
+                    <div id="divSR7205" class="form-group filter divSR7205 ">
+                        <label class="control-label col-md-12">Delivery Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_fromSR7205" name="date_fromSR7205"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Delivery Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_toSR7205" name="date_toSR7205"
+                                    type="text" value=""/>
+                        </div>
+                        <label for="lbSR7205Supplier" class="control-label col-md-12">From Supplier No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7205Supplier }}
+                        </div>
+                        <label for="lbSR7205ToSupplier" class="control-label col-md-12">To Supplier No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7205ToSupplier }}
+                        </div>
+                        <label for="lbSR7205PartNo" class="control-label col-md-12">From Part No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7205PartNo }}
+                        </div>
+                        <label for="lbSR7205ToPartNo" class="control-label col-md-12">To Part No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7205ToPartNo }}
+                        </div>
+                    </div>
+
+                    <div id="divSR7404" class="form-group filter divSR7404">
+                        <label class="control-label col-md-12">Wanted Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_fromSR7404" name="date_fromSR7404"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Wanted Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_toSR7404" name="date_toSR7404"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">From Customer Code</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7404Customer }}
+                        </div>
+                        <label class="control-label col-md-12">To Customer Code</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7404ToCustomer }}
+                        </div>
+                        <label class="control-label col-md-12">From Part No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7404PartNo }}
+                        </div>
+                        <label class="control-label col-md-12">To Part No</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7404ToPartNo }}
+                        </div>
+                        <label class="control-label col-md-12">From Part Grp</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7404PartGrp }}
+                        </div>
+                        <label class="control-label col-md-12">To Part Grp</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7404ToPartGrp }}
+                        </div>
+                    </div>
+
+                    <div id="divSR7102" class="form-group filter divSR7102">
+                        <label class="control-label col-md-12">Issue Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_fromSR7102" name="date_fromSR7102"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Issue Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_toSR7102" name="date_toSR7102"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">From Part Group</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7102PartGrp }}
+                        </div>
+                        <label class="control-label col-md-12">To Part Group</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7102ToPartGrp }}
+                        </div>
+                    </div>
+
+                    <div id="divSR8500" class="form-group filter divSR8500">
+                        <label class="control-label col-md-12">Wanted Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_fromSR8500" name="date_fromSR8500"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Wanted Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_toSR8500" name="date_toSR8500"
+                                    type="text" value=""/>
+                        </div>
+                        <label for="sr8500Location" class="control-label col-md-12">Location</label>
+                        <div class="col-md-12">
+                            {{ form.sr8500Location }}
+                        </div>
+                        <label class="control-label col-md-12">From Part No</label>
+                        <div class="col-md-12">
+                            {{ form.sr8500PartNo }}
+                        </div>
+                        <label class="control-label col-md-12">To Part No</label>
+                        <div class="col-md-12">
+                            {{ form.sr8500ToPartNo }}
+                        </div>
+                    </div>
+
+                    <div id="sales_analysis" class="form-group filter divSR7101 divSR7103">
+                        <label class="control-label col-md-12">Issue Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_fromSA" name="date_fromSA"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Issue Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_toSA" name="date_toSA"
+                                    type="text" value=""/>
+                        </div>
+                        <div id="sa_customer_div">
+                            <label class="control-label col-md-12">From Customer</label>
+                            <div class="col-md-11">
+                                {{ form.fromSACustomer }}
+                            </div>
+                            <label class="control-label col-md-12">To Customer</label>
+                            <div class="col-md-11">
+                                {{ form.toSACustomer }}
+                            </div>
+                        </div>
+                        <label class="control-label col-md-12">From Customer PO</label>
+                        <div class="col-md-11">
+                            {{ form.fromSACustomerPo }}
+                        </div>
+                        <label class="control-label col-md-12">To Customer PO</label>
+                        <div class="col-md-11">
+                            {{ form.toSACustomerPo }}
+                        </div>
+                        <label class="control-label col-md-12">From Part No</label>
+                        <div class="col-md-11">
+                            {{ form.fromSAPartNo }}
+                        </div>
+                        <label class="control-label col-md-12">To Part No</label>
+                        <div class="col-md-11">
+                            {{ form.toSAPartNo }}
+                        </div>
+                        {% comment %} <label class="control-label col-md-12">Print Selection</label>
+                        <div class="col-md-12">
+                            <input type="radio" name="sa_print_selection" value="A" checked> All<br>
+                            <input type="radio" name="sa_print_selection" value="Y"> Confirm<br>
+                            <input type="radio" name="sa_print_selection" value="N"> Not Confirm<br>
+                        </div> {% endcomment %}
+                    </div>
+
+                    <div id="divDateFromTo" class="form-group filter divSR7405 divSR7402 divSR8800">
+                        <label id="SR8800_label_from" class="control-label col-md-12">Wanted Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_fromSR7402" name="date_fromSR7402"
+                                    type="text" value=""/>
+                        </div>
+                        <label id="SR8800_label_to" class="control-label col-md-12">Wanted Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_toSR7402" name="date_toSR7402"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">From Customer</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7402Customer }}
+                        </div>
+                        <label class="control-label col-md-12">To Customer</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7402ToCustomer }}
+                        </div>
+                    </div>
+
+                    <div id="divSR7403" class="form-group filter divSR7403">
+                        <label class="control-label col-md-12">Wanted Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_fromSR7403" name="date_fromSR7403"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Wanted Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_toSR7403" name="date_toSR7403"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">From Customer</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7403Customer }}
+                        </div>
+                        <label class="control-label col-md-12">To Customer</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7403ToCustomer }}
+                        </div>
+                        <label class="control-label col-md-12">From Supplier</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7403Supplier }}
+                        </div>
+                        <label class="control-label col-md-12">To Supplier</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR7403ToSupplier }}
+                        </div>
+                    </div>
+
+                    <div id="divDateFromTo" class="form-group filter divSR8300 divSR8400">
+                        <label class="control-label col-md-12">Issue Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_fromSR834" name="date_fromSR834"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Issue Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_toSR834" name="date_toSR834"
+                                    type="text" value=""/>
+                        </div>
+                        <div id="SR8400_customer_select">
+                            <label class="control-label col-md-12">From Customer Code</label>
+                            <div class="col-md-11">
+                                {{ form.lbSR8400Customer }}
+                            </div>
+                            <label class="control-label col-md-12">To Customer Code</label>
+                            <div class="col-md-11">
+                                {{ form.lbSR8400ToCustomer }}
+                            </div>
+                        </div>
+                        <div id="SR8300_supplier_select">
+                            <label class="control-label col-md-12">From Supplier Code</label>
+                            <div class="col-md-11">
+                                {{ form.lbSR8300Supplier }}
+                            </div>
+                            <label class="control-label col-md-12">To Supplier Code</label>
+                            <div class="col-md-11">
+                                {{ form.lbSR8300ToSupplier }}
+                            </div>
+                        </div>
+                        <label class="control-label col-md-12">From Document Number</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR834Document }}
+                        </div>
+                        <label class="control-label col-md-12">To Document Number</label>
+                        <div class="col-md-11">
+                            {{ form.lbSR834ToDocument }}
+                        </div>
+                    </div>
+
+                    <div id="divSupplierFilter" class="form-group filter divCL2400" style="display: none">
+                        <label class="control-label col-md-12">From Supplier</label>
+                        <div class="col-md-12">
+                            {{ form.lbCL2400Supplier }}
+                        </div>
+                        <label class="control-label col-md-12">To Supplier</label>
+                        <div class="col-md-12">
+                            {{ form.lbCL2400ToSupplier }}
+                        </div>
+                    </div>
+
+                    <div id="divCustomerFilter" class="form-group filter divDL2400" style="display: none">
+                        <label class="control-label col-md-12">From Customer</label>
+                        <div class="col-md-12">
+                            {{ form.lbDL2400Supplier }}
+                        </div>
+                        <label class="control-label col-md-12">To Customer</label>
+                        <div class="col-md-12">
+                            {{ form.lbDL2400ToSupplier }}
+                        </div>
+                    </div>
+
+                    <div id="divPurchasePriceFilter" class="form-group filter divSL2100" style="display: none">
+                        <label class="control-label col-md-12">From Part No</label>
+                        <div class="col-md-12">
+                            <select name="sl2100_part_no" id='sl2100_part_no' class="form-control">
+                                <option value="">Select Part No</option>
+                                {% for part in part_list %}
+                                <option value="{{ part.0 }}">{{ part.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">To Part No</label>
+                        <div class="col-md-12">
+                            <select name="sl2100_part_no_to" id='sl2100_part_no_to' class="form-control">
+                                <option value="">Select Part No</option>
+                                {% for part in part_list %}
+                                <option value="{{ part.0 }}">{{ part.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">From Part Grp</label>
+                        <div class="col-md-12">
+                            <select name="sl2100_part_grp" id='sl2100_part_grp' class="form-control">
+                                <option value="">Select Part Grp</option>
+                                {% for part in part_group_list %}
+                                <option value="{{ part.0 }}">{{ part.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">To Part Grp</label>
+                        <div class="col-md-12">
+                            <select name="sl2100_part_grp_to" id='sl2100_part_grp_to' class="form-control">
+                                <option value="">Select Part Grp</option>
+                                {% for part in part_group_list %}
+                                <option value="{{ part.0 }}">{{ part.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">From Supplier</label>
+                        <div class="col-md-12">
+                            <select name="sl2100_supplier" id='sl2100_supplier' class="form-control">
+                                <option value="">Select Supplier</option>
+                                {% for part in supplier_list %}
+                                <option value="{{ part.0 }}">{{ part.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">To Supplier</label>
+                        <div class="col-md-12">
+                            <select name="sl2100_supplier_to" id='sl2100_supplier_to' class="form-control">
+                                <option value="">Select Supplier</option>
+                                {% for part in supplier_list %}
+                                <option value="{{ part.0 }}">{{ part.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="divPurchasePriceFilter" class="form-group filter divSL2200" style="display: none">
+                        <label class="control-label col-md-12">From Part No</label>
+                        <div class="col-md-12">
+                            <select name="sl2200_part_no" id='sl2200_part_no' class="form-control">
+                                <option value="">Select Part No</option>
+                                {% for part in part_list %}
+                                <option value="{{ part.0 }}">{{ part.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">To Part No</label>
+                        <div class="col-md-12">
+                            <select name="sl2200_part_no_to" id='sl2200_part_no_to' class="form-control">
+                                <option value="">Select Part No</option>
+                                {% for part in part_list %}
+                                <option value="{{ part.0 }}">{{ part.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">From Part Grp</label>
+                        <div class="col-md-12">
+                            <select name="sl2200_part_grp" id='sl2200_part_grp' class="form-control">
+                                <option value="">Select Part Grp</option>
+                                {% for part in part_group_list %}
+                                <option value="{{ part.0 }}">{{ part.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">To Part Grp</label>
+                        <div class="col-md-12">
+                            <select name="sl2200_part_grp_to" id='sl2200_part_grp_to' class="form-control">
+                                <option value="">Select Part Grp</option>
+                                {% for part in part_group_list %}
+                                <option value="{{ part.0 }}">{{ part.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">From Customer</label>
+                        <div class="col-md-12">
+                            <select name="sl2200_customer" id='sl2200_customer' class="form-control">
+                                <option value="">Select Customer</option>
+                                {% for part in customer_list %}
+                                <option value="{{ part.0 }}">{{ part.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">To Customer</label>
+                        <div class="col-md-12">
+                            <select name="sl2200_customer_to" id='sl2200_customer_to' class="form-control">
+                                <option value="">Select Customer</option>
+                                {% for part in customer_list %}
+                                <option value="{{ part.0 }}">{{ part.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="divPurchasePriceFilter" class="form-group filter divSL2201" style="display: none">
+                        <label class="control-label col-md-12">From Part No</label>
+                        <div class="col-md-12">
+                            <select name="sl2201_part_no" id='sl2201_part_no' class="form-control">
+                                <option value="">Select Part No</option>
+                                {% for part in part_list %}
+                                <option value="{{ part.0 }}">{{ part.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">To Part No</label>
+                        <div class="col-md-12">
+                            <select name="sl2201_part_no_to" id='sl2201_part_no_to' class="form-control">
+                                <option value="">Select Part No</option>
+                                {% for part in part_list %}
+                                <option value="{{ part.0 }}">{{ part.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">From Part Grp</label>
+                        <div class="col-md-12">
+                            <select name="sl2201_part_grp" id='sl2201_part_grp' class="form-control">
+                                <option value="">Select Part Grp</option>
+                                {% for part in part_group_list %}
+                                <option value="{{ part.0 }}">{{ part.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">To Part Grp</label>
+                        <div class="col-md-12">
+                            <select name="sl2201_part_grp_to" id='sl2201_part_grp_to' class="form-control">
+                                <option value="">Select Part Grp</option>
+                                {% for part in part_group_list %}
+                                <option value="{{ part.0 }}">{{ part.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">From Customer</label>
+                        <div class="col-md-12">
+                            <select name="sl2201_customer" id='sl2201_customer' class="form-control">
+                                <option value="">Select Customer</option>
+                                {% for part in customer_list %}
+                                <option value="{{ part.0 }}">{{ part.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">To Customer</label>
+                        <div class="col-md-12">
+                            <select name="sl2201_customer_to" id='sl2201_customer_to' class="form-control">
+                                <option value="">Select Customer</option>
+                                {% for part in customer_list %}
+                                <option value="{{ part.0 }}">{{ part.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">From Supplier</label>
+                        <div class="col-md-12">
+                            <select name="sl2201_supplier" id='sl2201_supplier' class="form-control">
+                                <option value="">Select Supplier</option>
+                                {% for part in supplier_list %}
+                                <option value="{{ part.0 }}">{{ part.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">To Supplier</label>
+                        <div class="col-md-12">
+                            <select name="sl2201_supplier_to" id='sl2201_supplier_to' class="form-control">
+                                <option value="">Select Supplier</option>
+                                {% for part in supplier_list %}
+                                <option value="{{ part.0 }}">{{ part.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="divTL1200" class="form-group filter divTL1200" style="display: none">
+                        <label class="control-label col-md-12">From Tax Code</label>
+                        <div class="col-md-12">
+                            <select name="TL1200_tax_code" id='TL1200_tax_code' class="form-control">
+                                <option value="">Select Tax Code</option>
+                                {% for tax in tax_list %}
+                                <option value="{{ tax.0 }}">{{ tax.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">To Tax Code</label>
+                        <div class="col-md-12">
+                            <select name="TL1200_tax_code_to" id='TL1200_tax_code_to' class="form-control">
+                                <option value="">Select Tax Code</option>
+                                {% for tax in tax_list %}
+                                <option value="{{ tax.0 }}">{{ tax.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="divCL2100" class="form-group filter divCL2100" style="display: none">
+                        <label class="control-label col-md-12">Select Options</label>
+                        <div class="col-md-12">
+                            <select name="CL2100_code" id='CL2100_code' class="form-control">
+                                <option value="country">Country</option>
+                                <option value="currency">Currency</option>
+                                <option value="account">Account Code</option>
+                                <option value="payment">Payment Mode</option>
+                                <option value="cost">Cost Center</option>
+                                <option value="part_group">Part Group</option>
+                                <option value="measurement">Measurement</option>
+                                <option value="tax">Tax Code</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="divSR7603" class="form-group filter divSR7603">
+                        <label class="control-label col-md-12">Issue Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="issue_fromSR7603" name="issue_fromSR7603"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Issue Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="issue_toSR7603" name="issue_toSR7603"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Wanted Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="wanted_fromSR7603" name="wanted_fromSR7603"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Wanted Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="wanted_toSR7603" name="wanted_toSR7603"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">From Customer</label>
+                        <div class="col-md-11">
+                            <select name="SR7603_customer" id='SR7603_customer' class="form-control">
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">To Customer</label>
+                        <div class="col-md-11">
+                            <select name="SR7603_customer_to" id='SR7603_customer_to' class="form-control">
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">From Document No</label>
+                        <div class="col-md-11">
+                            <select name="SR7603_document" id='SR7603_document' class="form-control">
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">To Document No</label>
+                        <div class="col-md-11">
+                            <select name="SR7603_document_to" id='SR7603_document_to' class="form-control">
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">From Cust. PO No</label>
+                        <div class="col-md-11">
+                            <select name="SR7603_customer_po" id='SR7603_customer_po' class="form-control">
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">To Cust. PO No</label>
+                        <div class="col-md-11">
+                            <select name="SR7603_customer_po_to" id='SR7603_customer_po_to' class="form-control">
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">From Part No</label>
+                        <div class="col-md-11">
+                            <select name="SR7603_part_no" id='SR7603_part_no' class="form-control">
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">To Part No</label>
+                        <div class="col-md-11">
+                            <select name="SR7603_part_no_to" id='SR7603_part_no_to' class="form-control">
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">Sort By:</label>
+                        <div class="col-md-11">
+                            <select name="SR7603_sort" id='SR7603_sort' class="form-control">
+                                <option value="customer">Customer Code</option>
+                                <option value="document">Document No</option>
+                                <option value="customer_po">Customer PO No</option>
+                                <option value="part_no">Part No</option>
+                                <option value="wanted_date">Wanted Date</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="divSR7303" class="form-group filter divSR7303">
+                        <label class="control-label col-md-12">Issue Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="issue_fromSR7303" name="issue_fromSR7303"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Issue Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="issue_toSR7303" name="issue_toSR7303"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Wanted Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="wanted_fromSR7303" name="wanted_fromSR7303"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Wanted Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="wanted_toSR7303" name="wanted_toSR7303"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">From Supplier</label>
+                        <div class="col-md-11">
+                            <select name="SR7303_supplier" id='SR7303_supplier' class="form-control">
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">To Supplier</label>
+                        <div class="col-md-11">
+                            <select name="SR7303_supplier_to" id='SR7303_supplier_to' class="form-control">
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">From Document No</label>
+                        <div class="col-md-11">
+                            <select name="SR7303_document" id='SR7303_document' class="form-control">
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">To Document No</label>
+                        <div class="col-md-11">
+                            <select name="SR7303_document_to" id='SR7303_document_to' class="form-control">
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">From Cust. PO</label>
+                        <div class="col-md-11">
+                            <select name="SR7303_customer_po" id='SR7303_customer_po' class="form-control">
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">To Cust. PO</label>
+                        <div class="col-md-11">
+                            <select name="SR7303_customer_po_to" id='SR7303_customer_po_to' class="form-control">
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">From Part No</label>
+                        <div class="col-md-11">
+                            <select name="SR7303_part_no" id='SR7303_part_no' class="form-control">
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">To Part No</label>
+                        <div class="col-md-11">
+                            <select name="SR7303_part_no_to" id='SR7303_part_no_to' class="form-control">
+                            </select>
+                        </div>
+                        <label class="control-label col-md-12">Sort By:</label>
+                        <div class="col-md-11">
+                            <select name="SR7303_sort" id='SR7303_sort' class="form-control">
+                                <option value="supplier">Supplier Code</option>
+                                <option value="document">Document No</option>
+                                <option value="customer_po">Customer PO No</option>
+                                <option value="part_no">Part No</option>
+                                <option value="wanted_date">Wanted Date</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="divSR7602" class="form-group filter divSR7602" style="display: none">
+                        <label class="control-label col-md-12">Wanted Month</label>
+                        <div class="col-md-12">
+                            <div id="sandbox-container">
+                                <input type="text" class="form-control month-date-picker" id="year_monthSR7602" name="year_monthSR7602" value="">
+                            </div>
+                        </div>
+                        <label class="control-label col-md-12">Print Selection</label>
+                        <div class="col-md-12">
+                            <input type="radio" name="print_selection" value="A" checked> All<br>
+                            <input type="radio" name="print_selection" value="Y"> Confirm<br>
+                            <input type="radio" name="print_selection" value="N"> Not Confirm<br>
+                        </div>
+                        <label class="control-label col-md-12">From Customer Code</label>
+                        <div class="col-md-12">
+                            {{ form.txtSuppplierCodeSR7602 }}
+                        </div>
+                        <label class="control-label col-md-12">To Customer Code</label>
+                        <div class="col-md-12">
+                            {{ form.totxtSuppplierCodeSR7602 }}
+                        </div>
+                    </div>
+
+                    <div id="divSR7601" class="form-group filter divSR7601" style="display: none">
+                        <label class="control-label col-md-12">Select Month</label>
+                        <div class="col-md-12">
+                            <div id="sandbox-container">
+                                <input type="text" class="form-control month-date-picker" id="year_monthSR7601" name="year_monthSR7601" value="">
+                            </div>
+                        </div>
+                        <label class="control-label col-md-12">Print Selection</label>
+                        <div class="col-md-12">
+                            <input type="radio" name="print_selection_SR7601" value="A" checked> All<br>
+                            <input type="radio" name="print_selection_SR7601" value="Y"> Confirm<br>
+                            <input type="radio" name="print_selection_SR7601" value="N"> Not Confirm<br>
+                        </div>
+                        <label class="control-label col-md-12">Form Part group</label>
+                        <div class="col-md-12">
+                            {{ form.txtSuppplierCodeSR7601 }}
+                        </div>
+                        <label class="control-label col-md-12">To Part group</label>
+                        <div class="col-md-12">
+                            {{ form.totxtSuppplierCodeSR7601 }}
+                        </div>
+                    </div>
+
+                    <div id="divSR7300" class="form-group filter divSR7300 divSR7301 divSR7302" style="display: none">
+                        <label class="control-label col-md-12">Select Month</label>
+                        <div class="col-md-12">
+                            <div id="sandbox-container">
+                                <input type="text" class="form-control month-date-picker" id="year_monthSR7300" name="year_monthSR7300" value="">
+                            </div>
+                        </div>
+                        <label class="control-label col-md-12">From Supplier</label>
+                        <div class="col-md-12">
+                            {{ form.txt7300SuppplierNo }}
+                        </div>
+                        <label class="control-label col-md-12">To Supplier</label>
+                        <div class="col-md-12">
+                            {{ form.txt7300ToSuppplierNo }}
+                        </div>
+                        <label class="control-label col-md-12">From Document No</label>
+                        <div class="col-md-12">
+                            {{ form.txtDocumentNoSR7300 }}
+                        </div>
+                        <label class="control-label col-md-12">To Document No</label>
+                        <div class="col-md-12">
+                            {{ form.txtDocumentNoSR7300_to }}
+                        </div>
+                        <div id="divSR7301" class="" style="display: none">
+                            <label class="control-label col-md-12">From Customer PO</label>
+                            <div class="col-md-12">
+                                {{ form.txtCustomerPoSR7301 }}
+                            </div>
+                            <label class="control-label col-md-12">To Customer PO</label>
+                            <div class="col-md-12">
+                                {{ form.txtCustomerPoToSR7301 }}
+                            </div>
+                        </div>
+                        <div id="divSR7302" class="" style="display: none">
+                            <label class="control-label col-md-12">From Part No</label>
+                            <div class="col-md-12">
+                                {{ form.txtPartNoSR7302 }}
+                            </div>
+                            <label class="control-label col-md-12">To Part No</label>
+                            <div class="col-md-12">
+                                {{ form.txtPartNoToSR7302 }}
+                            </div>
+                        </div>
+                    </div>
+
+                    {% comment %} <div id="divSR7301" class="form-group filter divSR7301" style="display: none">
+                        <label class="control-label col-md-12">Select Month</label>
+                        <div class="col-md-12">
+                            <div id="sandbox-container">
+                                <input type="text" class="form-control" id="year_monthSR7301" name="year_monthSR7301" value="">
+                            </div>
+                        </div>
+                        <label class="control-label col-md-12">From Customer PO</label>
+                        <div class="col-md-12">
+                            {{ form.txtCustomerPoSR7301 }}
+                        </div>
+                        <label class="control-label col-md-12">To Customer PO</label>
+                        <div class="col-md-12">
+                            {{ form.txtCustomerPoToSR7301 }}
+                        </div>
+                        <label class="control-label col-md-12">From Part No</label>
+                        <div class="col-md-12">
+                            {{ form.txtPartNoSR7301 }}
+                        </div>
+                        <label class="control-label col-md-12">To Part No</label>
+                        <div class="col-md-12">
+                            {{ form.txtPartNoToSR7301 }}
+                        </div>
+                    </div>
+
+                    <div id="divSR7302" class="form-group filter divSR7302" style="display: none">
+                        <label class="control-label col-md-12">Select Month</label>
+                        <div class="col-md-12">
+                            <div id="sandbox-container">
+                                <input type="text" class="form-control" id="year_monthSR7302" name="year_monthSR7302" value="">
+                            </div>
+                        </div>
+                        <label class="control-label col-md-12">From Document No</label>
+                        <div class="col-md-12">
+                            {{ form.txtDocumentNoSR7302 }}
+                        </div>
+                        <label class="control-label col-md-12">To Document No</label>
+                        <div class="col-md-12">
+                            {{ form.txtDocumentNoToSR7302 }}
+                        </div>
+                        <label class="control-label col-md-12">From Supplier</label>
+                        <div class="col-md-12">
+                            {{ form.txt7300SuppplierNo }}
+                        </div>
+                        <label class="control-label col-md-12">To Supplier</label>
+                        <div class="col-md-12">
+                            {{ form.txt7300ToSuppplierNo }}
+                        </div>
+                        <label class="control-label col-md-12">From Part No</label>
+                        <div class="col-md-12">
+                            {{ form.txtPartNoSR7302 }}
+                        </div>
+                        <label class="control-label col-md-12">To Part No</label>
+                        <div class="col-md-12">
+                            {{ form.txtPartNoToSR7302 }}
+                        </div>
+                    </div> {% endcomment %}
+
+                    <div id="divSR7401" class="form-group filter divSR7401" style="display: none">
+                                                <label class="control-label col-md-12">Wanted Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_fromSR7401" name="date_fromSR7401"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Wanted Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_toSR7401" name="date_toSR7401"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Doc. No. From</label>
+                        <div class="col-md-12">
+                            {{ form.txtDocNoFromSR7401 }}
+                        </div>
+                        <label class="control-label col-md-12">Doc. No. To</label>
+                        <div class="col-md-12">
+                            {{ form.txtDocNoToSR7401 }}
+                        </div>
+                        <label class="control-label col-md-12">Cust. PO No. From</label>
+                        <div class="col-md-12">
+                            {{ form.txtCustPONoFromSR7401 }}
+                        </div>
+                        <label class="control-label col-md-12">Cust. PO No. To</label>
+                        <div class="col-md-12">
+                            {{ form.txtCustPONoToSR7401 }}
+                        </div>
+                    </div>
+
+                    <div id="divSR7504" class="form-group filter divSR7504 divSR7501">
+                        <label class="control-label col-md-12">Issue Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_fromSR7504" name="date_fromSR7504"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Issue Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_toSR7504" name="date_toSR7504"
+                                    type="text" value=""/>
+                        </div>
+
+                        <label class="control-label col-md-12">Supplier From</label>
+                        <div class="col-md-11">
+                            {{ form.txtSuppplierNoSR7504 }}
+                        </div>
+                        <label class="control-label col-md-12">Supplier To</label>
+                        <div class="col-md-11">
+                            {{ form.txtToSuppplierNoSR7504 }}
+                        </div>
+                        <div id='SR7501'>
+                            <label class="control-label col-md-12">Report Confirm</label>
+                            <div class="col-md-11">
+                                <select name="is_confirm_2" id='is_confirm_2' class="form-control">
+                                <option value="X">All</option>
+                                <option value="Y">Yes</option>
+                                <option value="N">No</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="divSR7503" class="form-group filter divSR7503 divSR7502">
+                        <label class="control-label col-md-12">Issue Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_fromSR7503" name="date_fromSR7503"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Issue Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="date_toSR7503" name="date_toSR7503"
+                                    type="text" value=""/>
+                        </div>
+                        <div id="SR7502_more">
+                            <label class="control-label col-md-12">From Cust. PO No.</label>
+                            <div class="col-md-11">
+                                {{ form.txtCustPONoFromSR7503 }}
+                            </div>
+                            <label class="control-label col-md-12">To Cust. PO No.</label>
+                            <div class="col-md-11">
+                                {{ form.txtCustPONoToSR7503 }}
+                            </div>
+                            <label class="control-label col-md-12">From Part Grp</label>
+                            <div class="col-md-11">
+                                {{ form.txtPartGrpSR7503 }}
+                            </div>
+                            <label class="control-label col-md-12">To Part Grp</label>
+                            <div class="col-md-11">
+                                {{ form.txtPartGrpToSR7503 }}
+                            </div>
+                        </div>
+                        <label class="control-label col-md-12">From Part No</label>
+                        <div class="col-md-11">
+                            {{ form.txtPartNoSR7503 }}
+                        </div>
+                        <label class="control-label col-md-12">To Part No</label>
+                        <div class="col-md-11">
+                            {{ form.txtPartNoToSR7503 }}
+                        </div>
+                        <div id="SR7502">
+                            <label class="control-label col-md-12">Report Confirm</label>
+                            <div class="col-md-11">
+                                <select name="is_confirm" id='is_confirm' class="form-control">
+                                    <option value="X">All</option>
+                                    <option value="Y">Yes</option>
+                                    <option value="N">No</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="divDO" class="form-group filter" style="display: none">
+                        <div class="radios" style="padding-left: 18px;">
+                            <label class="label_radio" for="radio-03">
+                                <input name="do-group-print-header" id="radio-03" value="1" type="radio" checked/> Print
+                                with header
+                            </label>
+                            <label class="label_radio" for="radio-04">
+                                <input name="do-group-print-header" id="radio-04" value="2" type="radio"/> Print no header
+                            </label>
+                        </div>
+                        {% comment %} <div id="do_pay_mode">
+                            <div class="col-lg-12 col-sm-12 checkbox"
+                                style="padding-top: 0px; margin-left: 15px; margin-top: 15px">
+                                <input name="pay_mode" id="id_pay_mode" class="styled" type="checkbox">
+                                <label for="id_pay_mode"></label>Print with Pay Mode
+                            </div>
+                        </div> {% endcomment %}
+                        <div class="col-lg-12 col-sm-12 checkbox checkbox-primary"
+                            style="padding-top: 0px; margin-left: 15px; margin-top: 15px">
+                            <input name="part_group" id="id_part_group" class="styled" type="checkbox">
+                            <label for="id_part_group"></label>Print with Part Code
+                        </div>
+                        <div id="do_alt_address">
+                            <label class="control-label col-md-12">Alternate Address</label>
+                            <div class="col-md-11">
+                                {{ form.do_alternate_address }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="divPO" class="form-group filter" style="display: none">
+                        <div class="radios" style="padding-left: 18px;">
+                            <label class="label_radio" for="radio-01">
+                                <input name="po-group-print-header" id="radio-01" value="1" type="radio" checked/> Print
+                                with header
+                            </label>
+                            <label class="label_radio" for="radio-02">
+                                <input name="po-group-print-header" id="radio-02" value="2" type="radio"/> Print no header
+                            </label>
+                        </div>
+                        <label class="control-label col-md-12">Wanted Date From</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="po_date_from" name="po_date_from"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">Wanted Date To</label>
+                        <div class="col-md-10">
+                            <input class="form-control form-control-inline input-medium default-date-picker"
+                                    size="16" id="po_date_to" name="po_date_to"
+                                    type="text" value=""/>
+                        </div>
+                        <label class="control-label col-md-12">From P/O</label>
+                        <div class="col-md-11">
+                            {{ form.fromPONo }}
+                        </div>
+                        <label class="control-label col-md-12">To P/O</label>
+                        <div class="col-md-11">
+                            {{ form.toPONo }}
+                        </div>
+                        <label class="control-label col-md-12">Alternate Address</label>
+                        <div class="col-md-11">
+                            {{ form.po_alternate_address }}
+                        </div>
+                        <div class="col-lg-12 col-sm-12 checkbox checkbox-primary"
+                            style="padding-top: 0px; margin-left: 15px; margin-top: 25px">
+                            <input name="remove_address" id="id_remove_address" class="styled" type="checkbox">
+                            <label for="id_remove_address"></label>Remove Alt. Address
+                        </div>
+                        <div class="col-lg-12 col-sm-12 checkbox checkbox-primary"
+                            style="padding-top: 0px; margin-left: 15px; margin-top: 25px">
+                            <input name="exclude_signature" id="id_exclude_signature" class="styled" type="checkbox">
+                            <label for="id_exclude_signature"></label>Exclude Signature
+                        </div>
+                        <div class="col-lg-12 col-sm-12 checkbox checkbox-primary"
+                            style="padding-top: 0px; margin-left: 15px; margin-top: 25px">
+                            <input name="part_group" id="id_po_part_group" class="styled" type="checkbox">
+                            <label for="id_po_part_group"></label>Print with Part Code
+                        </div>
+                    </div>
+
+                    <div id="divButton" class="form-group bottom-group">
+                        <div class="col-md-12">
+                            <input id="hdCategoryId" name="hdCategoryId" type="hidden" value="{{ category_id }}">
+                            <input id="hdOrderType" name="hdOrderType" type="hidden" value="{{ order_type }}">
+                            <input id="hdOrderID" name="hdOrderID" type="hidden" value="{{ order_id }}">
+                            <input id="hdPrintType" name="hdPrintType" type="hidden" value="{{ print_type }}">
+                            <div class="col-md-5">
+                                <a id="btnReview" tabindex="1" class="btn btn-success" style="margin-top: 10px;">Review</a>
+                            </div>
+                            <div class="col-md-7">
+                                <a id="export_excel" tabindex="1" class="btn btn-success" style="margin-top: 10px; display: none;">Excel Report</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <div class="col-md-9">
+            <section class="panel">
+                <div class="panel-body" style="height: 100%; min-height: 500px;">
+                    <form id="reportForm" target="frViewPDF"
+                        method="post" action="" >
+                        {% csrf_token %}
+                        <input type="text" class="hide" id="param0" name="param0">
+                        <input type="text" class="hide" id="param1" name="param1">
+                        <input type="text" class="hide" id="param2" name="param2">
+                        <input type="text" class="hide" id="param3" name="param3">
+                        <input type="text" class="hide" id="param4" name="param4">
+                        <input type="text" class="hide" id="param5" name="param5">
+                        <input type="text" class="hide" id="param6" name="param6">
+                        <input type="text" class="hide" id="param7" name="param7">
+                        <input type="text" class="hide" id="param8" name="param8">
+                    </form>
+                    <div id="divViewPDF" class="adv-table">
+                        <iframe id="frViewPDF" name="frViewPDF" width="100%" height="100%" style="height: 100%; min-height: 510px;"
+                                src=""></iframe>
+                    </div>
+                    <div id="loadpage"
+                         style="position:absolute; left:0px; top:0px; background-color:white; layer-background-color:white; width: 100%; height: 100%;">
+                        <p align="center" style="font-size: large;">
+                            <img src="/static/img/loading1.gif">
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+{% block extrafoot %}
+    {% load staticfiles %}
+{#    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>#}
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/js/bootstrap-datepicker.min.js"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+    <script type="text/javascript" src="{% static 'js/order/report_focus.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/order/report.js' %}"></script>
+    <script type="text/javascript">
+        var current_period_from = "{{current_period_from}}";
+        var current_period_to = "{{current_period_to}}";
+        var period = current_period_from.split('-');
+        var current_period = period[1] + '-' + period[2];
+        var tax_list = [];
+        var part_list = [];
+        var part_group_list = [];
+        var supplier_list = [];
+        var customer_list = [];
+
+        {% for item in tax_list %}
+            tax_list.push([{{ item.0 }}, "{{ item.1 }}"])
+        {% endfor %}
+        {% for item in part_list %}
+            part_list.push([{{ item.0 }}, "{{ item.1 }}"])
+        {% endfor %}
+        {% for item in part_group_list %}
+            part_group_list.push([{{ item.0 }}, "{{ item.1 }}"])
+        {% endfor %}
+        {% for item in supplier_list %}
+            supplier_list.push([{{ item.0 }}, "{{ item.1 }}"])
+        {% endfor %}
+        {% for item in customer_list %}
+            customer_list.push([{{ item.0 }}, "{{ item.1 }}"])
+        {% endfor %}
+
+    </script>
+{% endblock %}

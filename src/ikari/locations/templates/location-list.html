@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% load staticfiles %}
+
+{% block title %}Location List{% endblock %}
+{% block ics_a_active %}active {% endblock %}
+{% block location_active %}active{% endblock %}
+{% block inv_setting_a_active %}active{% endblock %}
+{% block inv_setting_i_active %}active{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    Location List
+                    <span class="tools pull-right">
+                         {% if 'locations.add_location' in user.get_all_permissions %}
+                             <a class="btn btn-success start" href="{% url 'location_add' %}">
+                                 <i class="glyphicon glyphicon-plus"></i>
+                                 <span>Add new</span>
+                             </a>
+                         {% endif %}
+                    </span>
+                </header>
+                    <div class="panel-body">
+                        <div class="adv-table">
+                            <table class="display table table-bordered table-striped table-condensed"
+                                   id="custom-table" style="width:100%">
+                                <thead>
+                                <tr>
+                                    <th>Update Date</th>
+                                    <th>Code</th>
+                                    <th>Name</th>
+                                    <th>Address</th>
+                                    <th class="text-center">Active</th>
+                                    {% if 'locations.change_location' in user.get_all_permissions %}
+                                        <th class="text-center">Edit</th>
+                                    {% endif %}
+                                </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#custom-table').dataTable({
+                "order": [[ 1, "asc" ]],
+                "serverSide": true,
+                "scrollX": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'LocationList__asJson' %}"
+                },
+                "columns": [
+                    {"data": "update_date"},
+                    {"data": "location_code"},
+                    {"data": "location_name"},
+                    {"data": "location_address"},
+                    {
+                        "className": "text-center",
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            if (full.is_active == 'True') {
+                                var mSpan = '<span class="label label-success label-mini">True</span>'
+                                return mSpan
+                            }
+                            else {
+                                var mSpan = '<span class="label label-danger label-mini">False</span>'
+                                return mSpan
+                            }
+                        }
+                    },
+                    {% if 'locations.change_location' in user.get_all_permissions %}
+                        {
+                            "className": "text-center",
+                            "orderable": false,
+                            "data": null,
+                            "render": function (data, type, full, meta) {
+                                var button_edit = '<a href="../edit/' + full.id + '/0/" class="fa fa-pencil fa-lg btn btn-primary btn-sm"></a>'
+                                return button_edit;
+                            }
+                        }
+                    {% endif %}
+                ]
+            });
+        });
+    </script>
+{% endblock %}
+
+

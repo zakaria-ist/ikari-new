@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    {% load humanize %}
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block title %}
+    {% if segment.id %}
+        Edit Segment Code
+    {% else %}
+        Add Segment Code
+    {% endif %}
+{% endblock %}
+{% block segment_active %}active{% endblock %}
+{% block account_setting_a_active %}active{% endblock %}
+{% block account_setting_i_active %}active{% endblock %}
+{% block parent_accounting_a_active %}active{% endblock %}
+{% block parent_accounting_i_active %}active{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <header class="panel-heading">
+                {% if segment.id %}
+                    Edit Segment Code
+                {% else %}
+                    Add Segment Code
+                {% endif %}
+            </header>
+            <div class="panel-body">
+                <form class="form-horizontal"
+                        {% if segment.id %}
+                      action="{% url 'segment_edit' segment.id %}"
+                        {% else %}
+                      action="{% url 'segment_add' %}"
+                        {% endif %}
+                      role="form" method="post" onsubmit="return checkForm(this);" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="code" class="col-lg-2 col-sm-2 control-label">Code<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-10">
+                            {{ form.code }}
+                            <span class="messages">{{ form.errors.code }}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-2 control-label">Name</label>
+                        <div class="col-lg-10">
+                            {{ form.name }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="description" class="col-lg-2 col-sm-2 control-label">Description</label>
+                        <div class="col-lg-10">
+                            {{ form.description }}
+                            <span class="messages">{{ form.errors.description }}</span>
+                        </div>
+                    </div>
+                    {% if segment.id %}
+                        <div class="form-group">
+                            <label for="note1" class="col-lg-2 col-sm-2 control-label">Last Update</label>
+                            <div class="col-lg-10">
+                                {{ form.update_date }}
+                            </div>
+                        </div>
+                    {% endif %}
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-10">
+                            <button type="submit" name="btnSave" class="btn btn-success">Save</button>
+                            {% if segment.id %}
+                                <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger">Delete</a>
+                            {% endif %}
+                            <a class="btn btn-default" href="{% url 'segment_list' %}">Cancel</a>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            {% if segment.id %}
+                <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+                     class="modal fade">
+                    <div class="modal-dialog modal-sm">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                                <h4 class="modal-title">Delete Confirm Dialog</h4>
+                            </div>
+                            <div class="modal-body">
+                                <form role="form" action="{% url 'segment_delete' segment.id %}" method="post">
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        <label for="exampleInputEmail1">Are you sure want to delete?</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-success">OK</button>
+                                    <a class="btn btn-default" href="{% url 'segment_edit' segment.id %}">Cancel</a>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </section>
+    </div>
+
+{% endblock %}
+
+{% block extrafoot %}
+    {% load staticfiles %}
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script>
+        $(document).ready(function(){
+            $('#id_code').attr('readonly', false);
+        })
+    </script>
+{% endblock %}

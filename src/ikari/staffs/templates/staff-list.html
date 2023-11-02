@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+<!--dynamic table-->
+{% block extrahead %}
+    {% load staticfiles %}
+{% endblock %}
+
+{% block title %}Staff List{% endblock %}
+{% block staff_active %} active {% endblock %}
+{% block parent_company_a_active %}active{% endblock %}
+{% block parent_company_i_active %}active{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading" style="font-size: 20px">
+                    Staff List
+                    <span class="tools pull-right">
+                         {% if 'staffs.add_staff' in user.get_all_permissions %}
+                             <a class="btn btn-success start" href="{% url 'staff_add' %}">
+                                 <i class="glyphicon glyphicon-plus"></i>
+                                 <span>Add new</span>
+                             </a>
+                         {% endif %}
+                     </span>
+                </header>
+                <div class="panel-body">
+                    <div class="adv-table">
+                        <table class="display table table-bordered table-striped"
+                               id="dynamic-table" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>Update Date</th>
+
+                                <th>User Name</th>
+                                <th>First Name</th>
+                                <th>Last Name</th>
+                                <th>Email</th>
+                                <th>Company</th>
+                                <th class="text-center">Active</th>
+                                <th class="text-center">Company Admin</th>
+                                {% if user.is_superuser %}
+                                    <th class="text-center">Super Admin</th>
+                                {% endif %}
+                                {% if 'staffs.change_staff' in user.get_all_permissions %}
+                                    <th class="text-center">Edit</th>
+                                {% endif %}
+                            </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block js %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#dynamic-table').dataTable({
+                "order": [[1, "asc"]],
+                "serverSide": true,
+                "scrollX": true,
+                stateSave: true,
+                "ajax": {
+                    "url": "{% url 'Staff__asJson' %}"
+                },
+                "columns": [
+                    {"data": "update_date"},
+                    {"data": "user__username"},
+                    {"data": "user__first_name"},
+                    {"data": "user__last_name"},
+                    {"data": "user__email"},
+                    {"data": "company__name"},
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            if (full.is_active == 'True') {
+                                var mSpan = '<span class="label label-success label-mini">True</span>'
+                                return mSpan
+                            }
+                            else {
+                                var mSpan = '<span class="label label-danger label-mini">False</span>'
+                                return mSpan
+                            }
+                        }
+                    },
+                    {
+                        "orderable": false,
+                        "data": null,
+                        "render": function (data, type, full, meta) {
+                            if (full.is_admin == 'True') {
+                                var mSpan = '<span class="label label-success label-mini">True</span>'
+                                return mSpan
+                            }
+                            else {
+                                var mSpan = '<span class="label label-danger label-mini">False</span>'
+                                return mSpan
+                            }
+                        }
+                    },
+                    {% if user.is_superuser %}
+                        {
+                            "orderable": false,
+                            "data": null,
+                            "render": function (data, type, full, meta) {
+                                if (full.is_superuser == 'True') {
+                                    var mSpan = '<span class="label label-success label-mini">True</span>'
+                                    return mSpan
+                                }
+                                else {
+                                    var mSpan = '<span class="label label-danger label-mini">False</span>'
+                                    return mSpan
+                                }
+                            }
+                        },
+                    {% endif %}
+                    {% if 'staffs.change_staff' in user.get_all_permissions %}
+                        {
+                            "orderable": false,
+                            "data": null,
+                            "render": function (data, type, full, meta) {
+                                var button_edit = '<a href=../edit/' + full.id + ' class="fa fa-pencil btn btn-primary btn-xs"></a>'
+                                return button_edit;
+                            }
+                        }
+                    {% endif %}
+                ]
+            });
+        });
+    </script>
+{% endblock %}
+
+
+
+

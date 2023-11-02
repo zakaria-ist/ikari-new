@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+{% block extrahead %}
+    {% load staticfiles %}
+
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap3-editable/css/bootstrap-editable.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+
+    <!-- Datatables -->
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/table.css" %}" rel="stylesheet">
+
+{% endblock %}
+
+{% block title %}
+{% if menu_type == '2' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    Sales Exchange Rates
+{% elif menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+    Purchase Exchange Rates
+{% elif menu_type == '4' %} {# TRN_CODE_TYPE_DICT['Accounting'] #}
+    Accounting Exchange Rates
+{% endif %}
+{% endblock %}
+
+{% block sale_exchange_active %}
+{% if menu_type == '2' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block purchase_exchange_active %}
+{% if menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_a_active %}
+{% if menu_type == '2' or menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] or TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+active
+{% endif %}
+{% endblock %}
+
+{% block sp_setting_i_active %}
+{% if menu_type == '2' or menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] or TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_order_i_active %}
+{% if menu_type == '2' or menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] or TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_order_a_active %}
+{% if menu_type == '2' or menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] or TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block exchange_rate_active %}
+{% if menu_type == '4' %} {# TRN_CODE_TYPE_DICT['Accounting'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block account_setting_a_active %}
+{% if menu_type == '4' %} {# TRN_CODE_TYPE_DICT['Accounting'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block account_setting_i_active %}
+{% if menu_type == '4' %} {# TRN_CODE_TYPE_DICT['Accounting'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_accounting_a_active %}
+{% if menu_type == '4' %} {# TRN_CODE_TYPE_DICT['Accounting'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block parent_accounting_i_active %}
+{% if menu_type == '4' %} {# TRN_CODE_TYPE_DICT['Accounting'] #}
+    active
+{% endif %}
+{% endblock %}
+
+{% block content %}
+    <form class="form-horizontal" action="" role="form" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" id="is_advance_filter" name="is_advance_filter" value="0">
+        <div class="row">
+            <div class="col-sm-12">
+                <section class="panel">
+                    <header class="panel-heading" style="font-size: 20px">
+                         Advance Search
+                        <span class="tools pull-right">
+                        <a href="javascript:;" class="fa fa-chevron-down"></a>
+                    </span>
+                    </header>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <div class="row">
+                                <div class="col-lg-4">
+                                    <div class="col-lg-4" style="padding-right: 0px; margin-top: 10px;">
+                                        From Currency
+                                    </div>
+                                    <div class="col-lg-8">
+                                        <select class="form-control fieldset" id="from_currency" name="from_currency">
+                                            <option value="">Select currency</option>
+                                            {% for curr in currency_list %}
+                                                <option value="{{ curr.0 }}">{{ curr.0 }} - {{ curr.1 }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <input type="hidden" id="is_advance_filter" name="is_advance_filter"
+                                               class="form-control"
+                                               value="1">
+                                    </div>
+                                </div>
+                                <div class="col-lg-4">
+                                    <div class="col-lg-4" style="padding-left: 25px;  margin-top: 10px;">
+                                        To Currency
+                                    </div>
+                                    <div class="col-lg-8">
+                                        <select class="form-control fieldset" id="to_currency" name="to_currency">
+                                            <option value="">Select currency</option>
+                                            {% for curr in currency_list %}
+                                                <option value="{{ curr.0 }}">{{ curr.0 }} - {{ curr.1 }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                </div>
+                                {% comment %} <div class="col-lg-4">
+                                    <div class="col-lg-4" style="padding-right: 0px;  margin-top: 10px;">
+                                        Exchange Date
+                                    </div>
+                                    <div class="col-lg-8">
+                                        <div id="sandbox-container">
+                                            <input id="exchange_date" name="exchange_date" type="text"
+                                                   class="form-control" value="{{ session_date }}">
+                                        </div>
+                                    </div>
+                                </div> {% endcomment %}
+                            </div>
+                            <div class="row" style="padding-top:20px; text-align: center;">
+                                <button id="btnSearchExchangeRate" class="btn btn-success" type="button">
+                                    <i class="fa fa-search"></i> Search
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                {% comment %} <div id="loadpage"
+                     style="position:absolute; left:0px; top:0px; background-color:white; layer-background-color:white; width: 100%; height: 100%;">
+                    <p align="center" style="font-size: large;">
+                        <img src="/static/img/loading1.gif">
+                    </p>
+                </div> {% endcomment %}
+                <section class="panel">
+                    <header class="panel-heading" style="font-size: 20px">
+                        {% if menu_type == '2' %} {# TRN_CODE_TYPE_DICT['Sales Number File'] #}
+                            Sales
+                        {% elif menu_type == '3' %} {# TRN_CODE_TYPE_DICT['Purchase Number File'] #}
+                            Purchase
+                        {% elif menu_type == '4' %} {# TRN_CODE_TYPE_DICT['Accounting'] #}
+                            Accounting
+                        {% endif %}
+                        Exchange Rate List
+                        <span class="tools pull-right">
+                         {% if request.session.staff_admin %}
+                             <a class="btn btn-success start" href="{% url 'exchange_rate_add' menu_type %}">
+                                 <i class="glyphicon glyphicon-plus"></i>
+                                 <span>Add new</span>
+                             </a>
+                             <a class="btn bg-primary" href="{% url 'load_exchange_copy' '0' menu_type %}"> {# overwrite #}
+                                 <span style="color: white;" class="fa fa-copy">Copy Previous Month</span>
+                             </a>
+                         {% endif %}
+                     </span>
+                    </header>
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="panel-body">
+                                <div class="adv-table table-responsive">
+                                  <table id="dynamic-table"
+                                         class="display table table-bordered table-striped table-condensed table-hover">
+                                      <thead>
+                                      <tr>
+                                          <th>From Currency</th>
+                                          <th>To Currency</th>
+                                          <th>Rate</th>
+                                          <th>Exchange Date</th>
+                                          {% if request.session.staff_admin %}
+                                              <th>Action</th>
+                                          {% endif %}
+                                      </tr>
+                                      </thead>
+                                  </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </form>
+{% endblock %}
+{% block js %}
+    <!-- Datatables -->
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script>
+        $('#sandbox-container input').datepicker({
+            format: "mm-yyyy",
+            startView: 1,
+            minViewMode: 1,
+            autoclose: true
+        });
+        var exchange_date = moment().format("MM-YYYY");
+        $('#exchange_date').bind('keyup', function (event) {
+            if (event.which != 13) {
+                temp_date = $(this).val();
+                valid_date = moment(temp_date, "MM-YYYY", true).isValid();
+                if (valid_date) {
+                    var exchange_date_split = temp_date.split("-");
+                    exchange_date = exchange_date_split[1] + "-" + exchange_date_split[0];
+                }
+                return true;
+            }
+        });
+        $('#exchange_date').on('change', function (event) {
+            temp_date = $(this).val();
+            valid_date = moment(temp_date, "MM-YYYY", true).isValid();
+            if (valid_date) {
+                var exchange_date_split = temp_date.split("-");
+                exchange_date = exchange_date_split[1] + "-" + exchange_date_split[0];
+            }
+        });
+        $('#exchange_date').bind('keydown', function (event) {
+            if (event.which == 13) {
+                $('#exchange_date').val(moment(exchange_date.split("-").reverse().join("-"), "MM-YYYY").format("MM-YYYY"));
+                $('#btnSearchExchangeRate').focus();
+                return false;
+            }
+        });
+        $(document).ready(function () {
+            $('#from_currency, #to_currency').select2({
+                placeholder: "Select currency",
+                allowClear: true
+            });
+            var exchrate_type = "{{ menu_type }}";
+            //$("#loadpage").hide();
+            $('#is_advance_filter').val('0');
+            var exchange_date_split = exchange_date.split("-");
+            exchange_date = exchange_date_split[1] + "-" + exchange_date_split[0];
+            $('#dynamic-table').dataTable({
+                "order": [[3, "desc"]],
+                "serverSide": true,
+                "scrollX": true,
+                stateSave: true,
+                "ajax": {
+                    "type": "POST",
+                    "url": "{% url 'ExchangeRate__asJson' %}",
+                    "data": function (d) {
+                        d.csrfmiddlewaretoken = $('input[name="csrfmiddlewaretoken"]').val();
+                        d.from_currency = $('#from_currency').val();
+                        d.to_currency = $('#to_currency').val();
+                        d.exchange_date = exchange_date;
+                        d.is_advance_filter = $('#is_advance_filter').val();
+                        d.exch_rate_type = exchrate_type;
+                    }
+                },
+                "columns": [
+                    {"data": "from_currency", "width": "230px"},
+                    {"data": "to_currency", "width": "230px"},
+                    {"data": "rate", "sClass": "text-right", "width": "120px"},
+                    {"data": "exchange_date", "width": "55px"},
+                    {% if request.session.staff_admin %}
+                        {
+                            "sClass": "text-center",
+                            "orderable": false,
+                            "data": null,
+                            "render": function (data, type, full, meta) {
+                                var button_edit = '<div class="btn-group dropdown">'
+                                    + '<button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="min-width: 40px!important;">Action'
+                                    + '<span class="caret" style="margin-left:3px"></span><span class="sr-only">Toggle Dropdown</span>'
+                                    + '</button>'
+                                    + '<ul class="dropdown-menu dropdown-menu-right">'
+                                    + '<li><a href="/currencies/exchange_rate_edit/' + full.id + '/' + exchrate_type +'/">Edit</a></li>';
+                                if (exchrate_type=='3') {
+                                    button_edit += '<li><a href="/currencies/send_to_sp/' + full.id + '/1/">Send to Sales Exchange Rate</a></li>'
+                                                + '<li><a href="/currencies/send_to_sp/' + full.id + '/2/">Send to Purchase Exchange Rate</a></li>';
+                                }
+                                button_edit += '</ul></div>';
+                                return button_edit;
+                            }
+                        }
+                    {% endif %}
+                ]
+            });
+            $('.dataTables_scrollHeadInner').attr('style', 'margin-left: auto !important; margin-right: auto !important');
+        });
+
+        /* Search Account button*/
+        $('#btnSearchExchangeRate').on('click', function () {
+            $('#loading').show();
+            $('#is_advance_filter').val('1');
+            var datatbl = $('#dynamic-table').DataTable();
+            datatbl.ajax.reload(function () {
+                 $("#loading").hide();
+            });
+            $('#is_advance_filter').val('0');
+            $('input[type="search"]').val('');
+        });
+
+        {% comment %} $(document).on('keydown', 'input[type="search"]', function (event) {
+            $('#from_currency').val('');
+            $('#to_currency').val('');
+        }); {% endcomment %}
+    </script>
+{% endblock %}

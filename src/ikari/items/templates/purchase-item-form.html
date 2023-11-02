@@ -1,0 +1,483 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    {% load staticfiles %}
+    <link href="{% static 'assets/selectable/css/dj.selectable.css' %} " type="text/css" media="all" rel="stylesheet"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap3-editable/css/bootstrap-editable.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/bootstrap-datepicker/css/datepicker.css' %}"/>
+    <link href="{% static "assets/datatables/css/dataTables.bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/select2/select2.css" %}" rel="stylesheet">
+
+    <style>
+        .custom_align {
+            text-align: center;
+        }
+
+        .tiny-width {
+            width: 30px !important;
+        }
+
+        .min-small-width {
+            min-width: 50px !important;
+        }
+
+        .min-medium-width {
+            min-width: 140px !important;
+        }
+
+        .medium-width {
+            min-width: 140px !important;
+        }
+
+        .width-100{
+            width: 100px;
+            text-align: center;
+        }
+
+        .width-80{
+            width: 80px;
+            text-align: center;
+        }
+
+        .width-175{
+            width: 175px;
+            text-align: center;
+        }
+
+        .label-item {
+            display: inline-block;
+            max-width: 100%;
+            margin-bottom: 5px;
+            font-weight: 100;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}{% if not item_id %}Purchase Item Add{% else %}Purchase Item Edit{% endif %}{% endblock %}
+{% block part_purchase_active %}active{% endblock %}
+{% block supplier_a_active %}active{% endblock %}
+{% block supplier_i_active %}active{% endblock %}
+{% block sp_setting_a_active %}active{% endblock %}
+{% block sp_setting_i_active %}active{% endblock %}
+{% block parent_order_a_active %}active{% endblock %}
+{% block parent_order_i_active %}active{% endblock %}
+
+{% block content %}
+    <div class="col-lg-12">
+        <section class="panel">
+            <div class="panel-body">
+                {% if item_id %}
+                    <input type="hidden" name="item_id" id="item_id" value="{{ item_id }}">
+                    <input type="hidden" name="existing_suppliers" id="existing_suppliers"
+                           value="{{ existing_suppliers }}">
+                {% endif %}
+                <form class="form-horizontal" action="{% url 'purchase_item_add' %}" role="form" method="post"
+                       onsubmit="return checkForm(this);" enctype="multipart/form-data" id="item_form_submit">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <header class="panel-heading">
+                            <strong>Purchase Item</strong>
+                        </header>
+                    </div>
+                    <div class="form-group ">
+                        <label for="code" class="col-lg-2 col-sm-12 control-label">Part Number<span
+                                class="span-required">(*)</span></label>
+                        <div class="col-lg-4">
+                            {{ form.code|default_if_none:"" }}
+                            {% if isnew == 0 %}
+                            <div id="cek_part" >
+                                <select class="form-control " name="part_number_axis" id="part_number_axis">
+                                    <option value=""></option>
+                                    {% for part in all_part_number %}
+                                    <option value="{{part.id}}">
+                                        {{part.code}}
+                                    </option>
+                                    {% endfor %}
+
+                                </select>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if isnew == 0 and company.is_inventory == 0 %}
+                    <div class="form-group" >
+                        <label for="name" class="col-lg-2 col-sm-12 control-label"></label>
+                        <div class="col-lg-4">
+                            <input name="new_part" id="new_part" class="styled sended" type="checkbox" > New Part ?
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="form-group">
+                        <label for="name" class="col-lg-2 col-sm-12 control-label">Description</label>
+                        <div class="col-lg-4">
+                            {{ form.name|default_if_none:"" }}
+                        </div>
+                        <label for="country" class="col-lg-2 col-sm-12 control-label">Country Origin</label>
+                        <div class="col-lg-4">{{ form.country|default_if_none:"" }}</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="short_desc" class="col-lg-2 col-sm-2 control-label">Short Description</label>
+                        <div class="col-lg-4">{{ form.short_description|default_if_none:"" }}</div>
+                        <label for="purchase_price" class=" col-lg-2 col-sm-12 control-label">Standard Price</label>
+                        <div class="col-lg-4">{{ form.purchase_price|default_if_none:"" }}</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="category" class="col-lg-2 col-sm-12 control-label">Part Group</label>
+                        <div class="col-lg-4">
+                            {{ form.category|default_if_none:"" }}
+                        </div>
+                        <label for="purchase_currency" class=" col-lg-2 col-sm-12 control-label">Standard Currency</label>
+                        <div class="col-lg-4">{{ form.purchase_currency|default_if_none:"" }}</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="inv_measure" class=" col-lg-2 col-sm-12 control-label">Inventory Measurement</label>
+                        <div class="col-lg-4">{{ form.inv_measure|default_if_none:"" }}</div>
+                        <label for="model_qty" class="col-lg-2 col-sm-12 control-label">Quantity per Model</label>
+                        <div class="col-lg-4">
+                            {{ form.model_qty|default_if_none:"" }}
+                        </div>
+                    </div>
+                    <div class="form-group ">
+                        <label for="purchase_measure" class=" col-lg-2 col-sm-12 control-label">Purchase Measurement</label>
+                        <div class="col-lg-4">{{ form.purchase_measure|default_if_none:"" }}</div>
+                        <label for="minimum_order" class="col-lg-2 col-sm-12 control-label">Minimum Order Quantity</label>
+                        <div class="col-lg-4">{{ form.minimun_order|default_if_none:"" }}</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="person_incharge" class="col-lg-2 col-sm-12 control-label">Person In Charge</label>
+                        <div class="col-lg-4">
+                            {{ form.person_incharge|default_if_none:"" }}
+                        </div>
+                        <label for="default_supplier" class="col-lg-2 col-sm-12 control-label">Default Supplier</label>
+                        <div class="col-lg-4">
+                            {{ form.default_supplier|default_if_none:"" }}
+                        </div>
+                    </div>
+                    <div class="form-group" style="display: none">
+                        <label for="default_location" class="col-lg-2 col-sm-12 control-label">Default Location</label>
+                        <div class="col-lg-4">
+                            {{ form.default_location|default_if_none:"" }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <header class="panel-heading">
+                            <strong>Supplier</strong>
+                        </header>
+                    </div>
+                    <div class="adv-table table-responsive" style="overflow-x: scroll; overflow-y: auto;">
+                        <table class="display table table-bordered table-striped table-condensed"
+                               id="supplier_table" style="width: 100%">
+                            <thead tabindex="-1">
+                            <tr>
+                                <th tabindex="-1" style="width: 30px;">No</th>
+                                <th tabindex="-1" style="width: 70px !important;">Code</th>
+                                <th tabindex="-1">Name</th>
+                                <th tabindex="-1">Curr.</th>
+                                <th tabindex="-1">Purchase Price</th>
+                                <th tabindex="-1">Lead</th>
+                                <th tabindex="-1">Effective Date</th>
+                                <th tabindex="-1">New Purchase Price</th>
+                                <th tabindex="-1">Update Date</th>
+                                <th tabindex="-1"></th>
+                            </tr>
+                            </thead>
+                            <tfoot style="display: none">
+                            <tr>
+                                <td colspan="9" style="text-align: left;">
+                                    <label class="control-label"><b>Supplier Code:</b></label>
+                                    <div style="display:inline-block;min-width:20%;">
+                                    <select id="supp_code">
+                                    <option></option>
+                                    {% for supp in supplier_list%}
+                                      <option value="{{supp.code}}">{{supp.code}}</option>
+                                    {% endfor%}
+                                    </select>
+                                    </div>
+                                    <input id="txtFilter" name="txtFilter" class="hidden">
+                                    <a id="btnAddSupplierDialog" data-toggle="modal" href="#mySupplierAddModal"
+                                       class="btn btn-white fa fa-plus"></a>
+                                </td>
+                            </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div class="form-group" style="text-align: left">
+                        <span id="supplier_error_table" class="messages col-lg-10">
+                          <strong>Supplier Code and Purchase Price can not empty !</strong><br>
+                          <strong>Purchase Price must be greater than zero!</strong>
+                        </span>
+                        <br>
+                        <span id="empty_supplier_error" class="messages col-lg-10"><strong>Please add at least one supplier !</strong></span>
+                    </div>
+                    <div class="form-group">
+                        <div style="text-align: center" class="col-lg-10">
+                            <button id="btnSaveItem" name="btnSave"
+                                    {% if item_id %}
+                                    formaction="{% url 'purchase_item_edit' item_id %}"
+                                    {% else %}
+                                    formaction="{% url 'purchase_item_add' %}"
+                                    {% endif %}
+                                    type="submit" class="btn btn-success">Save
+                            </button>
+                            {% if item_id and 'items.delete_item' in user.get_all_permissions %}
+                                <a href="#delete-dialog" data-toggle="modal" class="btn btn-danger">Delete</a>
+                            {% endif %}
+                            <a class="btn btn-default" href="{% url 'purchase_item_list' %}">Cancel</a>
+                        </div>
+                    </div>
+                    <input type="hidden" name="suppliers_json" id="suppliers_json">
+                </form>
+            </div>
+        </section>
+    </div>
+
+    <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="delete-dialog"
+         class="modal fade">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                    <h4 class="modal-title">Confirm Delete</h4>
+                </div>
+                <div class="modal-body">
+                    <form role="form" action="{% url 'purchase_item_delete' item_id %}" method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="delete-purchase-item">Are you sure want to delete this Item?</label>
+                        </div>
+                        <button type="submit" class="btn btn-success">OK</button>
+                        <a class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="mySupplierAddModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Search Supplier</h4>
+                </div>
+                <div class="modal-body" style="padding-bottom: 10px!important;">
+                    <div class="form-group">
+                        <section class="panel" style="margin-top: 10px!important;">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="panel-body"
+                                         style="padding: 0px!important; font-size: 12.5px !important;">
+                                        <div class="adv-table">
+                                            <table id="supplier-table-list" style="width: 100% !important;"
+                                                   class="display table table-bordered table-striped table-condensed">
+                                                <thead>
+                                                <tr>
+                                                    <th>Supplier Code</th>
+                                                    <th>Supplier Name</th>
+                                                    <th>Country</th>
+                                                    <th>Currency</th>
+                                                    <th></th>
+                                                </tr>
+                                                </thead>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                        <button class="btn btn-success" type="button" id="btnSupplierSelect">Select</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1"
+         id="part_new-dialog"
+         class="modal fade">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content" style="width: 500px; margin-left: auto; margin-right: auto;">
+                <div class="modal-header">
+                    <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×
+                    </button>
+                    <h4 class="modal-title">Confirmation</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="exampleInputEmail1">Is new part?</label>
+                    </div>
+                    <button type="submit" id="yes_new_part" class="btn btn-success">Yes</button>
+                    <button data-dismiss="modal" id="no_new_part" class="btn btn-default" type="button">No
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{{ form.media.js }}
+{% block extrafoot %}
+    {% load staticfiles %}
+    <!--external js of page-->
+    <script type="text/javascript" src="{% static 'assets/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+    <script src="{% static 'js/advanced-form-datepicker.js' %}"></script>
+    <script src="{% static "assets/datatables/js/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "assets/datatables/js/dataTables.bootstrap.min.js" %}"></script>
+    <script type="text/javascript" src="{% static 'assets/selectable/js/jquery.dj.selectable.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/order/purchase_part_form.js' %}?{% now 'H' %}"></script>
+    <script type="text/javascript" src="{% static 'js/order/common-order.js' %}?{% now 'H' %}"></script>
+    <script src="{% static "js/select2/select2.js" %}"></script>
+    <script type="text/javascript">
+    var supp_code_select = $('#supp_code').clone(true);
+
+$(document).ready(function() {
+	$('#supp_code').select2({
+		placeholder: 'Select Supplier'
+	});
+	$('#id_category').select2({
+		placeholder: 'Select Category'
+	});
+	$('#id_inv_measure').select2({
+		placeholder: 'Select'
+	});
+	$('#id_purchase_measure').select2({
+		placeholder: 'Select'
+	});
+	$('#id_country').select2({
+		placeholder: 'Select'
+	});
+	$('#id_purchase_currency').select2({
+		placeholder: 'Select'
+	});
+	$('#id_default_supplier').select2({
+		placeholder: 'Select'
+	});
+	$('#part_number_axis').select2({
+		placeholder: 'Select'
+	});
+	$('#part_number_axis').on('select2:close', function() {
+		$('#id_name').select();
+	});
+	$('#id_country').on('select2:close', function() {
+		$('#id_short_description').select();
+	});
+	$('#id_category').on('select2:close', function() {
+		$('#id_purchase_currency').focus();
+	});
+	$('#id_purchase_currency').on('select2:close', function() {
+		$('#id_inv_measure').focus();
+	});
+	$('#id_inv_measure').on('select2:close', function() {
+		$('#id_model_qty').select();
+	});
+	$('#id_purchase_measure').on('select2:close', function() {
+		$('#id_minimun_order').select();
+	});
+	$('#id_default_supplier').on('select2:close', function() {
+	    var currentRow = $('#supplier_table  tbody tr:first').closest('tr').find('select');
+		  $(currentRow[0]).focus();
+		  $(currentRow[0]).select2('open');
+	});
+	$('#id_default_supplier').on('select2:close', function() {
+		if (
+			$('#supplier_table')
+				.DataTable()
+				.data()
+				.count() == 0
+		) {
+			$('#btnSaveItem').focus();
+		} else {
+			$(
+				$(
+					$('#supplier_table')
+						.DataTable()
+						.cell(0, 0)
+						.node()
+				).find('select')[0]
+			).focus();
+			$(
+				$(
+					$('#supplier_table')
+						.DataTable()
+						.cell(0, 0)
+						.node()
+				).find('select')[0]
+			).select2('open');
+		}
+	});
+
+	var default_add_part = '{{ isnew }}';
+	var is_inventory = '{{ company.is_inventory }}';
+	if (is_inventory == 'True') {
+		{#$('#id_code').addClass('hide');#}
+		{#$('#part_new-dialog').modal('show');#}
+    $("#no_new_part").trigger('click');
+	} else {
+		if (default_add_part == '0') {
+			$('#id_code').addClass('hide');
+			$('#part_new-dialog').modal('show');
+		} else {
+			$('#id_code').removeClass('hide');
+			$('#id_name').focus();
+		}
+	}
+
+});
+
+$('#id_name').on('focusout', function(e) {
+    var name = $(this).val();
+    if ($('#id_short_description').val() == '') {
+        $('#id_short_description').val(name);
+    }
+})
+
+$('#id_purchase_price').change(function () {
+    $(this).val(comma_format(float_format($(this).val()), 6));
+});
+
+$(document).on('click', 'input[type="text"]', function() {
+	$(this).select();
+});
+$(document).on('click', 'input[type="number"]', function() {
+	$(this).select();
+});
+
+$("#yes_new_part").click(function() {
+    $("#new_part").prop( "checked", true );
+    {#$("#new_part").trigger('change');#}
+    $('#id_code').removeClass('hide');
+    $('#id_code').attr('required', 'required');
+    $('#cek_part').addClass('hide');
+    $('#part_new-dialog').modal('hide');
+    $('#id_name').focus();
+    $('#btnSave').attr('disabled', true);
+});
+
+$("#no_new_part").click(function() {
+    $("#new_part").prop( "checked", false );
+    {#$("#new_part").trigger('change');#}
+    $('#id_code').addClass('hide');
+    $('#id_code').removeAttr( "required" );
+    $('#cek_part').removeClass('hide');
+    $('#part_new-dialog').modal('hide');
+    $('#part_number_axis').focus();
+    $('#part_number_axis').select2('open');
+    $('#btnSave').attr('disabled', false);
+});
+
+function saveform(){
+
+}
+
+</script>
+    <style>
+    .hide {
+            display: none;
+        }
+    </style>
+{% endblock %}
